@@ -1,0 +1,2317 @@
+{
+  "extracted_data": [
+    {
+      "hole_no": "NBH-1",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-1",
+        "GROUND_SURFACE_LEVEL": "138.40m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480617.493,
+        "Y_COORDINATE": 263804.657,
+        "GROUND_WATER_LEVEL": "GL(-)6.40m",
+        "DATE": "2022.3.8",
+        "DRILLER": "박노선"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~4.3m",
+          "soil_name": "봉적층",
+          "soil_color": "암회색",
+          "observation": "-실트질 모래 -소량의 잔자갈 함유 -습윤 -매우느슨",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "3/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "2/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "1/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "4/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.3~6.7m",
+          "soil_name": "풍화토",
+          "soil_color": "암갈색",
+          "observation": "-실트질 모래 -습윤 -조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "34/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/14",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "6.7~18.5m",
+          "soil_name": "풍화암",
+          "soil_color": "담회색",
+          "observation": "-균열시 실트질 모래 및 암편으로 분해 -습윤 -매우조밀 TCR: 16%, RQD:0% TCR: 18%, RQD:0% TCR: 63%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/8",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "18.5~21.5m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "-화강암의 연암 | 파쇄대 및 절리 발달, TCR:93%, RQD:0%, 심한풍화, 약함, 심도 21.50 M 에서 시추종료",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 19,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        1,
+        2
+      ],
+      "x": 480617.493,
+      "y": 263804.657
+    },
+    {
+      "hole_no": "NBH-2",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-2",
+        "GROUND_SURFACE_LEVEL": "143.30m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480620.178,
+        "Y_COORDINATE": 263745.402,
+        "GROUND_WATER_LEVEL": "GL(-)2.65m",
+        "DATE": "2022.3.22",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~2.0m",
+          "soil_name": "봉적층 SM",
+          "soil_color": "담갈색 갈색",
+          "observation": "-자갈섞인 실트질 모래 -습윤 -보통조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "17/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "21/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.0~5.0m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "갈색 황갈색",
+          "observation": "-실트질 모래 -습윤 -보통조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "50/20",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "50/17",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/10",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "5.0~6.3m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담황색 황갈색",
+          "observation": "-굳진시 실트질 모래로 분해 -매우조밀",
+          "samples": [
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/8",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "6.3~9.3m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담회색",
+          "observation": "-강암의 연암 -파쇄대 및 절리. 6.3~7.3m: TCR:60%, RQD:0%, 심한풍화~보통풍화, 약함~보통강함. 7.3~8.3m: TCR:75%, RQD:0%, 심한풍화~보통풍화, 약함~보통강함. 8.3~9.3m: TCR:85%, RQD:0%, 심한풍화~보통풍화, 약함~보통강함. 심도 9.30 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        3
+      ],
+      "x": 480620.178,
+      "y": 263745.402
+    },
+    {
+      "hole_no": "NBH-3",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-3",
+        "GROUND_SURFACE_LEVEL": "127.38 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480683.454,
+        "Y_COORDINATE": 263804.997,
+        "GROUND_WATER_LEVEL": "GL(-) 3.75 m",
+        "DATE": "2022.3.7",
+        "DRILLER": "정현화 김연수"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.50m",
+          "soil_name": "전답토",
+          "soil_color": "암갈색",
+          "observation": "실트질 모래 -습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.50~4.50m",
+          "soil_name": "퇴적층",
+          "soil_color": "황갈색~담회색",
+          "observation": "실트질 모래 -소량의 잔자갈 함유 -습윤 -느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "19/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "7/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "6/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "7/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.50~6.40m",
+          "soil_name": "풍화토",
+          "soil_color": "황갈색",
+          "observation": "실트질 모래 -습윤 -조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "43/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/15",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "6.40~9.70m",
+          "soil_name": "풍화암",
+          "soil_color": "담회색",
+          "observation": "균열사 실트질 모래 및 암편으로 분해 -매우조밀 -TCR: 15%, RQD: 0%",
+          "samples": []
+        },
+        {
+          "depth_range": "9.70~10.70m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "흑회강암의 연암 -전구간 파쇄대 발달 -TCR: 100%, RQD: 0% -완전풍화~심한풍화 -매우약함~약함 * 심도 10.70 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        4
+      ],
+      "x": 480683.454,
+      "y": 263804.997
+    },
+    {
+      "hole_no": "NBH-4",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-4",
+        "GROUND_SURFACE_LEVEL": "129.75 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480679.456,
+        "Y_COORDINATE": null,
+        "GROUND_WATER_LEVEL": "GL(-) 1.40 m",
+        "DATE": "2022.3.22",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.80m",
+          "soil_name": "붕적층",
+          "soil_color": "암갈색",
+          "observation": "자갈질 모래",
+          "samples": []
+        },
+        {
+          "depth_range": "0.80~1.40m",
+          "soil_name": "풍화토",
+          "soil_color": "황갈색, 암갈색",
+          "observation": "실트질 모래, 습윤, 매울조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "50/18",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "1.40~6.60m",
+          "soil_name": "풍화암",
+          "soil_color": "담갈색, 담회색",
+          "observation": "굵은 실트질 모래 및 암편으로 분해, 습윤, 매울조밀. 1.4~2.4m -TCR:70%, RQD:0%. 2.4~4.4m -TCR:25%, RQD:0%. 4.4~5.6m -TCR:45%, RQD:0%. 5.6~6.6m -TCR:50%, RQD:0%",
+          "samples": []
+        },
+        {
+          "depth_range": "6.60~9.60m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "황강암의 연암, 파쇄 및 절리 발달. 6.6~9.6m -TCR:85%, RQD:16%. 심한풍화~보통풍화, 약함~보통강함. * 심도 9.60 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        5
+      ],
+      "x": 480679.456,
+      "y": null
+    },
+    {
+      "hole_no": "NBH-5",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-5",
+        "GROUND_SURFACE_LEVEL": "125.43 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480731.897,
+        "Y_COORDINATE": 263810.054,
+        "GROUND_WATER_LEVEL": "GL(-) 1.90 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "안병무"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토",
+          "soil_color": "암회색",
+          "observation": "모래섞인 실트질 점토 -습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~2.7m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "점토층 -연약~보통견고",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "4/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "7/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.7~3.8m",
+          "soil_name": "퇴적층",
+          "soil_color": "담회색",
+          "observation": "모래질 자갈 -자갈입경 : 0.5~6.0cm -습윤 -느슨",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "9/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.8~8.0m",
+          "soil_name": "풍화토",
+          "soil_color": "담갈색, 갈색",
+          "observation": "실트질 모래 -습윤 -매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "50/14",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/19",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/15",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/12",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/7",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "8.0~9.1m",
+          "soil_name": "풍화암",
+          "soil_color": "담갈색, 갈색",
+          "observation": "균진시 실트질 모래 및 암편으로 분해 -습윤 -매우조밀",
+          "samples": [
+            {
+              "Sample_number": "N.S",
+              "Depth": 9,
+              "Hits": "50/3",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "9.1~12.1m",
+          "soil_name": "연암층",
+          "soil_color": "암회색",
+          "observation": "화강암의 연암 -파쇄대 및 절리 -심한풍화~보통풍화 -악함~보통강함",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        6
+      ],
+      "x": 480731.897,
+      "y": 263810.054
+    },
+    {
+      "hole_no": "NBH-6",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-6",
+        "GROUND_SURFACE_LEVEL": "125.43 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480922.472,
+        "Y_COORDINATE": 263714.355,
+        "GROUND_WATER_LEVEL": "GL(-)2.00m",
+        "DATE": "2022.3.6",
+        "DRILLER": "안병무"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.50m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암갈색",
+          "observation": "전답토",
+          "samples": []
+        },
+        {
+          "depth_range": "0.50~1.50m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "암갈색",
+          "observation": "-모래섞인 실트질 점토-습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "8/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "1.50~4.50m",
+          "soil_name": "퇴적층 GW",
+          "soil_color": "암갈색",
+          "observation": "-실트질 모래-습윤-느슨",
+          "samples": [
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "12/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "9/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "10/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.50~5.00m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "암갈색 갈색",
+          "observation": "-모래질 자갈-자갈입경: 0.5~5.0cm-습윤-느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/9",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "5.00~9.50m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담갈색 갈색",
+          "observation": "-암갈색 실트질 모래 및 암편으로 분해-습윤-매우조밀-9.0~9.5M-TCR:32%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/7",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/7",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/6",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "N.S",
+              "Depth": 9,
+              "Hits": "50/3",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "9.50~12.50m",
+          "soil_name": "연암층 SR",
+          "soil_color": "암회색",
+          "observation": "-화강암의 연암-파쇄대 및 절리-9.5~12.5M-TCR:100%, RQD:7%-완전풍화~보통풍화-매우약함~보통강도",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        7
+      ],
+      "x": 480922.472,
+      "y": 263714.355
+    },
+    {
+      "hole_no": "NBH-7",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-7",
+        "GROUND_SURFACE_LEVEL": "125.20 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480789.225,
+        "Y_COORDINATE": 263814.808,
+        "GROUND_WATER_LEVEL": "GL(-)1.80m",
+        "DATE": "2022.3.7",
+        "DRILLER": "안병무"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.6m",
+          "soil_name": "전답토",
+          "soil_color": "암갈색",
+          "observation": "-모래섞인 실트질 점토-습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.6~2.3m",
+          "soil_name": "퇴적층",
+          "soil_color": "담갈색",
+          "observation": "-실트질 모래-느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "5/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "13/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.3~3.9m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "-모래질 자갈-자갈입경 : 0.5~5.0cm-느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "29/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.9~8.0m",
+          "soil_name": "풍화토",
+          "soil_color": "담갈색 담회색",
+          "observation": "-실트질 모래-습윤-조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "41/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/20",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/14",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/12",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/10",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "8.0~12.0m",
+          "soil_name": "풍화암",
+          "soil_color": "담갈색 담회색",
+          "observation": "-골진시 실트질 모래 및 암편으로 분해-매우조밀",
+          "samples": [
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/7",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "N.S",
+              "Depth": 11,
+              "Hits": "50/3",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "12.0~15.0m",
+          "soil_name": "연암층",
+          "soil_color": "담갈색 담회색",
+          "observation": "-규장암의 연암-파쇄대 및 절리-지하수에 의한 변질 및 산화된 상태-TCR:85%, RQD:15%-완전풍화~보통풍화-매우약함~보통강함* 심도 15.00 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        8
+      ],
+      "x": 480789.225,
+      "y": 263814.808
+    },
+    {
+      "hole_no": "NBH-8",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-8",
+        "GROUND_SURFACE_LEVEL": "125.62 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480779.313,
+        "Y_COORDINATE": 263711.602,
+        "GROUND_WATER_LEVEL": "GL(-)2.20m",
+        "DATE": "2022.3.5",
+        "DRILLER": "박노선"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토",
+          "soil_color": "암회색",
+          "observation": "-실트질 모래 -습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~3.3m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "담갈색",
+          "observation": "-자갈섞인 실트질 모래 -자갈입경 : 0.5~1.0cm -습윤 -느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "6/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "22/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "21/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.3~5.5m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "암갈색 암회색",
+          "observation": "-실트질 모래 -습윤 -조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "34/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/17",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "5.5~18.0m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "암갈색 담회색",
+          "observation": "-굴진시 실트질 모래 및 암편으로 분해 -습윤 -매우조밀 -13.0~15.5m -TCR:20%, RQD:0% -15.5~18.0m -TCR:16%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/9",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/10",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/7",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "11",
+              "Depth": 11,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "12",
+              "Depth": 12,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "N.S",
+              "Depth": 13,
+              "Hits": "50/3",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "18.0~21.0m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담회색",
+          "observation": "-화강암의 연암 -파쇄대 및 절리 발달 | RQD: 22%, TCR: 95%, 심한풍화~보통풍화, 암함~보통강함. 심도 21.00 M 에서 시추종료",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 19,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        9,
+        10
+      ],
+      "x": 480779.313,
+      "y": 263711.602
+    },
+    {
+      "hole_no": "NBH-9",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-9",
+        "GROUND_SURFACE_LEVEL": "125.19 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480789.298,
+        "Y_COORDINATE": 263765.684,
+        "GROUND_WATER_LEVEL": "GL(-) 1.70 m",
+        "DATE": "2022.3.5",
+        "DRILLER": "안병무"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.6m",
+          "soil_name": "전답토",
+          "soil_color": "암갈색",
+          "observation": "모래섞인 실트질 점토- 습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.6~2.5m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "실트질 모래- 습윤- 느슨",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "6/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "9/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.5~4.5m",
+          "soil_name": "퇴적층",
+          "soil_color": "회갈색",
+          "observation": "자갈질 모래- 자갈입경 : 0.5~5.0cm- 느슨- 보통조밀",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "22/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "28/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.5~10.0m",
+          "soil_name": "풍화토",
+          "soil_color": "담갈색",
+          "observation": "실트질 모래- 습윤- 매우조밀",
+          "samples": [
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/19",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/12",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/14",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/13",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/12",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/8",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "10.0~12.0m",
+          "soil_name": "풍화암",
+          "soil_color": "담갈색",
+          "observation": "굴진시 실트질 모래 및 암편으로 분해- 습윤- 매우조밀- 11.5~12.0m-TCR:40%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "11",
+              "Depth": 11,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "12.0~14.7m",
+          "soil_name": "연암층",
+          "soil_color": "암회색",
+          "observation": "화강암의 연암- 12.0~14.7m-TCR:96%, RQD:39%- 심한풍화~보통풍화- 약함~보통강함",
+          "samples": []
+        },
+        {
+          "depth_range": "14.7~17.0m",
+          "soil_name": "경암층",
+          "soil_color": "암회색",
+          "observation": "화강암의 경암- 14.7~17.0m-TCR:100%, RQD:71%- 보통풍화- 보통강함",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 15,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        11
+      ],
+      "x": 480789.298,
+      "y": 263765.684
+    },
+    {
+      "hole_no": "NBH-10",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-10",
+        "GROUND_SURFACE_LEVEL": "125.14 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480845.108,
+        "Y_COORDINATE": 263765.69,
+        "GROUND_WATER_LEVEL": "GL(-) 1.60 m",
+        "DATE": "2022.3.3",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암갈색",
+          "observation": "모래섞인 실트질 점토 - 습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~3.6m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "갈색",
+          "observation": "자갈섞인 실트질 모래 - 자갈크기: 0.5~4.0cm - 습윤~젖음 - 보통조밀~조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "19/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "22/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "32/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.6~12.0m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "담갈색",
+          "observation": "실트질 모래 - 습윤 - 조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "48/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "49/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/17",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/24",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/27",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/22",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/19",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "11",
+              "Depth": 11,
+              "Hits": "50/13",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "12",
+              "Depth": 12,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "12.0~18.0m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담갈색",
+          "observation": "굴진시 실트질 모래로 분해 - 매우조밀",
+          "samples": [
+            {
+              "Sample_number": "13",
+              "Depth": 13,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "14",
+              "Depth": 14,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "15",
+              "Depth": 15,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "16",
+              "Depth": 16,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "N.S",
+              "Depth": 17,
+              "Hits": "50/4",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "18.0~23.0m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담갈색 담회색",
+          "observation": "화강암의 연암 - 파쇄대 및 절리 - 지하수에 의한 변질 및 산화",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        12,
+        13
+      ],
+      "x": 480845.108,
+      "y": 263765.69
+    },
+    {
+      "hole_no": "NBH-11",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-11",
+        "GROUND_SURFACE_LEVEL": "125.49 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480849.25,
+        "Y_COORDINATE": 263705.826,
+        "GROUND_WATER_LEVEL": "GL(-) 2.10 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "박노선"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.50m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암갈색",
+          "observation": "-모래섞인 실트질 점토-습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.50~3.60m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "암갈색",
+          "observation": "-자갈섞인 실트질 모래-3.2~3.6m : 자갈입경 : 0.5~7.0cm-다량 함유-습윤~젖음-느슨~조밀",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "8/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "22/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "49/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.60~6.70m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "갈색 암갈색",
+          "observation": "-실트질 모래-매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "50/25",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/23",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/22",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "6.70~12.30m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담갈색 암갈색",
+          "observation": "-균질시 실트질 모래 및 암편으로 분해-습윤-12.1~12.3m:암편회수",
+          "samples": [
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/10",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/9",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/7",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "11",
+              "Depth": 11,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "12",
+              "Depth": 12,
+              "Hits": "50/5",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "12.30~15.30m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담회색",
+          "observation": "-화강암의 연암-파쇄대 및 절리-18.0~21.0m : -TCR: 100%, RQD:63%-심한풍화~보통풍화-약함~보통강함 * 심도 15.30 M 00시추종료",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 14,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        14
+      ],
+      "x": 480849.25,
+      "y": 263705.826
+    },
+    {
+      "hole_no": "NBH-12",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-12",
+        "GROUND_SURFACE_LEVEL": "125.12 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480862.8,
+        "Y_COORDINATE": 263812.292,
+        "GROUND_WATER_LEVEL": "GL(-) 1.80 m",
+        "DATE": "2022.3.5",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토",
+          "soil_color": "암갈색",
+          "observation": "",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~1.5m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "점토섞인 실트질 모래, 습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "12/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "1.5~3.6m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "자갈섞인 실트질 모래, 자갈입경: 0.5~4.0cm, 습윤, 보통조밀",
+          "samples": [
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "13/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "20/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.6~9.0m",
+          "soil_name": "풍화토",
+          "soil_color": "갈색",
+          "observation": "실트질 모래, 습윤, 보통조밀~매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "17/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "50/26",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/23",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/15",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/11",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/7",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "9.0~11.0m",
+          "soil_name": "풍화암",
+          "soil_color": "갈색",
+          "observation": "풍화시 실트질 모래로 분해, 습윤, 매우조밀",
+          "samples": [
+            {
+              "Sample_number": "N.S",
+              "Depth": 10,
+              "Hits": "50/4",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "11.0~12.6m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "화강암의 연암, 파쇄대 및 절리, TCR: 100%, RQD: 2%, 완전풍화~심한풍화, 매우약함~약함",
+          "samples": []
+        },
+        {
+          "depth_range": "12.6~15.6m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "TCR: 53%, RQD: 13%, 완전풍화~심한풍화, 매우약함~약함",
+          "samples": []
+        },
+        {
+          "depth_range": "15.6~18.6m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "TCR: 30%, RQD: 0%, 완전풍화~보통풍화, 매우약함~보통강함, 자발풍화와 발불풍화, 토사화 진행",
+          "samples": []
+        },
+        {
+          "depth_range": "18.6~20.0m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "TCR: 43%, RQD: 0%, 완전풍화~심한풍화, 매우약함~약함",
+          "samples": []
+        },
+        {
+          "depth_range": "20.0~23.0m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "TCR: 90%, RQD: 46%, 완전풍화~심한풍화 | -매우약함-약함",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        15,
+        16
+      ],
+      "x": 480862.8,
+      "y": 263812.292
+    },
+    {
+      "hole_no": "NBH-13",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-13",
+        "GROUND_SURFACE_LEVEL": "124.77 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480921.888,
+        "Y_COORDINATE": 263812.576,
+        "GROUND_WATER_LEVEL": "(GL-) 1.60 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.50m",
+          "soil_name": "전답토",
+          "soil_color": "암회색",
+          "observation": "모래섞인 실트질 점토 -습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.50~3.50m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "자갈섞인 실트질 모래 -자갈입경: 0.5~3.0cm -습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "8/30",
+              "Method": "흐트러진시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "9/30",
+              "Method": "흐트러진시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "9/30",
+              "Method": "흐트러진시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.50~4.00m",
+          "soil_name": "퇴적층",
+          "soil_color": "암갈색",
+          "observation": "모래질 자갈 -자갈입경: 0.5~3.0cm -습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 4,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.00~7.50m",
+          "soil_name": "연암층",
+          "soil_color": "담갈색, 암회색",
+          "observation": "화강암의 연암 -파쇄대 및 절리 발달 -암석질 -4.0~5.5m -TCR:70%, RQD:7% -완전풍화~보통풍화 -매우약함~보통강함 -5.5~7.5m -TCR:70%, RQD:12% -완전풍화~보통풍화 -매우약함~보통강함 * 심도 7.50 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        17
+      ],
+      "x": 480921.888,
+      "y": 263812.576
+    },
+    {
+      "hole_no": "NBH-14",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-14",
+        "GROUND_SURFACE_LEVEL": "124.88 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480897.164,
+        "Y_COORDINATE": 263807.777,
+        "GROUND_WATER_LEVEL": "GL(-) 1.60 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암회색",
+          "observation": "전답토",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~2.0m",
+          "soil_name": "퇴적층 ML",
+          "soil_color": "암회색",
+          "observation": "-모래섞인 실트질 점토 -습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "6/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "9/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.0~3.8m",
+          "soil_name": "퇴적층 GP",
+          "soil_color": "황갈색",
+          "observation": "-모래질 실트 -점성없고 -견고",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "16/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.8~6.0m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "황갈색 담황색",
+          "observation": "-모래질 자갈 -자갈 크기: 0.5~4.0cm -습윤 -느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "17/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "5",
+              "Depth": 5,
+              "Hits": "30/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "6",
+              "Depth": 6,
+              "Hits": "50/9",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "6.0~15.7m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담황색",
+          "observation": "-실트질 모래 -습윤 -보통조밀~조밀 -골진시 실트질 모래 및 암편으로 분해 -습윤 -매우조밀 -15.3~15.7m -TCR:63%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "7",
+              "Depth": 7,
+              "Hits": "50/10",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "8",
+              "Depth": 8,
+              "Hits": "50/10",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "9",
+              "Depth": 9,
+              "Hits": "50/9",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "10",
+              "Depth": 10,
+              "Hits": "50/8",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "11",
+              "Depth": 11,
+              "Hits": "50/6",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "12",
+              "Depth": 12,
+              "Hits": "50/4",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "13",
+              "Depth": 13,
+              "Hits": "50/4",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "14",
+              "Depth": 14,
+              "Hits": "50/6",
+              "Method": "코아시료"
+            },
+            {
+              "Sample_number": "15",
+              "Depth": 15,
+              "Hits": "50/9",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "15.7~18.7m",
+          "soil_name": "연암층 SR",
+          "soil_color": "회백색",
+          "observation": "-규장암의 연암 -파쇄대 및 절리 -15.7~18.7m -TCR:76%, RQD:0% -완전풍화암~보통풍화암 -매우약함~보통강함 * 심도 18.70 M에서 시추종료",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 17,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        18
+      ],
+      "x": 480897.164,
+      "y": 263807.777
+    },
+    {
+      "hole_no": "NBH-15",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-15",
+        "GROUND_SURFACE_LEVEL": "125.03 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480922.472,
+        "Y_COORDINATE": 263714.355,
+        "GROUND_WATER_LEVEL": "GL(-) 1.80 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "박노선"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.5m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암회색",
+          "observation": "-모래섞인 실트질 점토 -습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.5~2.7m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "암회색",
+          "observation": "-자갈섞인 실트질 모래 -습윤 -느슨",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "5/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "7/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.7~3.5m",
+          "soil_name": "풍화토 SM",
+          "soil_color": "담갈색 암갈색",
+          "observation": "-실트질 모래 -습윤 -매우조밀",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "50/25",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.5~5.5m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "담갈색 암갈색",
+          "observation": "-굴진시 실트질 모래 및 암편으로 분해 -매우조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "50/7",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "N·S",
+              "Depth": 5,
+              "Hits": "50/4",
+              "Method": "흐트러진시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "5.5~8.5m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담회색",
+          "observation": "-화강암의 연암 -파쇄대 및 절리 발달 -18.0~21.0m -TCR:69%, RQD:0% -심한풍화 -약함 *심도 8.50M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        19
+      ],
+      "x": 480922.472,
+      "y": 263714.355
+    },
+    {
+      "hole_no": "NBH-16",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-16",
+        "GROUND_SURFACE_LEVEL": "125.64 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480926.685,
+        "Y_COORDINATE": 263624.912,
+        "GROUND_WATER_LEVEL": "GL(-) 2.40 m",
+        "DATE": "2022.3.6",
+        "DRILLER": "정현화"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.6m",
+          "soil_name": "전답토",
+          "soil_color": "암갈색",
+          "observation": "전답토",
+          "samples": []
+        },
+        {
+          "depth_range": "0.6~1.5m",
+          "soil_name": "퇴적층",
+          "soil_color": "암흑색",
+          "observation": "모래섞인 실트질 점토, 습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "11/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "1.5~3.0m",
+          "soil_name": "퇴적층",
+          "soil_color": "담회색",
+          "observation": "실트질 모래, 습윤, 보통조밀",
+          "samples": [
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "19/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "25/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.0~5.4m",
+          "soil_name": "퇴적층",
+          "soil_color": "암회색, 담회색",
+          "observation": "실트질 자갈, 자갈입경 : 0.5~4.0cm, 습윤, 보통조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "49/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "N.S",
+              "Depth": 5,
+              "Hits": "50/18",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "5.4~5.7m",
+          "soil_name": "풍화암",
+          "soil_color": "암회색",
+          "observation": "모래질 자갈, 자갈입경 : 0.5~10.0cm, 풍화층밀~매우조밀",
+          "samples": []
+        },
+        {
+          "depth_range": "5.7~6.6m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "글진시 실트질 모래 암편으로 분해, 습윤, 매우조밀, TCR:63%, RQD:0%, 완전풍화~심한풍화, 매우약함~약함",
+          "samples": []
+        },
+        {
+          "depth_range": "6.6~7.3m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "글진시 실트질 모래 암편으로 분해, 습윤, 매우조밀, TCR:71%, RQD:0%, 완전풍화~심한풍화, 매우약함~약함",
+          "samples": []
+        },
+        {
+          "depth_range": "7.3~9.0m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "글진시 실트질 모래 암편으로 분해, 습윤, 매우조밀, TCR:100%, RQD:0%, 완전풍화~심한풍화, 매우약함~약함, 심도 9.00 M 에서 시추종료",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        20
+      ],
+      "x": 480926.685,
+      "y": 263624.912
+    },
+    {
+      "hole_no": "NBH-17",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-17",
+        "GROUND_SURFACE_LEVEL": "124.73 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480925.635,
+        "Y_COORDINATE": 263426.812,
+        "GROUND_WATER_LEVEL": "GL(-) 1.10 m",
+        "DATE": "2022.3.7",
+        "DRILLER": "이 기 호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.4m",
+          "soil_name": "전답토",
+          "soil_color": "암회색",
+          "observation": "점토섞인 실트질 모래- 습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.4~2.5m",
+          "soil_name": "퇴적층",
+          "soil_color": "황갈색, 갈색",
+          "observation": "실트질 모래- 점토섞임- 습윤",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "7/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "11/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "2.5~3.0m",
+          "soil_name": "풍화토",
+          "soil_color": "황갈색",
+          "observation": "실트질 모래- 습윤- 느슨~보통조밀",
+          "samples": [
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "50/6",
+              "Method": "코아시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.0~4.5m",
+          "soil_name": "풍화암",
+          "soil_color": "담회색",
+          "observation": "굳어진 실트질 모래 및 암편으로 분해- 습윤- 매우조밀",
+          "samples": []
+        },
+        {
+          "depth_range": "4.5~7.7m",
+          "soil_name": "연암층",
+          "soil_color": "담회색",
+          "observation": "- TCR:87%, RQD:0%- 화강암의 연암- 파쇄대 및 절리- 습윤- 매우조밀- 심도 7.70m 에서 시추종료",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 7,
+              "Hits": "50/6",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        21
+      ],
+      "x": 480925.635,
+      "y": 263426.812
+    },
+    {
+      "hole_no": "NBH-18",
+      "metadata": {
+        "PROJECT_NAME": "음성 천연가스발전소 1호기 파워 블록 EPC 지질조사용역",
+        "HOLE_NO": "NBH-18",
+        "GROUND_SURFACE_LEVEL": "125.86 m",
+        "LOCATION": "충청북도 음성군 음성읍 평곡리 일원",
+        "X_COORDINATE": 480705.826,
+        "Y_COORDINATE": 263774.007,
+        "GROUND_WATER_LEVEL": "2.20 m",
+        "DATE": "2022.3.23",
+        "DRILLER": "이기호"
+      },
+      "sample_data": [],
+      "soil_data": [
+        {
+          "depth_range": "0.0~0.50m",
+          "soil_name": "전답토 CL",
+          "soil_color": "암갈색",
+          "observation": "-모래섞인 실트질 점토-습윤",
+          "samples": []
+        },
+        {
+          "depth_range": "0.50~3.60m",
+          "soil_name": "퇴적층 SM",
+          "soil_color": "암갈색",
+          "observation": "-실트질 모래-느슨-습윤-부분적으로 자갈 함유",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 1,
+              "Hits": "5/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "2",
+              "Depth": 2,
+              "Hits": "5/30",
+              "Method": "관입시험기에 의한 시료"
+            },
+            {
+              "Sample_number": "3",
+              "Depth": 3,
+              "Hits": "6/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "3.60~4.70m",
+          "soil_name": "퇴적층 GW-GM",
+          "soil_color": "암갈색",
+          "observation": "-실트섞인 모래질 자갈-자갈크기: 0.5~5.0cm-습윤-보통 조밀",
+          "samples": [
+            {
+              "Sample_number": "4",
+              "Depth": 4,
+              "Hits": "11/30",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "4.70~11.60m",
+          "soil_name": "풍화암 WR",
+          "soil_color": "갈색",
+          "observation": "-균열시 실트질 모래 및 암편으로 분해-습윤-매우 조밀-4.7~6.6m -TCR:24%, RQD:0%-6.6~7.6m -TCR:53%, RQD:0%-7.6~8.6m -coreloss-8.6~9.6m -TCR:92%, RQD:0%-9.6~10.6m -TCR:8%, RQD:0%-10.6~11.6m -TCR:50%, RQD:0%",
+          "samples": [
+            {
+              "Sample_number": "1",
+              "Depth": 6,
+              "Hits": "",
+              "Method": "관입시험기에 의한 시료"
+            }
+          ]
+        },
+        {
+          "depth_range": "11.60~22.6m",
+          "soil_name": "연암층 SR",
+          "soil_color": "담회색",
+          "observation": "-화강암의 연암-파쇄대 및 절리 발달-자갈풍화 발달-11.6~12.6m -TCR:97%, RQD:0%-완전풍화~심한풍화-매우약함~약함-12.6~13.6m -TCR:23%, RQD:0%-완전풍화~심한풍화-매우약함~약함-13.6~14.6m -TCR:54%, RQD:0%-완전풍화~심한풍화-매우약함~약함-14.6~15.6m -TCR:80%, RQD:0%-15.6~16.6m -TCR:61%, RQD:0%",
+          "samples": []
+        }
+      ],
+      "source_pdf_url": "processed_from_table_images",
+      "source_pages": [
+        22,
+        23
+      ],
+      "x": 480705.826,
+      "y": 263774.007
+    }
+  ],
+  "borehole_locations": [
+    {
+      "Borehole_name": "NBH-1",
+      "Ground_water_level": "GL(-)6.40m",
+      "Depth": "0.0~21.5m",
+      "location": {
+        "lat": 263804.657,
+        "lng": 480617.493
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-2",
+      "Ground_water_level": "GL(-)2.65m",
+      "Depth": "0.0~9.3m",
+      "location": {
+        "lat": 263745.402,
+        "lng": 480620.178
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-3",
+      "Ground_water_level": "GL(-) 3.75 m",
+      "Depth": "0.0~10.7m",
+      "location": {
+        "lat": 263804.997,
+        "lng": 480683.454
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-4",
+      "Ground_water_level": "GL(-) 1.40 m",
+      "Depth": "0.0~9.6m",
+      "location": null,
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-5",
+      "Ground_water_level": "GL(-) 1.90 m",
+      "Depth": "0.0~12.1m",
+      "location": {
+        "lat": 263810.054,
+        "lng": 480731.897
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-6",
+      "Ground_water_level": "GL(-)2.00m",
+      "Depth": "0.0~12.5m",
+      "location": {
+        "lat": 263714.355,
+        "lng": 480922.472
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-7",
+      "Ground_water_level": "GL(-)1.80m",
+      "Depth": "0.0~15.0m",
+      "location": {
+        "lat": 263814.808,
+        "lng": 480789.225
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-8",
+      "Ground_water_level": "GL(-)2.20m",
+      "Depth": "0.0~21.0m",
+      "location": {
+        "lat": 263711.602,
+        "lng": 480779.313
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-9",
+      "Ground_water_level": "GL(-) 1.70 m",
+      "Depth": "0.0~17.0m",
+      "location": {
+        "lat": 263765.684,
+        "lng": 480789.298
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-10",
+      "Ground_water_level": "GL(-) 1.60 m",
+      "Depth": "0.0~23.0m",
+      "location": {
+        "lat": 263765.69,
+        "lng": 480845.108
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-11",
+      "Ground_water_level": "GL(-) 2.10 m",
+      "Depth": "0.0~15.3m",
+      "location": {
+        "lat": 263705.826,
+        "lng": 480849.25
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-12",
+      "Ground_water_level": "GL(-) 1.80 m",
+      "Depth": "0.0~23.0m",
+      "location": {
+        "lat": 263812.292,
+        "lng": 480862.8
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-13",
+      "Ground_water_level": "(GL-) 1.60 m",
+      "Depth": "0.0~7.5m",
+      "location": {
+        "lat": 263812.576,
+        "lng": 480921.888
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-14",
+      "Ground_water_level": "GL(-) 1.60 m",
+      "Depth": "0.0~18.7m",
+      "location": {
+        "lat": 263807.777,
+        "lng": 480897.164
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-15",
+      "Ground_water_level": "GL(-) 1.80 m",
+      "Depth": "0.0~8.5m",
+      "location": {
+        "lat": 263714.355,
+        "lng": 480922.472
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-16",
+      "Ground_water_level": "GL(-) 2.40 m",
+      "Depth": "0.0~9.0m",
+      "location": {
+        "lat": 263624.912,
+        "lng": 480926.685
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-17",
+      "Ground_water_level": "GL(-) 1.10 m",
+      "Depth": "0.0~7.7m",
+      "location": {
+        "lat": 263426.812,
+        "lng": 480925.635
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    },
+    {
+      "Borehole_name": "NBH-18",
+      "Ground_water_level": "2.20 m",
+      "Depth": "0.0~22.6m",
+      "location": {
+        "lat": 263774.007,
+        "lng": 480705.826
+      },
+      "details": "충청북도 음성군 음성읍 평곡리 일원"
+    }
+  ],
+  "processing_summary": {
+    "total_table_images": 23,
+    "successfully_processed": 18,
+    "failed_processing": 0,
+    "errors": [],
+    "total_time_sec": 160.3,
+    "extraction_mode": "combined",
+    "pipeline_mode": "streaming",
+    "total_pages": 23,
+    "drill_log_pages": 23,
+    "skipped_pages": 0
+  }
+}

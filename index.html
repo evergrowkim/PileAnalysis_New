@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>말뚝 기초 설계 계산기 v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+:root {
+  --primary-navy: #1e3a5f;
+  --primary-steel: #2c4e7e;
+  --primary-slate: #3d5a80;
+  --status-pass: #2e7d32;
+  --status-fail: #c62828;
+  --status-warning: #f57c00;
+  --status-info: #0277bd;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-header: #263238;
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+  --text-light: #ffffff;
+  --calc-bg: #f7f8fa;
+  --calc-border: #d1d5db;
+  --calc-formula: #1e3a5f;
+  --calc-value: #2e7d32;
+  --calc-step: #495057;
+  --border-color: #d1d5db;
+  --accent-coral: #e94560;
+  --accent-green: #16a34a;
+  --accent-blue: #3b82f6;
+  --font-body: 'Noto Sans KR', 'Pretendard', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: var(--font-body); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px; line-height: 1.5; }
+
+/* Toolbar */
+.toolbar { height: 42px; background: linear-gradient(135deg, var(--bg-header), #16213e, var(--primary-navy)); color: var(--text-light); display: flex; align-items: center; padding: 0 16px; gap: 12px; border-bottom: 3px solid var(--accent-coral); }
+.toolbar .app-title { font-size: 14px; font-weight: 700; }
+.toolbar .pipe-char { color: rgba(255,255,255,0.3); margin: 0 4px; }
+.toolbar .bh-info { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.toolbar .bh-label { font-size: 10px; color: #a8b2d1; }
+.toolbar .bh-value { font-size: 13px; font-weight: 700; color: var(--accent-coral); }
+.pile-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; }
+.pile-tag.phc { background: #fef3c7; color: #92400e; }
+.pile-tag.steel { background: #dbeafe; color: #1d4ed8; }
+
+/* Toolbar Buttons */
+.btn-toolbar { padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; background: rgba(255,255,255,0.1); color: #fff; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background .2s; }
+.btn-toolbar:hover { background: rgba(255,255,255,0.2); }
+
+/* Tab Navigation */
+.tab-nav { background: #445D73; display: flex; padding: 0 20px; gap: 4px; overflow-x: auto; border-bottom: 1px solid #324E67; }
+.tab-btn { padding: 10px 16px; font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.75); background: transparent; border: none; cursor: pointer; position: relative; white-space: nowrap; transition: all .2s; }
+.tab-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.tab-btn.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.15); }
+.tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #fff; }
+
+/* Tab Content */
+.tab-content { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.tab-content.active { display: block; }
+.content-area { overflow-y: auto; height: calc(100vh - 93px); }
+
+/* Section Headers */
+.sec-title { font-size: 13px; font-weight: 700; color: var(--primary-navy); border-left: 3px solid var(--accent-coral); padding-left: 10px; margin: 18px 0 10px; }
+
+/* Form Grid */
+.form-grid { display: grid; gap: 10px; }
+.form-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.form-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Form Field */
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .3px; }
+.field input, .field select { padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: var(--font-mono); outline: none; background: #fff; }
+.field input:focus, .field select:focus { border-color: var(--primary-steel); box-shadow: 0 0 0 2px rgba(44,78,126,0.1); }
+.field input:disabled { background: var(--bg-tertiary); color: var(--text-muted); }
+
+/* Buttons */
+.btn { padding: 6px 13px; background: var(--primary-navy); color: #fff; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.btn:hover { background: var(--primary-steel); }
+.btn-sm { padding: 4px 8px; font-size: 10px; }
+.btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+.btn-danger:hover { background: #fecaca; }
+.btn-success { background: var(--status-pass); }
+.btn-warning { background: var(--status-warning); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+.btn-outline:hover { background: var(--bg-tertiary); }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+table th { background: var(--bg-header); color: #fff; padding: 6px 7px; text-align: center; font-weight: 600; font-size: 10px; white-space: nowrap; }
+table td { padding: 5px 7px; border-bottom: 1px solid #eee; text-align: center; font-family: var(--font-mono); font-size: 11px; }
+table td.left { text-align: left; }
+table tr:nth-child(even) { background: #fafbfc; }
+table tr:hover { background: #f0f4ff; }
+table input { padding: 4px 6px; border: 1px solid var(--border-color); border-radius: 3px; width: 55px; text-align: center; font-size: 11px; font-family: var(--font-mono); }
+table select { padding: 3px 5px; border: 1px solid var(--border-color); border-radius: 3px; font-size: 10px; }
+
+/* Calculation Line */
+.cl { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--calc-bg); border-radius: 4px; margin-bottom: 4px; font-family: var(--font-mono); font-size: 11px; flex-wrap: wrap; }
+.cl .cl-label { font-weight: 600; color: var(--primary-navy); min-width: 50px; }
+.cl .cl-formula { color: var(--text-secondary); }
+.cl .cl-eq { margin: 0 3px; }
+.cl .cl-val { color: var(--accent-coral); font-weight: 700; }
+.cl .cl-unit { color: var(--text-muted); font-size: 10px; }
+
+/* Formula Box */
+.formula-box { font-family: var(--font-mono); font-size: 11.5px; padding: 7px 11px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 5px; line-height: 1.4; }
+
+/* Result Bar */
+.result-bar { display: flex; justify-content: space-between; align-items: center; padding: 9px 13px; border-radius: 6px; margin-top: 8px; }
+.result-bar.ok { background: #f0fdf4; border: 1px solid #86efac; }
+.result-bar.ng { background: #fef2f2; border: 1px solid #fca5a5; }
+.result-bar .rb-label { font-size: 12px; font-weight: 600; }
+.result-bar .rb-val { font-size: 16px; font-weight: 800; font-family: var(--font-mono); }
+.result-bar.ok .rb-val { color: var(--status-pass); }
+.result-bar.ng .rb-val { color: var(--status-fail); }
+
+/* Spec Card */
+.spec-card { padding: 10px; border-radius: 5px; margin-top: 10px; }
+.spec-card.phc { background: #fffbeb; border: 1px solid #fde68a; }
+.spec-card.steel { background: #eff6ff; border: 1px solid #bfdbfe; }
+.spec-card .spec-title { font-size: 10.5px; font-weight: 700; margin-bottom: 5px; }
+.spec-card.phc .spec-title { color: #92400e; }
+.spec-card.steel .spec-title { color: #1d4ed8; }
+
+/* Derived Info */
+.derived-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding: 9px; background: var(--calc-bg); border-radius: 5px; }
+.derived-grid .dg-item { font-size: 11px; }
+.derived-grid .dg-item strong { color: var(--primary-navy); }
+
+/* Soil Badge */
+.soil-badge { padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 700; }
+.soil-badge.sand { background: #dcfce7; color: #15803d; }
+.soil-badge.clay { background: #dbeafe; color: #1d4ed8; }
+.soil-badge.rock { background: #fef3c7; color: #92400e; }
+
+/* Rock Params Box */
+.rock-params { padding: 9px; background: #eff6ff; border-radius: 5px; border: 1px solid #bfdbfe; margin-top: 8px; }
+
+/* Upload Zone */
+.upload-zone { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 15px; background: var(--bg-primary); }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--primary-steel); background: #f0f7ff; }
+.upload-zone .uz-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-zone .uz-text { font-size: 12px; color: var(--text-muted); }
+.upload-zone .uz-sub { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+.upload-zone.success { border-color: var(--status-pass); background: #f0fdf4; }
+.upload-zone.error { border-color: var(--status-fail); background: #fef2f2; }
+.upload-result { font-size: 11px; font-weight: 600; margin-top: 6px; }
+.upload-result.success { color: var(--status-pass); }
+.upload-result.error { color: var(--status-fail); }
+
+/* Borehole Selector after upload */
+.bh-selector { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #eff6ff; border-radius: 6px; margin-bottom: 12px; border: 1px solid #bfdbfe; }
+.bh-selector label { font-size: 11px; font-weight: 600; color: var(--primary-navy); }
+.bh-selector select { padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: var(--font-mono); min-width: 140px; }
+.bh-selector .btn { margin-left: auto; }
+
+/* Summary Cards */
+.summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.summary-card { padding: 14px; border-radius: 7px; background: var(--bg-primary); text-align: center; border-width: 2px; border-style: solid; }
+.summary-card .sc-label { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
+.summary-card .sc-value { font-size: 20px; font-weight: 800; font-family: var(--font-mono); }
+.summary-card .sc-unit { font-size: 10px; color: var(--text-muted); }
+
+/* Slide Panel (Borehole Log) */
+.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; }
+.panel-overlay.open { display: block; }
+.slide-panel { position: fixed; top: 0; right: -540px; width: 520px; max-width: 95vw; height: 100vh; background: var(--bg-primary); box-shadow: -4px 0 20px rgba(0,0,0,0.2); z-index: 10000; transition: right .3s ease-out; overflow-y: auto; }
+.slide-panel.open { right: 0; }
+.panel-header { background: linear-gradient(135deg, #455A64, #2C5F8D); color: #fff; padding: 16px 18px; }
+.panel-header .ph-title { font-size: 20px; font-weight: 700; }
+.panel-header .ph-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 11px; }
+.panel-header .ph-meta .pm-label { opacity: 0.7; }
+.panel-header .ph-meta .pm-value { font-weight: 600; }
+.panel-header .ph-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.panel-header .ph-close:hover { background: rgba(255,255,255,0.3); }
+.panel-legend { display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); flex-wrap: wrap; }
+.panel-legend .pl-item { display: flex; align-items: center; gap: 4px; font-size: 9px; }
+.panel-legend .pl-swatch { width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.3); }
+.panel-body { padding: 12px 16px; }
+.panel-columns { display: grid; grid-template-columns: 55px 1fr 130px; gap: 6px; position: relative; }
+.panel-col-header { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-align: center; padding: 4px 0; border-bottom: 2px solid var(--primary-navy); margin-bottom: 6px; position: sticky; top: 0; background: var(--bg-primary); z-index: 5; }
+
+/* Depth markers in panel */
+.depth-mark { position: absolute; left: 0; width: 55px; font-size: 10px; color: var(--text-secondary); text-align: right; padding-right: 4px; }
+.depth-mark.major { font-weight: 700; color: #455A64; font-size: 11px; }
+.depth-line { position: absolute; left: 60px; right: 0; height: 1px; background: #ddd; }
+.depth-line.major { background: #aaa; }
+
+/* Strat layer in panel */
+.strat-layer { position: absolute; left: 0; right: 0; display: flex; border: 1px solid #888; border-radius: 2px; overflow: hidden; }
+.strat-color-strip { width: 40px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.6); writing-mode: vertical-rl; }
+.strat-info { flex: 1; padding: 3px 6px; font-size: 11px; font-weight: 600; color: #455A64; }
+
+/* N-value bar in panel */
+.nval-bar-row { position: absolute; left: 0; right: 0; height: 12px; display: flex; align-items: center; }
+.nval-bar { height: 10px; border-radius: 1px; min-width: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.nval-bar.normal { background: linear-gradient(to right, #90CAF9, #1976d2); }
+.nval-bar.refusal { background: linear-gradient(to right, #1976d2, #2E7D32); }
+.nval-label { font-size: 9px; font-weight: 700; margin-left: 3px; font-family: var(--font-mono); }
+.nval-label.normal { color: #1976d2; }
+.nval-label.refusal { color: #2E7D32; }
+
+/* Water/Excavation markers */
+.marker-line { position: absolute; left: 0; right: 0; height: 0; z-index: 3; }
+.marker-line.water { border-top: 2px dashed #2196F3; }
+.marker-line.excavation { border-top: 3px dashed #FF6F00; }
+.marker-badge { position: absolute; right: 0; padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: 700; color: #fff; transform: translateY(-50%); }
+.marker-badge.water { background: #2196F3; }
+.marker-badge.excavation { background: #FF6F00; }
+
+/* Verification Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; justify-content: center; align-items: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg-primary); border-radius: 10px; width: 90vw; max-width: 1000px; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.modal-header { padding: 16px 20px; background: var(--primary-navy); color: #fff; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 15px; font-weight: 700; }
+.modal-close { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 18px; cursor: pointer; }
+.modal-body { padding: 20px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.modal-tab { padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); font-size: 11px; font-weight: 600; cursor: pointer; }
+.modal-tab.active { background: var(--primary-navy); color: #fff; border-color: var(--primary-navy); }
+.verify-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.verify-col { padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+.verify-col h3 { font-size: 12px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-navy); }
+
+/* Calc Tooltip */
+.calc-tip { position: relative; cursor: help; border-bottom: 1px dotted var(--primary-navy); }
+.calc-tip .tip-content { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 10px; line-height: 1.4; white-space: pre-line; min-width: 250px; max-width: 400px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.calc-tip:hover .tip-content { display: block; }
+
+/* SPT Paste */
+.paste-area { width: 100%; height: 200px; font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; resize: vertical; }
+
+/* Dashboard */
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.dash-stat { padding: 12px; background: #fff; border-radius: 6px; text-align: center; border: 1px solid var(--border-color); }
+.dash-stat .ds-val { font-size: 22px; font-weight: 800; font-family: var(--font-mono); color: var(--primary-navy); }
+.dash-stat .ds-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.dash-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.dash-toolbar input { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; min-width: 200px; }
+.dash-table th { cursor: pointer; user-select: none; }
+.dash-table th:hover { background: #37474f; }
+
+/* Report */
+.report-section { margin-bottom: 24px; padding: 16px; background: #fff; border-radius: 8px; border: 1px solid var(--border-color); }
+.report-title { font-size: 15px; font-weight: 700; color: var(--primary-navy); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--primary-navy); }
+.report-step { padding: 10px 14px; margin-bottom: 8px; background: var(--calc-bg); border-left: 3px solid var(--primary-navy); border-radius: 0 4px 4px 0; }
+.report-step .step-num { display: inline-block; width: 24px; height: 24px; border-radius: 50%; background: var(--primary-navy); color: #fff; text-align: center; line-height: 24px; font-size: 11px; font-weight: 700; margin-right: 8px; }
+
+/* SVG Container */
+.svg-container { border: 1px solid #dee2e6; border-radius: 8px; overflow-x: auto; background: #fff; margin-top: 10px; }
+
+/* Toast */
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 99999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 10px 16px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 8px; animation: toastIn .3s ease-out; min-width: 250px; }
+.toast.success { background: #f0fdf4; border-left: 4px solid var(--status-pass); color: var(--status-pass); }
+.toast.error { background: #fef2f2; border-left: 4px solid var(--status-fail); color: var(--status-fail); }
+.toast.warning { background: #fffbeb; border-left: 4px solid var(--status-warning); color: var(--status-warning); }
+.toast.info { background: #eff6ff; border-left: 4px solid var(--status-info); color: var(--status-info); }
+@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .form-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .derived-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .form-grid.cols-3, .form-grid.cols-4 { grid-template-columns: 1fr; }
+  .summary-cards { grid-template-columns: 1fr; }
+  .verify-compare { grid-template-columns: 1fr; }
+  .dash-stats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <span class="app-title">말뚝 기초 설계 계산기</span>
+  <span class="pipe-char">|</span>
+  <span class="pile-tag phc" id="pileTag">PHC</span>
+  <div class="bh-info">
+    <span class="bh-label">시추공:</span>
+    <span class="bh-value" id="headerBH">-</span>
+  </div>
+  <button class="btn-toolbar" onclick="openVerifyModal()">&#10003; 검증</button>
+  <button class="btn-toolbar" onclick="openPasteModal()">&#128203; SPT붙여넣기</button>
+  <button class="btn-toolbar" onclick="exportExcel()">&#128196; 엑셀</button>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn active" data-tab="input">입력</button>
+  <button class="tab-btn" data-tab="vertical">수직지지력</button>
+  <button class="tab-btn" data-tab="horizontal">수평지지력</button>
+  <button class="tab-btn" data-tab="pullout">인발</button>
+  <button class="tab-btn" data-tab="settlement">침하</button>
+  <button class="tab-btn" data-tab="summary">요약</button>
+  <button class="tab-btn" data-tab="dashboard">대시보드</button>
+  <button class="tab-btn" data-tab="overall">종합결과</button>
+  <button class="tab-btn" data-tab="report">상세보고서</button>
+</div>
+
+<!-- Content Area -->
+<div class="content-area">
+
+<!-- INPUT TAB -->
+<div class="tab-content active" id="tab-input">
+</div>
+
+<!-- VERTICAL TAB -->
+<div class="tab-content" id="tab-vertical">
+</div>
+
+<!-- HORIZONTAL TAB -->
+<div class="tab-content" id="tab-horizontal">
+</div>
+
+<!-- PULL-OUT TAB -->
+<div class="tab-content" id="tab-pullout">
+</div>
+
+<!-- SETTLEMENT TAB -->
+<div class="tab-content" id="tab-settlement">
+</div>
+
+<!-- SUMMARY TAB -->
+<div class="tab-content" id="tab-summary">
+</div>
+
+<!-- DASHBOARD TAB -->
+<div class="tab-content" id="tab-dashboard">
+</div>
+
+<!-- OVERALL TAB -->
+<div class="tab-content" id="tab-overall">
+</div>
+
+<!-- REPORT TAB -->
+<div class="tab-content" id="tab-report">
+</div>
+
+</div><!-- /content-area -->
+
+<!-- Borehole Log Slide Panel -->
+<div class="panel-overlay" id="panelOverlay" onclick="closeLogPanel()">
+  <div class="slide-panel" id="slidePanel" onclick="event.stopPropagation()">
+    <div class="panel-header" style="position:relative;">
+      <div>
+        <div class="ph-title" id="panelTitle">-</div>
+        <div class="ph-meta" id="panelMeta"></div>
+        <div class="panel-legend" id="panelLegend"></div>
+      </div>
+      <button class="ph-close" onclick="closeLogPanel()">&#10005;</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<!-- Verification Modal -->
+<div class="modal-overlay" id="verifyOverlay" onclick="closeVerifyModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>&#10003; 검증 모듈</h2>
+      <button class="modal-close" onclick="closeVerifyModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="verifyBody"></div>
+  </div>
+</div>
+
+<!-- SPT Paste Modal -->
+<div class="modal-overlay" id="pasteOverlay" onclick="closePasteModal()">
+  <div class="modal" style="max-width:700px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>SPT 데이터 붙여넣기</h2>
+      <button class="modal-close" onclick="closePasteModal()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">엑셀에서 복사한 SPT 데이터를 아래에 붙여넣으세요.<br>형식: No. | EL.+ | Depth | N | Remark (탭 구분)</p>
+      <textarea class="paste-area" id="pasteArea" placeholder="1	128.38	1.0	10	성토층"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" onclick="parsePastedSPT()">적용</button>
+        <button class="btn btn-outline" onclick="closePasteModal()">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONSTANTS & CALCULATION ENGINE (from pile_calculator.jsx) =====
+
+const PHC_SPECS = [
+  { d: 350, t: 60, Ac: 547, Ic: 59930, wt: 142, types: { A: { Qap_tf: 88, Ze: 3508, Ie: 61400, ps: 40 }, B: { Qap_tf: 66, Ze: 3614, Ie: 63240, ps: 80 }, C: { Qap_tf: 55, Ze: 3655, Ie: 63960, ps: 100 } } },
+  { d: 400, t: 65, Ac: 684, Ic: 99580, wt: 178, types: { A: { Qap_tf: 109, Ze: 5104, Ie: 102100, ps: 40 }, B: { Qap_tf: 82, Ze: 5229, Ie: 104600, ps: 80 }, C: { Qap_tf: 68, Ze: 5327, Ie: 106500, ps: 100 } } },
+  { d: 450, t: 70, Ac: 836, Ic: 156000, wt: 217, types: { A: { Qap_tf: 68, Ze: 7121, Ie: 160200, ps: 40 }, B: { Qap_tf: 100, Ze: 7310, Ie: 164500, ps: 80 }, C: { Qap_tf: 84, Ze: 7437, Ie: 167300, ps: 100 } } },
+  { d: 500, t: 80, Ac: 1056, Ic: 241200, wt: 274, types: { A: { Qap_tf: 169, Ze: 9914, Ie: 247900, ps: 40 }, B: { Qap_tf: 127, Ze: 10180, Ie: 254500, ps: 80 }, C: { Qap_tf: 106, Ze: 10360, Ie: 258900, ps: 100 } } },
+  { d: 600, t: 90, Ac: 1442, Ic: 483400, wt: 375, types: { A: { Qap_tf: 231, Ze: 16560, Ie: 496900, ps: 40 }, B: { Qap_tf: 173, Ze: 17010, Ie: 570400, ps: 80 }, C: { Qap_tf: 144, Ze: 17330, Ie: 519800, ps: 100 } } },
+];
+const STEEL_SPECS = [
+  { d: 406.4, options: [
+    { t: 9, W: 88.2, Ap: 112.4, I: 22200, Z: 1090, K: 14.0, Qap: 1131 },
+    { t: 10, W: 97.8, Ap: 124.5, I: 24500, Z: 1200, K: 14.0, Qap: 1426 },
+    { t: 12, W: 117.0, Ap: 148.7, I: 28900, Z: 1420, K: 14.0, Qap: 1823 } ] },
+  { d: 508.0, options: [
+    { t: 9, W: 111.0, Ap: 141.1, I: 43900, Z: 1730, K: 17.6, Qap: 1520 },
+    { t: 10, W: 123.0, Ap: 156.5, I: 48500, Z: 1910, K: 17.6, Qap: 1754 },
+    { t: 12, W: 147.0, Ap: 187.0, I: 57500, Z: 2270, K: 17.5, Qap: 2233 } ] },
+  { d: 609.6, options: [
+    { t: 9, W: 133.0, Ap: 169.8, I: 76600, Z: 2510, K: 21.2, Qap: 1808 },
+    { t: 10, W: 148.0, Ap: 188.4, I: 84700, Z: 2780, K: 21.2, Qap: 2082 },
+    { t: 12, W: 177.0, Ap: 225.3, I: 101000, Z: 3300, K: 21.1, Qap: 2642 } ] },
+];
+const SOIL_OPTS = ["성토층","전답토(CL)","퇴적층(SM)","퇴적층(CL)","퇴적층(SP)","풍화토(SM)","풍화토(CL)","풍화암(WR)","연암(SR)","경암(HR)","자갈층(GP)","모래층(SP)","실트층(ML)"];
+const SOIL_CLS = {"성토층":"sand","전답토(CL)":"clay","퇴적층(SM)":"sand","퇴적층(CL)":"clay","퇴적층(SP)":"sand","풍화토(SM)":"sand","풍화토(CL)":"clay","풍화암(WR)":"sand","연암(SR)":"rock","경암(HR)":"rock","자갈층(GP)":"sand","모래층(SP)":"sand","실트층(ML)":"clay"};
+const UW_DEF = {"성토층":18,"전답토(CL)":16,"퇴적층(SM)":18,"퇴적층(CL)":17,"퇴적층(SP)":18,"풍화토(SM)":19,"풍화토(CL)":18,"풍화암(WR)":20,"연암(SR)":22,"경암(HR)":24,"자갈층(GP)":19,"모래층(SP)":18,"실트층(ML)":17};
+const SOIL_COLORS = {"매립":"#8B7355","붕적":"#C4A484","퇴적":"#D2B48C","충적":"#DEB887","풍화잔류토":"#E8C872","풍화토":"#DEB887","풍화암":"#BDB76B","연암":"#A9A9A9","경암":"#696969","전답":"#C4A484","성토":"#8B7355","자갈":"#B8860B","모래":"#F4A460","실트":"#D3D3D3"};
+
+function getSoilColor(name) {
+  if (!name) return '#E0E0E0';
+  for (const [key, color] of Object.entries(SOIL_COLORS)) {
+    if (name.includes(key)) return color;
+  }
+  return '#E0E0E0';
+}
+
+function calcPile(p) {
+  const isPHC = p.pileType === "PHC";
+  const D = p.diameter_mm / 1000, t = p.thickness_mm / 1000;
+  const pileLength = p.pileTopEL - p.bearingEL;
+  const cutFillDepth = p.pileTopEL - p.groundEL;
+  const gwlEL = p.groundEL - p.gwlDepth;
+  let Ap_tip, Ap_net, I, Zp, E, Qap, n_slender, W_unit, At_steel = 0, Ai_steel = 0, steelSpec = null;
+  if (isPHC) {
+    const row = PHC_SPECS.find(r => r.d === p.diameter_mm);
+    Ap_tip = Math.PI / 4 * D * D;
+    if (row) {
+      Ap_net = row.Ac / 10000; I = row.Ic / 1e8;
+      const td = row.types[p.phcGrade || "A"];
+      Zp = td.Ze / 1e6; Qap = td.Qap_tf * 9.80665;
+    } else {
+      Ap_net = Math.PI / 4 * (D * D - Math.pow(D - 2 * t, 2));
+      I = Math.PI / 64 * (Math.pow(D, 4) - Math.pow(D - 2 * t, 4));
+      Zp = I / (D / 2); Qap = 1650;
+    }
+    E = 39200000; n_slender = 85; W_unit = Ap_net * 24;
+  } else {
+    const corr = (p.corrosionThickness_mm || 2) / 1000;
+    const dRow = STEEL_SPECS.find(r => r.d === p.diameter_mm);
+    steelSpec = dRow ? dRow.options.find(o => o.t === p.thickness_mm) : null;
+    Ap_tip = Math.PI / 4 * D * D;
+    At_steel = Math.PI / 4 * (D * D - Math.pow(D - 2 * (t - corr), 2));
+    Ai_steel = Math.PI / 4 * Math.pow(D - 2 * t, 2);
+    if (steelSpec) {
+      Ap_net = steelSpec.Ap / 10000; I = steelSpec.I / 1e8;
+      Zp = steelSpec.Z / 1e6; Qap = steelSpec.Qap;
+      W_unit = steelSpec.W * 9.80665 / 1000;
+    } else {
+      Ap_net = Math.PI / 4 * (D * D - Math.pow(D - 2 * t, 2));
+      I = Math.PI / 64 * (Math.pow(D, 4) - Math.pow(D - 2 * t, 4));
+      Zp = I / (D / 2); Qap = Ap_net * 235000 / 3; W_unit = Ap_net * 78.5;
+    }
+    E = 210000000; n_slender = 100;
+  }
+  const U = Math.PI * D, EI = E * I;
+  // 2.1.1 Material
+  const L_over_d = pileLength / D;
+  const mu1 = L_over_d > n_slender ? Math.min((L_over_d / n_slender - 1) * 100, 30) : 0;
+  const jc = p.jointCount || 0;
+  let mu2 = 0;
+  if (jc > 0) {
+    const jt = p.jointType || "welding";
+    if (jt === "welding") mu2 = jc * 5;
+    else if (jt === "bolt") mu2 = jc * 10;
+    else mu2 = Math.min(jc, 2) * 20 + Math.max(jc - 2, 0) * 30;
+  }
+  const Qp_material = (1 - (mu1 + mu2) / 100) * Qap;
+  // Layers
+  const processedLayers = [];
+  if (p.layers) p.layers.forEach(layer => {
+    const sc = SOIL_CLS[layer.soilType] || "sand";
+    const As_i = U * layer.thickness;
+    const cN = Math.min(layer.avgN, 30);
+    processedLayers.push({ ...layer, soilClass: sc, As: As_i,
+      skinFriction_sand: sc === "sand" ? 2 * cN * As_i : 0,
+      skinFriction_clay: sc === "clay" ? 6.25 * cN * As_i : 0 });
+  });
+  const sum_2NsAs = processedLayers.reduce((s, l) => s + l.skinFriction_sand, 0);
+  const sum_625NcAc = processedLayers.reduce((s, l) => s + l.skinFriction_clay, 0);
+  const tipSPT = p.sptData && p.sptData.length > 0 ? p.sptData[p.sptData.length - 1] : { N: 50 };
+  const N_tip = Math.min(tipSPT.N, 50);
+  let Pu_tip, Pu_goodman = null, Pu_canadian = null, Pu_selected, rockCalcDetails = null;
+  const method = p.bearingMethod || (isPHC ? "meyerhof" : "rock");
+  if (!isPHC && method === "rock") {
+    const qu_eff = Math.min(p.qu_kPa || 10000, 10000);
+    const qu_lab = p.qu_kPa || 32460;
+    Pu_tip = 443 * Math.pow(qu_eff, 0.5) * Math.pow(At_steel, 2 / 5) * Math.pow(Ai_steel, 1 / 3);
+    const phi_rock = p.rockPhi_deg || 35;
+    const N_phi = Math.pow(Math.tan((45 + phi_rock / 2) * Math.PI / 180), 2);
+    const Ap_full = Math.PI / 4 * D * D;
+    Pu_goodman = qu_lab * (N_phi + 1) * Ap_full;
+    const Sd = p.Sd_m || 0.15, td2 = p.td_m || 0.002;
+    const Ksp = (3 + Sd / D) / (10 * Math.sqrt(1 + 300 * td2 / Sd));
+    Pu_canadian = 3 * qu_lab * Ksp * 2 * Ap_full;
+    Pu_selected = Math.min(Pu_tip, Pu_goodman, Pu_canadian);
+    rockCalcDetails = { qu_eff, qu_lab, At_m2: At_steel, Ai_m2: Ai_steel, Pu_tip, phi_rock, N_phi, Ap_full, Pu_goodman, Sd, td: td2, Ksp, Pu_canadian, Pu_selected };
+  } else {
+    Pu_selected = 250 * N_tip * Ap_tip; Pu_tip = Pu_selected;
+  }
+  const Qu = Pu_selected + sum_2NsAs + sum_625NcAc;
+  const Qu_tip = Pu_selected, Qu_skin = sum_2NsAs + sum_625NcAc;
+  const FS = 3, Qa_ground = Qu / FS;
+  const Qa_applied = Math.min(Qp_material, Qa_ground);
+  // 2.2 Horizontal
+  const topN = p.sptData && p.sptData.length > 0 ? p.sptData.filter(s => s.N < 50).reduce((s, d) => s + d.N, 0) / Math.max(p.sptData.filter(s => s.N < 50).length, 1) : 10;
+  const N_kh = Math.max(topN, 1);
+  const a = p.alpha_kh || 1;
+  const Eo2800 = 2800 * N_kh, Eo1000 = 1000 * N_kh;
+  const Kh1 = 1.208 * Math.pow(a * Eo2800, 1.1) * Math.pow(D, -0.31) * Math.pow(EI, -0.1);
+  const Kh2 = 6910 * Math.pow(N_kh, 0.406);
+  const Kh3 = 2000 * N_kh;
+  const Kh4 = 1.208 * Math.pow(a * Eo1000, 1.1) * Math.pow(D, -0.31) * Math.pow(EI, -0.1);
+  const Kh_min = Math.min(Kh1, Kh2, Kh3, Kh4);
+  const beta = Math.pow((Kh_min * D) / (4 * EI), 0.25);
+  const nh = Kh_min * D / (1 / beta);
+  const eta = Math.pow(nh / EI, 0.2);
+  const etaL = eta * pileLength;
+  const pileClass = etaL < 2 ? "짧은말뚝" : etaL <= 4 ? "중간말뚝" : "긴말뚝";
+  const phi_deg = Math.sqrt(12 * N_kh) + 15;
+  const phi_rad = phi_deg * Math.PI / 180;
+  const Kp = (1 + Math.sin(phi_rad)) / (1 - Math.sin(phi_rad));
+  const gamma_top = p.layers && p.layers.length > 0 ? p.layers[0].unitWeight : 18;
+  const deltaM = (p.delta_cm || 1.5) / 100;
+  const H_disp = 4 * Math.pow(beta, 3) * EI * deltaM;
+  const My_case1 = H_disp / (2 * beta);
+  let Hu_brom1;
+  if (pileClass === "긴말뚝") { const term = My_case1 / (Kp * gamma_top * Math.pow(D, 4)); Hu_brom1 = 2.38 * Math.pow(term, 2 / 3) * Kp * gamma_top * Math.pow(D, 3); }
+  else if (pileClass === "짧은말뚝") { Hu_brom1 = 1.5 * Kp * gamma_top * D * pileLength * pileLength; }
+  else { const term = My_case1 / (Kp * Math.pow(D, 4) * gamma_top); Hu_brom1 = Kp * Math.pow(D, 3) * gamma_top * (term + 0.5 * Math.pow(pileLength / D, 3)) * (D / pileLength); }
+  const Ha_brom1 = Hu_brom1 / 2.5;
+  const sigma_max = p.sigmaMax_kN || (isPHC ? 20000 : 235000);
+  const My_case2 = Zp * sigma_max;
+  let Hu_brom2;
+  if (pileClass === "긴말뚝") { const t2 = My_case2 / (Kp * gamma_top * Math.pow(D, 4)); Hu_brom2 = 2.38 * Math.pow(t2, 2 / 3) * Kp * gamma_top * Math.pow(D, 3); }
+  else { Hu_brom2 = Hu_brom1; }
+  const Ha_brom2 = Hu_brom2 / 2.5;
+  const Ha_brom = Math.min(Ha_brom1, Ha_brom2);
+  const Ha_chang = deltaM * Kh_min * D / beta;
+  const Ha_applied = Math.min(Ha_brom, Ha_chang);
+  // Pull-out
+  const l1 = Math.max(p.pileTopEL - gwlEL, 0);
+  const l2 = pileLength - l1;
+  const Wp = W_unit * pileLength - (l2 > 0 ? Ap_tip * l2 * 10 : 0);
+  const Qpull = Qu_skin / FS + Math.max(Wp, 0);
+  // Settlement
+  const ratio_tip = Qu_tip / Math.max(Qu, 1);
+  const Qps = Qa_applied * ratio_tip, Qfs = Qa_applied * (1 - ratio_tip);
+  const Ss = (Qps + 0.67 * Qfs) * (pileLength * 1000) / (Ap_net * E);
+  const Cp = 0.09;
+  const qp = Qu_tip / Math.max(Ap_tip, 0.001);
+  const Sp = (Qps * Cp) / (D * Math.max(qp, 1)) * 1000;
+  const Cs = (0.93 + 0.16 * Math.sqrt(pileLength / D)) * Cp;
+  const Sps = (Qfs * Cs) / (pileLength * Math.max(qp, 1)) * 1000;
+  const St = Ss + Sp + Sps;
+  return { D, t, pileLength, cutFillDepth, gwlEL, U, Ap_tip, Ap_net, I, Zp, E, EI, W_unit,
+    L_over_d, mu1, mu2, Qap, Qp_material, n_slender,
+    N_tip, Qu, Qu_tip, Qu_skin, Qa_ground, FS, sum_2NsAs, sum_625NcAc, processedLayers, Qa_applied,
+    At_steel, Ai_steel, steelSpec, rockCalcDetails, method, Pu_tip, Pu_goodman, Pu_canadian, Pu_selected,
+    N_kh: Math.round(N_kh * 100) / 100, Eo2800, Eo1000,
+    Kh1, Kh2, Kh3, Kh4, Kh_min,
+    beta, betaL: beta * pileLength, eta, etaL, pileClass,
+    phi_deg, Kp, gamma_top,
+    H_disp, My_case1, Hu_brom1, Ha_brom1, My_case2, Hu_brom2, Ha_brom2, Ha_brom, Ha_chang, Ha_applied,
+    l1, l2, Wp, Qpull, ratio_tip, Qps, Qfs, Ss, Sp, Sps, St, Cp, Cs, qp };
+}
+
+const fmt = (v, d = 2) => v != null && !isNaN(v) ? Number(v).toFixed(d) : "-";
+const fmtE = v => v != null ? v.toExponential(3) : "-";
+
+// ===== STATE MANAGEMENT =====
+const STATE = {
+  pileType: "PHC", diameter_mm: 500, thickness_mm: 80, phcGrade: "A",
+  pileTopEL: 130, groundEL: 127.38, bearingEL: 119.98, gwlDepth: 3.75,
+  boreholeNo: "NBH-03", alpha_kh: 1, delta_cm: 1.5, sigmaMax: 20000,
+  bearingMethod: "meyerhof", corrosionThk: 2, qu_kPa: 32460,
+  Sd_m: 0.15, td_m: 0.002, rockPhi: 35, jointCount: 1, jointType: "welding",
+  sptData: [
+    { depth: 1, N: 10, remark: "성토층" }, { depth: 2, N: 10, remark: "성토층" },
+    { depth: 3.62, N: 19, remark: "퇴적층(SM)" }, { depth: 4.62, N: 7, remark: "퇴적층(SM)" },
+    { depth: 5.62, N: 6, remark: "퇴적층(SM)" }, { depth: 6.62, N: 7, remark: "퇴적층(SM)" },
+    { depth: 7.62, N: 43, remark: "풍화토(SM)" }, { depth: 8.62, N: 50, remark: "풍화토(SM)" },
+    { depth: 9.62, N: 50, remark: "풍화암(WR)" },
+  ],
+  layers: [
+    { soilType: "성토층", thickness: 2.62, avgN: 10, unitWeight: 18 },
+    { soilType: "전답토(CL)", thickness: 0.5, avgN: 19, unitWeight: 16 },
+    { soilType: "퇴적층(SM)", thickness: 4, avgN: 9.75, unitWeight: 18 },
+    { soilType: "풍화토(SM)", thickness: 1.9, avgN: 30, unitWeight: 19 },
+    { soilType: "풍화암(WR)", thickness: 1, avgN: 30, unitWeight: 20 },
+  ],
+  uploadedData: null, // parsed JSON
+  result: null, // calcPile result
+};
+
+// Verification data (NBH-03 PHC, NBH-09 Steel)
+const VERIFY_DATA = {
+  phc: {
+    label: "PHC D500x80t (NBH-03)", pileType: "PHC", diameter_mm: 500, thickness_mm: 80, phcGrade: "A",
+    boreholeNo: "NBH-03", groundEL: 127.38, bearingEL: 119.98, pileTopEL: 130, gwlDepth: 3.75,
+    bearingMethod: "meyerhof", sigmaMax: 20000, alpha_kh: 1, delta_cm: 1.5, jointCount: 1, jointType: "welding",
+    sptData: [{depth:1,N:10,remark:"성토층"},{depth:2,N:10,remark:"성토층"},{depth:3.62,N:19,remark:"퇴적층(SM)"},{depth:4.62,N:7,remark:"퇴적층(SM)"},{depth:5.62,N:6,remark:"퇴적층(SM)"},{depth:6.62,N:7,remark:"퇴적층(SM)"},{depth:7.62,N:43,remark:"풍화토(SM)"},{depth:8.62,N:50,remark:"풍화토(SM)"},{depth:9.62,N:50,remark:"풍화암(WR)"}],
+    layers: [{soilType:"성토층",thickness:2.62,avgN:10,unitWeight:18},{soilType:"전답토(CL)",thickness:0.5,avgN:19,unitWeight:16},{soilType:"퇴적층(SM)",thickness:4,avgN:9.75,unitWeight:18},{soilType:"풍화토(SM)",thickness:1.9,avgN:30,unitWeight:19},{soilType:"풍화암(WR)",thickness:1,avgN:30,unitWeight:20}],
+  },
+  steel: {
+    label: "Steel D609.6x12t (NBH-09)", pileType: "강관", diameter_mm: 609.6, thickness_mm: 12,
+    boreholeNo: "NBH-09", groundEL: 125.19, bearingEL: 112.19, pileTopEL: 130, gwlDepth: 1.7,
+    bearingMethod: "rock", sigmaMax: 235000, corrosionThk: 2, qu_kPa: 32460, Sd_m: 0.15, td_m: 0.002, rockPhi: 35,
+    alpha_kh: 1, delta_cm: 1.5, jointCount: 1, jointType: "welding",
+    sptData: [{depth:1,N:10,remark:"성토층"},{depth:2,N:10,remark:"성토층"},{depth:3,N:10,remark:"성토층"},{depth:4,N:10,remark:"성토층"},{depth:5,N:6,remark:"퇴적층(SM)"},{depth:6,N:9,remark:"퇴적층(SM)"},{depth:7,N:22,remark:"퇴적층(SM)"},{depth:8,N:28,remark:"퇴적층(SM)"},{depth:9,N:50,remark:"풍화토(SM)"},{depth:10,N:50,remark:"풍화토(SM)"},{depth:11,N:50,remark:"풍화토(SM)"},{depth:12,N:50,remark:"풍화토(SM)"},{depth:13,N:50,remark:"풍화토(SM)"},{depth:14,N:50,remark:"풍화암(WR)"},{depth:15,N:50,remark:"풍화암(WR)"},{depth:16,N:50,remark:"연암(SR)"}],
+    layers: [{soilType:"성토층",thickness:4.81,avgN:10,unitWeight:18},{soilType:"전답토(CL)",thickness:0.6,avgN:6,unitWeight:16},{soilType:"퇴적층(SM)",thickness:1.9,avgN:7.5,unitWeight:18},{soilType:"퇴적층(SP)",thickness:2,avgN:25,unitWeight:18},{soilType:"풍화토(SM)",thickness:5.5,avgN:50,unitWeight:19},{soilType:"풍화암(WR)",thickness:2,avgN:50,unitWeight:20},{soilType:"연암(SR)",thickness:1,avgN:50,unitWeight:23}],
+  }
+};
+
+function recalculate() {
+  try {
+    STATE.result = calcPile({
+      pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
+      phcGrade: STATE.phcGrade, pileTopEL: STATE.pileTopEL, groundEL: STATE.groundEL,
+      bearingEL: STATE.bearingEL, gwlDepth: STATE.gwlDepth, sptData: STATE.sptData,
+      layers: STATE.layers, alpha_kh: STATE.alpha_kh, delta_cm: STATE.delta_cm,
+      sigmaMax_kN: STATE.sigmaMax, corrosionThickness_mm: STATE.corrosionThk,
+      qu_kPa: STATE.qu_kPa, Sd_m: STATE.Sd_m, td_m: STATE.td_m, rockPhi_deg: STATE.rockPhi,
+      bearingMethod: STATE.bearingMethod, jointCount: STATE.jointCount, jointType: STATE.jointType
+    });
+  } catch (e) { console.error('Calc error:', e); STATE.result = null; }
+  renderAllTabs();
+}
+
+// ===== JSON IMPORT ENGINE =====
+function parseHits(hits) {
+  if (hits == null || hits === '' || typeof hits !== 'string' || hits.trim() === '') return null;
+  const h = hits.trim();
+  const parts = h.split('/');
+  if (parts.length < 2) { const v = parseInt(h); return isNaN(v) ? null : Math.min(v, 50); }
+  const blows = parseInt(parts[0]);
+  const pen = parseInt(parts[1]);
+  if (isNaN(blows) || isNaN(pen)) return null;
+  if (pen >= 30) return blows;
+  if (blows >= 50) return 50;
+  return Math.min(Math.round(blows * 30 / pen), 50);
+}
+
+function mapSoilName(name) {
+  if (!name) return "퇴적층(SM)";
+  const n = name.toLowerCase ? name : String(name);
+  if (n.includes("매립") || n.includes("성토") || n.includes("붕적") || n.includes("봉적")) return "성토층";
+  if (n.includes("전답") || n.includes("경작")) return "전답토(CL)";
+  if (n.includes("풍화암")) return "풍화암(WR)";
+  if (n.includes("연암")) return "연암(SR)";
+  if (n.includes("경암")) return "경암(HR)";
+  if (n.includes("풍화토") || n.includes("풍화잔류")) {
+    if (n.includes("CL") || n.includes("점토")) return "풍화토(CL)";
+    return "풍화토(SM)";
+  }
+  if (n.includes("퇴적") || n.includes("충적")) {
+    if (n.includes("CL") || n.includes("점토")) return "퇴적층(CL)";
+    if (n.includes("SP")) return "퇴적층(SP)";
+    return "퇴적층(SM)";
+  }
+  if (n.includes("자갈")) return "자갈층(GP)";
+  if (n.includes("모래")) return "모래층(SP)";
+  if (n.includes("실트")) return "실트층(ML)";
+  return "퇴적층(SM)";
+}
+
+function parseDepthRange(dr) {
+  if (!dr) return [0, 0];
+  const cleaned = dr.replace(/m/gi, '').replace(/\s/g, '');
+  const parts = cleaned.split(/[~\-]/);
+  return [parseFloat(parts[0]) || 0, parseFloat(parts[1]) || 0];
+}
+
+function parseElevation(el) {
+  if (typeof el === 'number') return el;
+  if (!el) return null;
+  const m = String(el).match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parseWaterLevel(wl) {
+  if (typeof wl === 'number') return wl;
+  if (!wl) return null;
+  const m = String(wl).match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function importDrillLogJSON(json) {
+  let boreholes = [];
+  // Format A/B: { extracted_data: [...] }
+  if (json.extracted_data && Array.isArray(json.extracted_data)) {
+    boreholes = json.extracted_data.map(bh => {
+      const meta = bh.metadata || {};
+      const groundEL = parseElevation(meta.GROUND_SURFACE_LEVEL);
+      const gwlDepth = parseWaterLevel(meta.GROUND_WATER_LEVEL);
+      // Extract SPT from soil_data.samples
+      const sptMap = new Map();
+      const soilLayers = [];
+      (bh.soil_data || []).forEach(sd => {
+        const [dFrom, dTo] = parseDepthRange(sd.depth_range);
+        const mappedSoil = mapSoilName(sd.soil_name);
+        soilLayers.push({ soilName: sd.soil_name, soilType: mappedSoil, depthFrom: dFrom, depthTo: dTo, thickness: dTo - dFrom });
+        (sd.samples || []).forEach(s => {
+          const key = s.Depth || s.depth;
+          const nVal = parseHits(s.Hits || s.hits);
+          if (key != null && nVal !== null && !sptMap.has(key)) {
+            sptMap.set(key, { depth: key, N: nVal, remark: mappedSoil });
+          }
+        });
+      });
+      const sptData = Array.from(sptMap.values()).sort((a, b) => a.depth - b.depth);
+      // Build averaged layers
+      const layers = soilLayers.filter(l => l.thickness > 0).map(l => {
+        const layerSPTs = sptData.filter(s => s.depth >= l.depthFrom && s.depth <= l.depthTo);
+        let avgN;
+        if (layerSPTs.length > 0) {
+          avgN = layerSPTs.reduce((s, v) => s + v.N, 0) / layerSPTs.length;
+        } else {
+          // 지층별 기본 N값: 연암≥50, 풍화암≥50, 풍화토=30, 나머지=10
+          const st = l.soilType;
+          avgN = (st.includes('연암') || st.includes('경암')) ? 50 : st.includes('풍화암') ? 50 : st.includes('풍화토') ? 30 : 10;
+        }
+        const sptDepths = layerSPTs.map(s => s.depth + 'm(N=' + s.N + ')').join(', ');
+        return { soilType: l.soilType, thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: layerSPTs.length > 0 ? sptDepths : '(SPT없음, 기본값)' , _sptCount: layerSPTs.length };
+      });
+      return { holeNo: bh.hole_no || meta.HOLE_NO || 'Unknown', groundEL, gwlDepth, sptData, layers, soilLayers, meta };
+    });
+  }
+  // Format C: { metadata, soil_layers, spt_data }
+  else if (json.spt_data || json.soil_layers) {
+    const meta = json.metadata || {};
+    const groundEL = meta.elevation || parseElevation(meta.GROUND_SURFACE_LEVEL);
+    const gwlDepth = meta.water_level || parseWaterLevel(meta.GROUND_WATER_LEVEL);
+    const sptData = (json.spt_data || []).map(s => ({
+      depth: s.depth, N: Math.min(s.n_value || s.N || 10, 50), remark: mapSoilName(s.soil_type || s.notes || "")
+    }));
+    const soilLayers = (json.soil_layers || []).map(l => ({
+      soilName: l.soil_type || l.description, soilType: mapSoilName(l.soil_type),
+      depthFrom: l.depth_from, depthTo: l.depth_to, thickness: l.depth_to - l.depth_from
+    }));
+    const layers = soilLayers.filter(l => l.thickness > 0).map(l => {
+      const layerSPTs = sptData.filter(s => s.depth >= l.depthFrom && s.depth <= l.depthTo);
+      let avgN;
+      if (layerSPTs.length > 0) {
+        avgN = layerSPTs.reduce((s, v) => s + v.N, 0) / layerSPTs.length;
+      } else {
+        const st = l.soilType;
+        avgN = (st.includes('연암') || st.includes('경암')) ? 50 : st.includes('풍화암') ? 50 : st.includes('풍화토') ? 30 : 10;
+      }
+      const sptDepths = layerSPTs.map(s => s.depth + 'm(N=' + s.N + ')').join(', ');
+      return { soilType: l.soilType, thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: layerSPTs.length > 0 ? sptDepths : '(SPT없음, 기본값)', _sptCount: layerSPTs.length };
+    });
+    boreholes.push({ holeNo: meta.hole_no || meta.HOLE_NO || 'BH-1', groundEL, gwlDepth, sptData, layers, soilLayers, meta });
+  }
+  return boreholes;
+}
+
+function applyBoreholeData(bh) {
+  if (!bh) return;
+  STATE.boreholeNo = bh.holeNo;
+  if (bh.groundEL != null) STATE.groundEL = bh.groundEL;
+  if (bh.gwlDepth != null) STATE.gwlDepth = bh.gwlDepth;
+  if (bh.sptData && bh.sptData.length > 0) STATE.sptData = JSON.parse(JSON.stringify(bh.sptData));
+  if (bh.layers && bh.layers.length > 0) STATE.layers = JSON.parse(JSON.stringify(bh.layers));
+  // Assign remark from layers to spt if missing
+  STATE.sptData.forEach(s => {
+    if (!s.remark || s.remark === "퇴적층(SM)") {
+      const layer = STATE.layers.find((l, i) => {
+        const cumDepth = STATE.layers.slice(0, i + 1).reduce((sum, la) => sum + la.thickness, 0);
+        return s.depth <= cumDepth;
+      });
+      if (layer) s.remark = layer.soilType;
+    }
+  });
+  recalculate();
+  showToast(`${bh.holeNo} 데이터 적용 완료`, 'success');
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Toast system
+function showToast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all .3s'; setTimeout(() => t.remove(), 300); }, 4000);
+}
+
+// Panel open/close
+function openLogPanel() { document.getElementById('panelOverlay').classList.add('open'); setTimeout(() => document.getElementById('slidePanel').classList.add('open'), 10); }
+function closeLogPanel() { document.getElementById('slidePanel').classList.remove('open'); setTimeout(() => document.getElementById('panelOverlay').classList.remove('open'), 300); }
+
+// Modal open/close
+function closeVerifyModal() { document.getElementById('verifyOverlay').classList.remove('open'); }
+
+// ESC key handler
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLogPanel(); closeVerifyModal(); closePasteModal(); }});
+
+// ===== RENDER FUNCTIONS =====
+function soilOptions(selected) {
+  return SOIL_OPTS.map(o => `<option value="${o}" ${o === selected ? 'selected' : ''}>${o}</option>`).join('');
+}
+
+function getSpecInfo() {
+  const isPHC = STATE.pileType === "PHC";
+  if (isPHC) {
+    const row = PHC_SPECS.find(r => r.d === STATE.diameter_mm);
+    if (!row) return null;
+    const t = row.types[STATE.phcGrade || "A"];
+    return { isPHC: true, Ac: row.Ac, Ic: row.Ic, wt: row.wt, Qap_tf: t.Qap_tf, Qap_kN: (t.Qap_tf * 9.80665).toFixed(1), Ze: t.Ze };
+  }
+  const dr = STEEL_SPECS.find(r => r.d === STATE.diameter_mm);
+  if (!dr) return null;
+  const opt = dr.options.find(o => o.t === STATE.thickness_mm);
+  return opt ? { isPHC: false, ...opt } : null;
+}
+
+function getDiamOptions() {
+  const isPHC = STATE.pileType === "PHC";
+  const specs = isPHC ? PHC_SPECS : STEEL_SPECS;
+  return specs.map(r => `<option value="${r.d}" ${r.d === STATE.diameter_mm ? 'selected' : ''}>${r.d} mm</option>`).join('');
+}
+
+function getThkOptions() {
+  const isPHC = STATE.pileType === "PHC";
+  if (isPHC) {
+    const row = PHC_SPECS.find(r => r.d === STATE.diameter_mm);
+    return row ? `<option value="${row.t}" selected>${row.t} mm</option>` : `<option value="${STATE.thickness_mm}">${STATE.thickness_mm} mm</option>`;
+  }
+  const dr = STEEL_SPECS.find(r => r.d === STATE.diameter_mm);
+  if (!dr) return `<option value="${STATE.thickness_mm}">${STATE.thickness_mm} mm</option>`;
+  return dr.options.map(o => `<option value="${o.t}" ${o.t === STATE.thickness_mm ? 'selected' : ''}>${o.t} mm</option>`).join('');
+}
+
+function renderInputTab() {
+  const isPHC = STATE.pileType === "PHC";
+  const r = STATE.result;
+  const spec = getSpecInfo();
+  let html = '';
+
+  // Upload Zone
+  html += `
+  <div class="upload-zone ${STATE.uploadedData ? 'success' : ''}" id="uploadZone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileUpload(event)">
+    <div class="uz-icon">&#128194;</div>
+    <div class="uz-text">${STATE.uploadedData ? '&#10003; JSON 파일 로드 완료' : 'drill_log JSON 파일을 드래그하거나 클릭하여 업로드'}</div>
+    <div class="uz-sub">Format A/B (extracted_data) 및 Format C (spt_data) 자동 감지</div>
+    ${STATE.uploadedData ? `<div class="upload-result success">${STATE.uploadedData.length}개 시추공 감지됨</div>` : ''}
+  </div>`;
+
+  // Borehole selector (if uploaded)
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    html += `<div class="bh-selector">
+      <label>시추공 선택:</label>
+      <select onchange="selectBorehole(this.value)">
+        ${STATE.uploadedData.map((bh, i) => `<option value="${i}" ${bh.holeNo === STATE.boreholeNo ? 'selected' : ''}>${bh.holeNo}</option>`).join('')}
+      </select>
+      <button class="btn btn-sm" onclick="openLogPanel(); renderLogPanel()">&#128200; 로그 보기</button>
+    </div>`;
+  }
+
+  // Section 1: Design Specs
+  html += `<h3 class="sec-title">1. 설계제원</h3>
+  <div class="form-grid cols-4">
+    <div class="field"><label>시추공 번호</label><input type="text" value="${STATE.boreholeNo}" onchange="STATE.boreholeNo=this.value; updateHeader()"></div>
+    <div class="field"><label>말뚝 종류</label><select onchange="handlePileTypeChange(this.value)"><option value="PHC" ${isPHC?'selected':''}>PHC</option><option value="강관" ${!isPHC?'selected':''}>강관</option></select></div>
+    <div class="field"><label>직경</label><select onchange="handleDiamChange(this.value)">${getDiamOptions()}</select></div>
+    <div class="field"><label>두께</label><select onchange="STATE.thickness_mm=parseFloat(this.value); recalculate()">${getThkOptions()}</select></div>
+  </div>`;
+
+  if (isPHC) {
+    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="STATE.phcGrade=this.value; recalculate()"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div></div>`;
+  } else {
+    html += `<div class="form-grid cols-4" style="margin-top:8px">
+      <div class="field"><label>부식두께 (mm)</label><input type="number" value="${STATE.corrosionThk}" onchange="STATE.corrosionThk=parseFloat(this.value)||2; recalculate()"></div>
+      <div class="field"><label>이음부 수</label><input type="number" value="${STATE.jointCount}" onchange="STATE.jointCount=parseInt(this.value)||0; recalculate()"></div>
+      <div class="field"><label>이음 방법</label><select onchange="STATE.jointType=this.value; recalculate()"><option value="welding" ${STATE.jointType==='welding'?'selected':''}>용접</option><option value="bolt" ${STATE.jointType==='bolt'?'selected':''}>볼트</option><option value="fill" ${STATE.jointType==='fill'?'selected':''}>충전</option></select></div>
+      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>Meyerhof (토사)</option></select></div>
+    </div>`;
+    if (STATE.bearingMethod === "rock") {
+      html += `<div class="rock-params"><div class="form-grid cols-4">
+        <div class="field"><label>qu (kPa)</label><input type="number" value="${STATE.qu_kPa}" onchange="STATE.qu_kPa=parseFloat(this.value)||10000; recalculate()"></div>
+        <div class="field"><label>Sd (m)</label><input type="number" value="${STATE.Sd_m}" step="0.01" onchange="STATE.Sd_m=parseFloat(this.value)||0.15; recalculate()"></div>
+        <div class="field"><label>td (m)</label><input type="number" value="${STATE.td_m}" step="0.001" onchange="STATE.td_m=parseFloat(this.value)||0.002; recalculate()"></div>
+        <div class="field"><label>Rock Phi (deg)</label><input type="number" value="${STATE.rockPhi}" onchange="STATE.rockPhi=parseFloat(this.value)||35; recalculate()"></div>
+      </div></div>`;
+    }
+  }
+
+  html += `<div class="form-grid cols-4" style="margin-top:8px">
+    <div class="field"><label>말뚝두부 EL (m)</label><input type="number" value="${STATE.pileTopEL}" step="0.1" onchange="STATE.pileTopEL=parseFloat(this.value)||130; recalculate()"></div>
+    <div class="field"><label>지반고 EL (m)</label><input type="number" value="${STATE.groundEL}" step="0.01" onchange="STATE.groundEL=parseFloat(this.value)||127; recalculate()"></div>
+    <div class="field"><label>지지층 EL (m)</label><input type="number" value="${STATE.bearingEL}" step="0.01" onchange="STATE.bearingEL=parseFloat(this.value)||120; recalculate()"></div>
+    <div class="field"><label>지하수위 (GL,m)</label><input type="number" value="${STATE.gwlDepth}" step="0.1" onchange="STATE.gwlDepth=parseFloat(this.value)||3; recalculate()"></div>
+  </div>
+  <div class="form-grid cols-3" style="margin-top:8px">
+    <div class="field"><label>alpha (Kh)</label><input type="number" value="${STATE.alpha_kh}" step="0.1" onchange="STATE.alpha_kh=parseFloat(this.value)||1; recalculate()"></div>
+    <div class="field"><label>허용변위 (cm)</label><input type="number" value="${STATE.delta_cm}" step="0.1" onchange="STATE.delta_cm=parseFloat(this.value)||1.5; recalculate()"></div>
+    <div class="field"><label>${isPHC?'허용압축응력':'항복응력'} (kN/m²)</label><input type="number" value="${STATE.sigmaMax}" onchange="STATE.sigmaMax=parseFloat(this.value)||20000; recalculate()"></div>
+  </div>`;
+
+  // Spec card
+  if (spec) {
+    html += `<div class="spec-card ${isPHC?'phc':'steel'}">
+      <div class="spec-title">${isPHC ? `PHC ${STATE.phcGrade}종 D${STATE.diameter_mm}x${STATE.thickness_mm}t 제원` : `강관 D${STATE.diameter_mm}x${STATE.thickness_mm}t 제원`}</div>
+      <div class="form-grid ${isPHC?'cols-4':'cols-4'}" style="font-size:10.5px">
+        ${isPHC ? `<div>Ac: <strong>${spec.Ac} cm2</strong></div><div>Ic: <strong>${spec.Ic} cm4</strong></div><div>Qap: <strong>${spec.Qap_kN} kN</strong></div><div>Wt: <strong>${spec.wt} kg/m</strong></div>` :
+        `<div>Ap: <strong>${spec.Ap} cm2</strong></div><div>I: <strong>${spec.I} cm4</strong></div><div>Z: <strong>${spec.Z} cm3</strong></div><div>Qap: <strong style="color:#1d4ed8">${spec.Qap} kN</strong></div>`}
+      </div>
+    </div>`;
+  }
+
+  // Derived
+  if (r) {
+    html += `<div class="derived-grid">
+      <div class="dg-item">말뚝길이: <strong>${fmt(r.pileLength)} m</strong></div>
+      <div class="dg-item">선단면적: <strong>${fmt(r.Ap_tip,4)} m²</strong></div>
+      <div class="dg-item">EI: <strong>${fmt(r.EI,1)} kN·m²</strong></div>
+      <div class="dg-item">E: <strong>${(r.E/1e6).toFixed(0)} MPa</strong></div>
+      <div class="dg-item">I: <strong>${fmtE(r.I)} m⁴</strong></div>
+      <div class="dg-item">둘레: <strong>${fmt(r.U,4)} m</strong></div>
+      ${!isPHC && r.At_steel > 0 ? `<div class="dg-item">At: <strong style="color:var(--accent-blue)">${fmt(r.At_steel,6)} m2</strong></div><div class="dg-item">Ai: <strong style="color:var(--accent-blue)">${fmt(r.Ai_steel,6)} m2</strong></div>` : ''}
+    </div>`;
+  }
+
+  // SPT Data
+  html += `<h3 class="sec-title">2. SPT N값</h3>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
+    <span style="font-size:11px; font-weight:600; color:var(--text-secondary)">SPT 데이터</span>
+    <div style="display:flex;gap:4px">
+      ${STATE.sptData.length > 0 ? '<button class="btn btn-sm btn-outline" onclick="openLogPanel(); renderLogPanel()">&#128200; 로그 보기</button>' : ''}
+      <button class="btn btn-sm btn-outline" onclick="openPasteModal()">붙여넣기</button>
+      <button class="btn btn-sm" onclick="addSPT()">+ 추가</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>No.</th><th>EL.+</th><th>깊이</th><th>N값</th><th>비고</th><th></th></tr></thead>
+    <tbody>${STATE.sptData.map((s, i) => `<tr>
+      <td>${i+1}</td>
+      <td>${fmt(STATE.groundEL - s.depth + 1)}</td>
+      <td><input type="number" value="${s.depth}" step="0.1" onchange="STATE.sptData[${i}].depth=parseFloat(this.value)||0; recalculate()"></td>
+      <td><input type="number" value="${s.N}" onchange="STATE.sptData[${i}].N=parseInt(this.value)||0; recalculate()"></td>
+      <td><select onchange="STATE.sptData[${i}].remark=this.value">${soilOptions(s.remark)}</select></td>
+      <td><button class="btn btn-sm btn-danger" onclick="STATE.sptData.splice(${i},1); recalculate()">삭제</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+
+  // Layers
+  html += `<h3 class="sec-title">3. 지층 평균</h3>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
+    <span style="font-size:11px; font-weight:600; color:var(--text-secondary)">지층 정보</span>
+    <button class="btn btn-sm" onclick="addLayer()">+ 추가</button>
+  </div>
+  <table>
+    <thead><tr><th>지층</th><th>두께(m)</th><th>평균N</th><th>단위중량</th><th>분류</th><th></th></tr></thead>
+    <tbody>${STATE.layers.map((l, i) => {
+      const detail = l._sptDetail || '';
+      const cnt = l._sptCount || 0;
+      const tipText = cnt > 0 ? '산정근거: ' + cnt + '개 SPT\\n' + detail + '\\n평균 = ' + l.avgN : '해당 구간 SPT 없음\\n지층 기본값 적용: N=' + l.avgN;
+      return `<tr>
+      <td><select onchange="STATE.layers[${i}].soilType=this.value; STATE.layers[${i}].unitWeight=UW_DEF[this.value]||18; recalculate()">${soilOptions(l.soilType)}</select></td>
+      <td><input type="number" value="${l.thickness}" step="0.1" onchange="STATE.layers[${i}].thickness=parseFloat(this.value)||0; recalculate()"></td>
+      <td><span class="calc-tip" style="display:inline-block;width:100%"><input type="number" value="${l.avgN}" step="0.1" style="width:100%" onchange="STATE.layers[${i}].avgN=parseFloat(this.value)||0; recalculate()"><span class="tip-content">${tipText}</span></span></td>
+      <td><input type="number" value="${l.unitWeight}" step="0.5" onchange="STATE.layers[${i}].unitWeight=parseFloat(this.value)||18; recalculate()"></td>
+      <td><span class="soil-badge ${SOIL_CLS[l.soilType]||'sand'}">${SOIL_CLS[l.soilType]||'sand'}</span></td>
+      <td><button class="btn btn-sm btn-danger" onclick="STATE.layers.splice(${i},1); recalculate()">삭제</button></td>
+    </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+
+  document.getElementById('tab-input').innerHTML = html;
+}
+
+function addSPT() {
+  const lastD = STATE.sptData.length > 0 ? STATE.sptData[STATE.sptData.length-1].depth : 0;
+  STATE.sptData.push({ depth: lastD + 1, N: 10, remark: "퇴적층(SM)" });
+  recalculate();
+}
+function addLayer() {
+  STATE.layers.push({ soilType: "퇴적층(SM)", thickness: 2, avgN: 10, unitWeight: 18 });
+  recalculate();
+}
+
+function handlePileTypeChange(v) {
+  STATE.pileType = v;
+  if (v === "PHC") { STATE.diameter_mm = 500; STATE.thickness_mm = 80; STATE.bearingMethod = "meyerhof"; STATE.sigmaMax = 20000; }
+  else { STATE.diameter_mm = 609.6; STATE.thickness_mm = 12; STATE.bearingMethod = "rock"; STATE.sigmaMax = 235000; }
+  recalculate();
+}
+function handleDiamChange(v) {
+  const d = parseFloat(v); STATE.diameter_mm = d;
+  const isPHC = STATE.pileType === "PHC";
+  if (isPHC) { const row = PHC_SPECS.find(r => r.d === d); if (row) STATE.thickness_mm = row.t; }
+  else { const row = STEEL_SPECS.find(r => r.d === d); if (row && row.options.length) STATE.thickness_mm = row.options[row.options.length - 1].t; }
+  recalculate();
+}
+
+function updateHeader() {
+  document.getElementById('headerBH').textContent = STATE.boreholeNo;
+  const tag = document.getElementById('pileTag');
+  tag.textContent = STATE.pileType === "PHC" ? "PHC" : "강관";
+  tag.className = 'pile-tag ' + (STATE.pileType === "PHC" ? 'phc' : 'steel');
+}
+
+// File upload handlers
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) { processJSON(ev.target.result, file.name); };
+  reader.readAsText(file, 'UTF-8');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.name.endsWith('.json')) { showToast('JSON 파일만 업로드 가능합니다', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) { processJSON(ev.target.result, file.name); };
+  reader.readAsText(file, 'UTF-8');
+}
+function processJSON(text, filename) {
+  try {
+    const json = JSON.parse(text);
+    const boreholes = importDrillLogJSON(json);
+    if (boreholes.length === 0) { showToast('시추공 데이터를 찾을 수 없습니다', 'error'); return; }
+    STATE.uploadedData = boreholes;
+    applyBoreholeData(boreholes[0]);
+    showToast(`${filename}: ${boreholes.length}개 시추공 로드 완료`, 'success');
+  } catch (e) { showToast('JSON 파싱 오류: ' + e.message, 'error'); }
+}
+function selectBorehole(idx) {
+  if (STATE.uploadedData && STATE.uploadedData[idx]) applyBoreholeData(STATE.uploadedData[idx]);
+}
+
+// ===== VERTICAL TAB =====
+function renderVerticalTab() {
+  const el = document.getElementById('tab-vertical');
+  const r = STATE.result;
+  if (!r) { el.innerHTML = '<p style="color:var(--text-muted)">계산 결과가 없습니다.</p>'; return; }
+  const isPHC = STATE.pileType === "PHC";
+  let html = `<h3 class="sec-title">수직 허용지지력 산정 (KDS 11 50 40)</h3>`;
+
+  // ── 1. 설계 조건 요약 ──
+  html += `<div class="report-section"><div class="report-title">설계 조건 요약</div>
+  <table><thead><tr><th>항목</th><th>값</th><th>항목</th><th>값</th></tr></thead><tbody>
+  <tr><td class="left">말뚝 종류</td><td>${isPHC?'PHC '+STATE.phcGrade+'종':'강관말뚝'}</td><td class="left">직경 D</td><td>${STATE.diameter_mm} mm = ${fmt(r.D,4)} m</td></tr>
+  <tr><td class="left">두께 t</td><td>${STATE.thickness_mm} mm</td><td class="left">말뚝 길이 L</td><td>$${fmt(STATE.pileTopEL,2)} - ${fmt(STATE.bearingEL,2)} = ${fmt(r.pileLength)}$ m</td></tr>
+  <tr><td class="left">둘레 U</td><td>$\\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</td><td class="left">선단면적 Ap</td><td>$\\frac{\\pi}{4}D^2 = \\frac{\\pi}{4}\\times${fmt(r.D,4)}^2 = ${fmt(r.Ap_tip,4)}$ m²</td></tr>
+  <tr><td class="left">순단면적 An</td><td>${fmt(r.Ap_net,4)} m²</td><td class="left">탄성계수 E</td><td>${(r.E/1e6).toFixed(0)} MPa</td></tr>
+  </tbody></table></div>`;
+
+  // ── 2. 재료 허용연직지지력 ──
+  html += `<div class="report-section"><div class="report-title">Step 1. 재료 허용연직지지력 (Qp)</div>
+  <div style="margin:10px 0">$$Q_p = \\left(1 - \\frac{\\mu_1 + \\mu_2}{100}\\right) \\times Q_{ap}$$</div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 세장비 감소율 (μ₁)</div>
+  <div style="font-size:11px">세장비: $L/d = \\frac{${fmt(r.pileLength)}}{${fmt(r.D,4)}} = ${fmt(r.L_over_d,1)}$</div>
+  <div style="font-size:11px">세장비 한계값: $n = ${r.n_slender}$ ${isPHC?'(PHC말뚝: KDS 11 50 40)':'(강관말뚝: KDS 11 50 40)'}</div>
+  <div style="font-size:11px;margin-top:4px">${r.L_over_d > r.n_slender ?
+    `$L/d = ${fmt(r.L_over_d,1)} > n = ${r.n_slender}$ → 세장비 감소 적용<br>$\\mu_1 = \\min\\left(\\left(\\frac{${fmt(r.L_over_d,1)}}{${r.n_slender}} - 1\\right) \\times 100,\\; 30\\right) = \\min(${fmt((r.L_over_d/r.n_slender-1)*100,1)},\\; 30)$` :
+    `$L/d = ${fmt(r.L_over_d,1)} \\leq n = ${r.n_slender}$ → 세장비 감소 없음`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$\\therefore \\mu_1 = ${fmt(r.mu1)}\\%$</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 이음부 감소율 (μ₂)</div>
+  <div style="font-size:11px">이음방법: <strong>${STATE.jointType==='welding'?'용접이음':STATE.jointType==='bolt'?'볼트이음':'충전이음'}</strong>, 이음수: <strong>${STATE.jointCount}개소</strong></div>
+  <div style="font-size:11px;margin-top:4px">${STATE.jointCount === 0 ? '이음부 없음 → μ₂ = 0%' :
+    STATE.jointType==='welding' ? `용접이음 1개소당 5%: $\\mu_2 = ${STATE.jointCount} \\times 5 = ${fmt(r.mu2)}\\%$` :
+    STATE.jointType==='bolt' ? `볼트이음 1개소당 10%: $\\mu_2 = ${STATE.jointCount} \\times 10 = ${fmt(r.mu2)}\\%$` :
+    `충전이음: $\\mu_2 = \\min(${STATE.jointCount},2)\\times 20 + \\max(${STATE.jointCount}-2,0)\\times 30 = ${fmt(r.mu2)}\\%$`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$\\therefore \\mu_2 = ${fmt(r.mu2)}\\%$</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 허용축하중 (Qap)</div>
+  <div style="font-size:11px">${isPHC ? `PHC ${STATE.phcGrade}종 D${STATE.diameter_mm}×${STATE.thickness_mm}t 규격값 (KS F 4306)` : `강관 D${STATE.diameter_mm}×${STATE.thickness_mm}t 규격값`}</div>
+  <div style="font-size:12px;font-weight:700">$Q_{ap} = ${fmt(r.Qap)}$ kN</div>
+  </div>
+
+  <div style="padding:12px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7">
+  <div style="font-size:11px">$Q_p = \\left(1 - \\frac{${fmt(r.mu1)} + ${fmt(r.mu2)}}{100}\\right) \\times ${fmt(r.Qap)}$</div>
+  <div style="font-size:11px;margin-top:2px">$= \\left(1 - \\frac{${fmt(r.mu1+r.mu2)}}{100}\\right) \\times ${fmt(r.Qap)} = ${fmt(1-(r.mu1+r.mu2)/100,4)} \\times ${fmt(r.Qap)}$</div>
+  <div style="font-size:13px;font-weight:800;color:var(--status-pass);margin-top:4px">$$\\therefore Q_p = ${fmt(r.Qp_material)} \\text{ kN}$$</div>
+  </div></div>`;
+
+  // ── 3. 암반 선단지지력 (강관+rock) ──
+  if (!isPHC && r.rockCalcDetails) {
+    const rc = r.rockCalcDetails;
+    html += `<div class="report-section"><div class="report-title">Step 2. 암반 선단지지력</div>
+
+    <div style="padding:10px;background:#fff3e0;border-radius:6px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px">방법 ① 구조물기초설계기준 (p305)</div>
+    <div style="margin:6px 0">$$P_u = 443 \\times q_u^{1/2} \\times A_t^{2/5} \\times A_i^{1/3}$$</div>
+    <div style="font-size:11px">일축압축강도: $q_u = \\min(${fmt(rc.qu_lab)},\\; 10000) = ${fmt(rc.qu_eff)}$ kPa</div>
+    <div style="font-size:11px">강관 순단면적: $A_t = ${fmt(rc.At_m2,6)}$ m²</div>
+    <div style="font-size:11px">강관 내부면적: $A_i = ${fmt(rc.Ai_m2,6)}$ m²</div>
+    <div style="font-size:11px;margin-top:6px">$P_u = 443 \\times ${fmt(rc.qu_eff)}^{0.5} \\times ${fmt(rc.At_m2,6)}^{0.4} \\times ${fmt(rc.Ai_m2,6)}^{0.333}$</div>
+    <div style="font-size:11px">$= 443 \\times ${fmt(Math.pow(rc.qu_eff,0.5),2)} \\times ${fmt(Math.pow(rc.At_m2,0.4),4)} \\times ${fmt(Math.pow(rc.Ai_m2,1/3),4)}$</div>
+    <div style="font-size:12px;font-weight:800">$= ${fmt(rc.Pu_tip)}$ kN</div>
+    </div>
+
+    <div style="padding:10px;background:#fff3e0;border-radius:6px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px">방법 ② Goodman (도로교설계기준 2008, p863)</div>
+    <div style="margin:6px 0">$$Q_u = q_u \\times (N_\\phi + 1) \\times A_p$$</div>
+    <div style="font-size:11px">암반 내부마찰각: $\\phi = ${rc.phi_rock}°$</div>
+    <div style="font-size:11px">$N_\\phi = \\tan^2\\left(45° + \\frac{${rc.phi_rock}°}{2}\\right) = \\tan^2(${45+rc.phi_rock/2}°) = ${fmt(rc.N_phi,3)}$</div>
+    <div style="font-size:11px">선단 전체면적: $A_p = \\frac{\\pi}{4}\\times${fmt(r.D,4)}^2 = ${fmt(rc.Ap_full,4)}$ m²</div>
+    <div style="font-size:11px;margin-top:6px">$Q_u = ${fmt(rc.qu_lab)} \\times (${fmt(rc.N_phi,3)} + 1) \\times ${fmt(rc.Ap_full,4)}$</div>
+    <div style="font-size:11px">$= ${fmt(rc.qu_lab)} \\times ${fmt(rc.N_phi+1,3)} \\times ${fmt(rc.Ap_full,4)}$</div>
+    <div style="font-size:12px;font-weight:800">$= ${fmt(rc.Pu_goodman)}$ kN</div>
+    </div>
+
+    <div style="padding:10px;background:#fff3e0;border-radius:6px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px">방법 ③ Canadian FEM (도로교설계기준 2008, p862)</div>
+    <div style="margin:6px 0">$$Q_u = 3 \\times q_u \\times K_{sp} \\times d \\times A_p$$</div>
+    <div style="font-size:11px">불연속면 간격: $S_d = ${rc.Sd}$ m, 두께: $t_d = ${rc.td}$ m</div>
+    <div style="font-size:11px;margin-top:4px">$$K_{sp} = \\frac{3 + S_d/D}{10\\sqrt{1 + 300 t_d / S_d}} = \\frac{3 + ${rc.Sd}/${fmt(r.D,4)}}{10\\sqrt{1 + 300 \\times ${rc.td}/${rc.Sd}}} = \\frac{${fmt(3+rc.Sd/r.D,3)}}{10 \\times ${fmt(Math.sqrt(1+300*rc.td/rc.Sd),3)}} = ${fmt(rc.Ksp,4)}$$</div>
+    <div style="font-size:11px;margin-top:6px">$Q_u = 3 \\times ${fmt(rc.qu_lab)} \\times ${fmt(rc.Ksp,4)} \\times 2 \\times ${fmt(rc.Ap_full,4)}$</div>
+    <div style="font-size:12px;font-weight:800">$= ${fmt(rc.Pu_canadian)}$ kN</div>
+    </div>
+
+    <div style="padding:10px;background:#e3f2fd;border-radius:6px">
+    <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">선단지지력 비교·선정</div>
+    <table style="margin-top:4px"><thead><tr><th>방법</th><th>Pu (kN)</th><th>비고</th></tr></thead><tbody>
+    <tr><td class="left">구조물기초설계기준</td><td style="font-weight:700">${fmt(rc.Pu_tip)}</td><td>${rc.Pu_tip===rc.Pu_selected?'← 최솟값':''}</td></tr>
+    <tr><td class="left">Goodman</td><td style="font-weight:700">${fmt(rc.Pu_goodman)}</td><td>${rc.Pu_goodman===rc.Pu_selected?'← 최솟값':''}</td></tr>
+    <tr><td class="left">Canadian FEM</td><td style="font-weight:700">${fmt(rc.Pu_canadian)}</td><td>${rc.Pu_canadian===rc.Pu_selected?'← 최솟값':''}</td></tr>
+    </tbody></table>
+    <div style="font-size:13px;font-weight:800;color:var(--status-pass);margin-top:8px">$$P_u = \\min(${fmt(rc.Pu_tip)},\\; ${fmt(rc.Pu_goodman)},\\; ${fmt(rc.Pu_canadian)}) = ${fmt(rc.Pu_selected)} \\text{ kN}$$</div>
+    </div></div>`;
+  }
+
+  // ── 4. 지반 허용연직지지력 ──
+  const stepNo = (!isPHC && r.rockCalcDetails) ? 3 : 2;
+  html += `<div class="report-section"><div class="report-title">Step ${stepNo}. 지반 허용연직지지력</div>
+  <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">기준: Meyerhof 공식 (사질토), KDS 11 50 40</div>
+  <div style="margin:8px 0">$$Q_u = ${r.rockCalcDetails?'P_u':'250 N_{tip} A_p'} + \\sum 2 N_s A_s + \\sum 6.25 N_c A_c$$</div>`;
+
+  // Tip resistance
+  if (!r.rockCalcDetails) {
+    const tipN = r.N_tip;
+    const lastSPT = STATE.sptData.length > 0 ? STATE.sptData[STATE.sptData.length-1].N : 50;
+    html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+    <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 선단지지력 (Meyerhof)</div>
+    <div style="font-size:11px">선단부 N값: $N_{tip} = \\min(N_{최하단},\\;50) = \\min(${lastSPT},\\;50) = ${tipN}$</div>
+    <div style="font-size:11px">선단면적: $A_p = \\frac{\\pi}{4}D^2 = \\frac{\\pi}{4}\\times${fmt(r.D,4)}^2 = ${fmt(r.Ap_tip,4)}$ m²</div>
+    <div style="font-size:12px;font-weight:700;margin-top:6px">$P_u = 250 \\times N_{tip} \\times A_p = 250 \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
+    </div>`;
+  } else {
+    html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+    <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 선단지지력 (암반근입)</div>
+    <div style="font-size:11px">위 Step 2에서 산정: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN</div>
+    </div>`;
+  }
+
+  // Skin friction detail table
+  html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면마찰력 상세</div>
+  <div style="font-size:11px;margin-bottom:4px">둘레: $U = \\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</div>
+  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께 L(m)</th><th>평균 N</th><th>$A_s = U \\times L$</th><th>사질토: $2N_sA_s$</th><th>점성토: $6.25N_cA_c$</th></tr></thead><tbody>`;
+  r.processedLayers.forEach(function(l) {
+    const cN = Math.min(l.avgN, 30);
+    html += `<tr>
+    <td class="left">${l.soilType}</td>
+    <td><span class="soil-badge ${l.soilClass}">${l.soilClass}</span></td>
+    <td>${fmt(l.thickness)}</td>
+    <td>${fmt(l.avgN,1)} ${l.avgN>30?'→ cap 30':''}</td>
+    <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
+    <td>${l.soilClass==='sand' ? `$2 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$` : '-'}</td>
+    <td>${l.soilClass==='clay' ? `$6.25 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$` : '-'}</td>
+    </tr>`;
+  });
+  html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="4">합계</td><td></td><td>${fmt(r.sum_2NsAs)} kN</td><td>${fmt(r.sum_625NcAc)} kN</td></tr>`;
+  html += `</tbody></table></div>`;
+
+  // Qu, Qa
+  html += `<div style="padding:12px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700">극한 지지력:</div>
+  <div style="font-size:11px">$Q_u = P_u + \\Sigma 2N_sA_s + \\Sigma 6.25N_cA_c$</div>
+  <div style="font-size:11px;margin-top:2px">$= ${fmt(r.Qu_tip)} + ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu)}$ kN</div>
+  <div style="font-size:11px;font-weight:700;margin-top:6px">허용 지지력 (FS=${r.FS}):</div>
+  <div style="font-size:12px;font-weight:800;color:var(--status-pass)">$$Q_a = \\frac{Q_u}{FS} = \\frac{${fmt(r.Qu)}}{${r.FS}} = ${fmt(r.Qa_ground)} \\text{ kN}$$</div>
+  </div></div>`;
+
+  // ── 5. 종합 비교 ──
+  const finalStep = stepNo + 1;
+  html += `<div class="report-section"><div class="report-title">Step ${finalStep}. 수직지지력 종합 비교</div>
+  <table><thead><tr><th>구분</th><th>지지력 (kN)</th><th>산정 근거</th></tr></thead><tbody>
+  <tr><td class="left">재료 허용지지력 (Qp)</td><td style="font-weight:700">${fmt(r.Qp_material)}</td><td class="left">${isPHC?'PHC '+STATE.phcGrade+'종':'강관'} 규격기반, μ₁=${fmt(r.mu1)}%, μ₂=${fmt(r.mu2)}%</td></tr>
+  <tr><td class="left">지반 허용지지력 (Qa)</td><td style="font-weight:700">${fmt(r.Qa_ground)}</td><td class="left">Qu=${fmt(r.Qu)} kN / FS=${r.FS}</td></tr>
+  </tbody></table>
+  <div style="margin-top:10px;padding:12px;background:#e3f2fd;border-radius:6px;text-align:center">
+  <div style="font-size:14px;font-weight:800;color:var(--primary-navy)">$$Q_{a,적용} = \\min(Q_p,\\; Q_a) = \\min(${fmt(r.Qp_material)},\\; ${fmt(r.Qa_ground)}) = ${fmt(r.Qa_applied)} \\text{ kN}$$</div>
+  <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${r.Qa_applied === r.Qp_material ? '→ 재료 허용지지력이 지배 (Qp < Qa)' : '→ 지반 허용지지력이 지배 (Qa < Qp)'}</div>
+  </div></div>`;
+
+  el.innerHTML = html;
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
+}
+
+// ===== HORIZONTAL TAB =====
+function renderHorizontalTab() {
+  const el = document.getElementById('tab-horizontal');
+  const r = STATE.result;
+  if (!r) { el.innerHTML = '<p style="color:var(--text-muted)">계산 결과가 없습니다.</p>'; return; }
+  const isPHC = STATE.pileType === "PHC";
+  let html = `<h3 class="sec-title">수평 허용지지력 산정</h3>`;
+
+  // ── Step 1: Kh ──
+  html += `<div class="report-section"><div class="report-title">Step 1. 수평 지반반력계수 (Kh) 산정</div>
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 기본 물성</div>
+  <div style="font-size:11px">N값 평균 (N<50 데이터): $N_{avg} = ${r.N_kh}$</div>
+  <div style="font-size:11px">보정계수: $\\alpha = ${STATE.alpha_kh}$</div>
+  <div style="font-size:11px">탄성계수: $E = ${(r.E/1e6).toFixed(0)}$ MPa</div>
+  <div style="font-size:11px">단면2차모멘트: $I = ${fmtE(r.I)}$ m⁴</div>
+  <div style="font-size:11px">휨강성: $EI = E \\times I = ${(r.E/1e3).toFixed(0)} \\times ${fmtE(r.I)} = ${fmt(r.EI,1)}$ kN·m²</div>
+  <div style="font-size:11px;margin-top:4px">$E_0 = 2800N = 2800 \\times ${r.N_kh} = ${r.Eo2800}$ kN/m²</div>
+  <div style="font-size:11px">$E_0' = 1000N = 1000 \\times ${r.N_kh} = ${r.Eo1000}$ kN/m²</div>
+  </div>
+
+  <table><thead><tr><th>산정 방법</th><th>산정식 및 대입</th><th>Kh (kN/m³)</th></tr></thead><tbody>
+  <tr style="background:${r.Kh_min===r.Kh1?'#fef9c3':'inherit'}"><td class="left">도로교 설계기준<br>(2008)</td>
+  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha E_0)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td>
+  <td style="font-weight:700">${fmt(r.Kh1,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh2?'#fef9c3':'inherit'}"><td class="left">福岡 (Fukuoka)</td>
+  <td class="left" style="font-size:10px">$K_h = 6910 N^{0.406} = 6910 \\times ${r.N_kh}^{0.406}$</td>
+  <td style="font-weight:700">${fmt(r.Kh2,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh3?'#fef9c3':'inherit'}"><td class="left">横山 (Yokoyama)</td>
+  <td class="left" style="font-size:10px">$K_h = 2000N = 2000 \\times ${r.N_kh}$</td>
+  <td style="font-weight:700">${fmt(r.Kh3,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh4?'#fef9c3':'inherit'}"><td class="left">지반공학회<br>(1996)</td>
+  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha \\cdot 1000N)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td>
+  <td style="font-weight:700">${fmt(r.Kh4,1)}</td></tr>
+  </tbody></table>
+  <div style="padding:10px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7;margin-top:8px">
+  <div style="font-size:13px;font-weight:800;color:var(--status-pass)">$$K_h = \\min(${fmt(r.Kh1,1)},\\; ${fmt(r.Kh2,1)},\\; ${fmt(r.Kh3,1)},\\; ${fmt(r.Kh4,1)}) = ${fmt(r.Kh_min,1)} \\text{ kN/m³}$$</div>
+  <div style="font-size:10px;color:var(--text-secondary)">← 최솟값 채택 (안전측)</div>
+  </div></div>`;
+
+  // ── Step 2: β, η, pile classification ──
+  const nh_val = r.Kh_min * r.D * r.beta;
+  html += `<div class="report-section"><div class="report-title">Step 2. 말뚝 특성치 및 분류</div>
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 특성치 산정</div>
+  <div style="font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="font-size:11px">$n_h = K_h \\cdot D \\cdot \\beta^{-1}$... $\\eta = (n_h / EI)^{0.2} = ${fmt(r.eta,6)}$ m⁻¹</div>
+  <div style="font-size:12px;font-weight:700;margin-top:6px">$\\eta L = ${fmt(r.eta,6)} \\times ${fmt(r.pileLength)} = ${fmt(r.etaL,2)}$</div>
+  </div>
+  <div style="padding:8px 12px;background:#e0f2fe;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px">${r.etaL < 2 ? `$\\eta L = ${fmt(r.etaL,2)} < 2$ → <strong>짧은말뚝 (Short Pile)</strong>` : r.etaL <= 4 ? `$2 \\leq \\eta L = ${fmt(r.etaL,2)} \\leq 4$ → <strong>중간말뚝 (Intermediate)</strong>` : `$\\eta L = ${fmt(r.etaL,2)} > 4$ → <strong>긴말뚝 (Long Pile)</strong>`}</div>
+  </div></div>`;
+
+  // ── Step 3: Brom Case-1 ──
+  html += `<div class="report-section"><div class="report-title">Step 3. Brom 방법 — Case-1 (변위 제한)</div>
+  <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">허용수평변위: $\\delta = ${STATE.delta_cm}$ cm = ${fmt(STATE.delta_cm/100,4)} m</div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 내부마찰각 · 수동토압계수</div>
+  <div style="font-size:11px">$\\phi = \\sqrt{12N} + 15 = \\sqrt{12 \\times ${r.N_kh}} + 15 = ${fmt(Math.sqrt(12*r.N_kh),2)} + 15 = ${fmt(r.phi_deg,1)}°$</div>
+  <div style="font-size:11px">$K_p = \\frac{1+\\sin\\phi}{1-\\sin\\phi} = \\frac{1+\\sin${fmt(r.phi_deg,1)}°}{1-\\sin${fmt(r.phi_deg,1)}°} = ${fmt(r.Kp,3)}$</div>
+  <div style="font-size:11px">$\\gamma = ${r.gamma_top}$ kN/m³ (최상위 지층 단위중량)</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 변위에 의한 수평하중 (H)</div>
+  <div style="font-size:11px">$$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)}$$</div>
+  <div style="font-size:11px">$= 4 \\times ${fmtE(Math.pow(r.beta,3))} \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 모멘트 · 극한하중 · 허용하중</div>
+  <div style="font-size:11px">$M_y = \\frac{H}{2\\beta} = \\frac{${fmt(r.H_disp)}}{2 \\times ${fmt(r.beta,6)}} = ${fmt(r.My_case1)}$ kN·m</div>
+  <div style="font-size:11px;margin-top:6px">${r.pileClass === '긴말뚝' ?
+    `긴말뚝 공식: $H_u = 2.38 \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} K_p \\gamma D^3$<br>
+    $= 2.38 \\left(\\frac{${fmt(r.My_case1)}}{${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^4}\\right)^{2/3} \\times ${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^3 = ${fmt(r.Hu_brom1)}$ kN` :
+    r.pileClass === '짧은말뚝' ?
+    `짧은말뚝 공식: $H_u = 1.5 K_p \\gamma D L^2 = 1.5 \\times ${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)} \\times ${fmt(r.pileLength)}^2 = ${fmt(r.Hu_brom1)}$ kN` :
+    `중간말뚝 보간법 적용: $H_u = ${fmt(r.Hu_brom1)}$ kN`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:6px;color:var(--status-pass)">$H_a = \\frac{H_u}{2.5} = \\frac{${fmt(r.Hu_brom1)}}{2.5} = ${fmt(r.Ha_brom1)}$ kN</div>
+  </div></div>`;
+
+  // ── Step 4: Brom Case-2 ──
+  html += `<div class="report-section"><div class="report-title">Step 4. Brom 방법 — Case-2 (항복 응력)</div>
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="font-size:11px">$\\sigma_{max} = ${STATE.sigmaMax}$ kN/m² ${isPHC?'(PHC 허용압축응력)':'(강관 항복응력)'}</div>
+  <div style="font-size:11px;margin-top:4px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
+  <div style="font-size:11px;margin-top:6px">${r.pileClass === '긴말뚝' ?
+    `긴말뚝: $H_u = 2.38 \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} K_p \\gamma D^3$<br>
+    $= 2.38 \\left(\\frac{${fmt(r.My_case2)}}{${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^4}\\right)^{2/3} \\times ${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^3 = ${fmt(r.Hu_brom2)}$ kN` :
+    `$H_u = ${fmt(r.Hu_brom2)}$ kN (Case-1 동일 적용)`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:6px;color:var(--status-pass)">$H_a = \\frac{H_u}{2.5} = \\frac{${fmt(r.Hu_brom2)}}{2.5} = ${fmt(r.Ha_brom2)}$ kN</div>
+  </div>
+  <div style="padding:8px 12px;background:#e3f2fd;border-radius:6px">
+  <div style="font-size:11px;font-weight:700">Brom 최종: $H_a = \\min(${fmt(r.Ha_brom1)},\\; ${fmt(r.Ha_brom2)}) = ${fmt(r.Ha_brom)}$ kN</div>
+  </div></div>`;
+
+  // ── Step 5: Chang ──
+  html += `<div class="report-section"><div class="report-title">Step 5. Chang 방법</div>
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
+  <div style="margin:6px 0">$$H_a = \\frac{\\delta \\cdot K_h \\cdot D}{\\beta} = \\frac{${fmt(STATE.delta_cm/100,4)} \\times ${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{${fmt(r.beta,6)}}$$</div>
+  <div style="font-size:12px;font-weight:800;color:var(--status-pass)">$$= ${fmt(r.Ha_chang)} \\text{ kN}$$</div>
+  </div></div>`;
+
+  // ── Step 6: 종합 ──
+  html += `<div class="report-section"><div class="report-title">Step 6. 수평지지력 종합 비교</div>
+  <table><thead><tr><th>방법</th><th>Ha (kN)</th><th>비고</th></tr></thead><tbody>
+  <tr><td class="left">Brom Case-1 (변위 제한)</td><td style="font-weight:700">${fmt(r.Ha_brom1)}</td><td class="left">δ=${STATE.delta_cm}cm 기반</td></tr>
+  <tr><td class="left">Brom Case-2 (항복 응력)</td><td style="font-weight:700">${fmt(r.Ha_brom2)}</td><td class="left">σmax=${STATE.sigmaMax} kN/m²</td></tr>
+  <tr><td class="left">Brom (최솟값)</td><td style="font-weight:800">${fmt(r.Ha_brom)}</td><td class="left">min(Case-1, Case-2)</td></tr>
+  <tr><td class="left">Chang</td><td style="font-weight:700">${fmt(r.Ha_chang)}</td><td></td></tr>
+  </tbody></table>
+  <div style="margin-top:10px;padding:12px;background:#e3f2fd;border-radius:6px;text-align:center">
+  <div style="font-size:14px;font-weight:800;color:var(--primary-navy)">$$H_{a,적용} = \\min(${fmt(r.Ha_brom)},\\; ${fmt(r.Ha_chang)}) = ${fmt(r.Ha_applied)} \\text{ kN}$$</div>
+  <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${r.Ha_applied === r.Ha_brom ? '→ Brom 방법이 지배' : '→ Chang 방법이 지배'}</div>
+  </div></div>`;
+
+  el.innerHTML = html;
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
+}
+
+// ===== PULL-OUT TAB =====
+function renderPulloutTab() {
+  const el = document.getElementById('tab-pullout');
+  const r = STATE.result;
+  if (!r) { el.innerHTML = '<p style="color:var(--text-muted)">계산 결과가 없습니다.</p>'; return; }
+  const isPHC = STATE.pileType === "PHC";
+  let html = `<h3 class="sec-title">인발 저항력 산정</h3>`;
+
+  // ── 공식 ──
+  html += `<div class="report-section"><div class="report-title">Step 1. 인발 저항력 산정</div>
+  <div style="margin:10px 0">$$Q_{pull} = \\frac{Q_{u,skin}}{FS} + W_p$$</div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면마찰력 (Qu,skin)</div>
+  <div style="font-size:11px">수직지지력 산정에서 구한 주면마찰력 합계를 사용합니다.</div>
+  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께(m)</th><th>N</th><th>As(m²)</th><th>사질토: 2NAs</th><th>점성토: 6.25NAc</th></tr></thead><tbody>`;
+  r.processedLayers.forEach(function(l) {
+    const cN = Math.min(l.avgN, 30);
+    html += `<tr>
+    <td class="left">${l.soilType}</td>
+    <td><span class="soil-badge ${l.soilClass}">${l.soilClass}</span></td>
+    <td>${fmt(l.thickness)}</td><td>${fmt(l.avgN,1)}</td>
+    <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
+    <td>${l.soilClass==='sand'?`$2 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
+    <td>${l.soilClass==='clay'?`$6.25 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
+    </tr>`;
+  });
+  html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="4">합계</td><td></td><td>${fmt(r.sum_2NsAs)} kN</td><td>${fmt(r.sum_625NcAc)} kN</td></tr>`;
+  html += `</tbody></table>
+  <div style="font-size:12px;font-weight:700;margin-top:8px">$Q_{u,skin} = \\Sigma 2N_sA_s + \\Sigma 6.25N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 말뚝 유효자중 (Wp)</div>
+  <div style="font-size:11px">단위중량: $W_{unit} = ${fmt(r.W_unit,2)}$ kN/m</div>
+  <div style="font-size:11px;margin-top:4px">지하수위 EL: $GWL = GL - ${fmt(STATE.gwlDepth,2)} = ${fmt(STATE.groundEL,2)} - ${fmt(STATE.gwlDepth,2)} = EL.${fmt(r.gwlEL,2)}$ m</div>
+  <div style="font-size:11px;margin-top:4px">지하수위 위 길이: $l_1 = \\max(EL_{top} - EL_{GWL},\\; 0) = \\max(${fmt(STATE.pileTopEL,2)} - ${fmt(r.gwlEL,2)},\\; 0) = ${fmt(r.l1)}$ m</div>
+  <div style="font-size:11px">지하수위 아래 길이: $l_2 = L - l_1 = ${fmt(r.pileLength)} - ${fmt(r.l1)} = ${fmt(r.l2)}$ m</div>
+  <div style="font-size:11px;margin-top:6px">$W_p = W_{unit} \\times L - A_p \\times l_2 \\times \\gamma_w$</div>
+  <div style="font-size:11px">$= ${fmt(r.W_unit,2)} \\times ${fmt(r.pileLength)} - ${fmt(r.Ap_tip,4)} \\times ${fmt(r.l2)} \\times 10$</div>
+  <div style="font-size:11px">$= ${fmt(r.W_unit*r.pileLength,2)} - ${fmt(r.Ap_tip*r.l2*10,2)}$</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$W_p = ${fmt(r.Wp)}$ kN ${r.Wp<0?'→ max(Wp, 0) = 0 kN 적용':''}</div>
+  </div>
+
+  <div style="padding:12px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7">
+  <div style="font-size:11px;font-weight:700">최종 인발 저항력:</div>
+  <div style="font-size:11px;margin-top:4px">$Q_{pull} = \\frac{Q_{u,skin}}{FS} + W_p = \\frac{${fmt(r.Qu_skin)}}{${r.FS}} + ${fmt(Math.max(r.Wp,0))}$</div>
+  <div style="font-size:11px">$= ${fmt(r.Qu_skin/r.FS)} + ${fmt(Math.max(r.Wp,0))}$</div>
+  <div style="font-size:14px;font-weight:800;color:var(--status-pass);margin-top:6px">$$\\therefore Q_{pull} = ${fmt(r.Qpull)} \\text{ kN}$$</div>
+  </div></div>`;
+
+  el.innerHTML = html;
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
+}
+
+// ===== SETTLEMENT TAB =====
+function renderSettlementTab() {
+  const el = document.getElementById('tab-settlement');
+  const r = STATE.result;
+  if (!r) { el.innerHTML = '<p style="color:var(--text-muted)">계산 결과가 없습니다.</p>'; return; }
+  const ok = r.St < 25;
+  let html = `<h3 class="sec-title">침하량 검토 (Vesic, 1977)</h3>`;
+
+  // ── 공식 ──
+  html += `<div class="report-section"><div class="report-title">Step 1. 침하량 산정</div>
+  <div style="margin:10px 0">$$S_t = S_s + S_p + S_{ps}$$</div>
+  <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">$S_s$: 축방향 압축침하 | $S_p$: 선단부 하중침하 | $S_{ps}$: 주면부 하중침하</div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 하중 분배</div>
+  <div style="font-size:11px">극한지지력: $Q_u = ${fmt(r.Qu)}$ kN</div>
+  <div style="font-size:11px">선단 극한: $Q_{u,tip} = ${fmt(r.Qu_tip)}$ kN</div>
+  <div style="font-size:11px;margin-top:4px">선단 분담비: $\\alpha_{tip} = Q_{u,tip}/Q_u = ${fmt(r.Qu_tip)}/${fmt(r.Qu)} = ${fmt(r.ratio_tip,3)}$</div>
+  <div style="font-size:11px;margin-top:4px">허용지지력: $Q_a = ${fmt(r.Qa_applied)}$ kN</div>
+  <div style="font-size:11px">선단 분담하중: $Q_{ps} = Q_a \\times \\alpha_{tip} = ${fmt(r.Qa_applied)} \\times ${fmt(r.ratio_tip,3)} = ${fmt(r.Qps)}$ kN</div>
+  <div style="font-size:11px">주면 분담하중: $Q_{fs} = Q_a \\times (1 - \\alpha_{tip}) = ${fmt(r.Qa_applied)} \\times ${fmt(1-r.ratio_tip,3)} = ${fmt(r.Qfs)}$ kN</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 축방향 압축침하 (Ss)</div>
+  <div style="font-size:11px">$$S_s = \\frac{(Q_{ps} + 0.67 Q_{fs}) \\times L}{A_n \\times E} \\times 1000$$</div>
+  <div style="font-size:11px;margin-top:4px">$= \\frac{(${fmt(r.Qps)} + 0.67 \\times ${fmt(r.Qfs)}) \\times ${fmt(r.pileLength)}}{${fmt(r.Ap_net,4)} \\times ${(r.E).toFixed(0)}} \\times 1000$</div>
+  <div style="font-size:11px">$= \\frac{(${fmt(r.Qps)} + ${fmt(0.67*r.Qfs)}) \\times ${fmt(r.pileLength)}}{${fmt(r.Ap_net,4)} \\times ${(r.E).toFixed(0)}} \\times 1000$</div>
+  <div style="font-size:11px">$= \\frac{${fmt(r.Qps+0.67*r.Qfs)} \\times ${fmt(r.pileLength)}}{${fmt(r.Ap_net*r.E,0)}} \\times 1000$</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$S_s = ${fmt(r.Ss)}$ mm</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 선단부 하중에 의한 침하 (Sp)</div>
+  <div style="font-size:11px">$$S_p = \\frac{Q_{ps} \\times C_p}{D \\times q_p} \\times 1000$$</div>
+  <div style="font-size:11px;margin-top:4px">경험상수: $C_p = ${r.Cp}$</div>
+  <div style="font-size:11px">선단 극한응력: $q_p = Q_{u,tip}/A_p = ${fmt(r.Qu_tip)}/${fmt(r.Ap_tip,4)} = ${fmt(r.qp,1)}$ kN/m²</div>
+  <div style="font-size:11px;margin-top:4px">$S_p = \\frac{${fmt(r.Qps)} \\times ${r.Cp}}{${fmt(r.D,4)} \\times ${fmt(r.qp,1)}} \\times 1000$</div>
+  <div style="font-size:11px">$= \\frac{${fmt(r.Qps*r.Cp,4)}}{${fmt(r.D*r.qp,2)}} \\times 1000$</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$S_p = ${fmt(r.Sp)}$ mm</div>
+  </div>
+
+  <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
+  <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면부 하중에 의한 침하 (Sps)</div>
+  <div style="font-size:11px">$$S_{ps} = \\frac{Q_{fs} \\times C_s}{L \\times q_p} \\times 1000$$</div>
+  <div style="font-size:11px;margin-top:4px">$C_s = (0.93 + 0.16\\sqrt{L/D}) \\times C_p$</div>
+  <div style="font-size:11px">$= (0.93 + 0.16\\sqrt{${fmt(r.pileLength)}/${fmt(r.D,4)}}) \\times ${r.Cp}$</div>
+  <div style="font-size:11px">$= (0.93 + 0.16 \\times ${fmt(Math.sqrt(r.pileLength/r.D),2)}) \\times ${r.Cp}$</div>
+  <div style="font-size:11px">$= ${fmt(0.93+0.16*Math.sqrt(r.pileLength/r.D),4)} \\times ${r.Cp} = ${fmt(r.Cs,4)}$</div>
+  <div style="font-size:11px;margin-top:4px">$S_{ps} = \\frac{${fmt(r.Qfs)} \\times ${fmt(r.Cs,4)}}{${fmt(r.pileLength)} \\times ${fmt(r.qp,1)}} \\times 1000$</div>
+  <div style="font-size:11px">$= \\frac{${fmt(r.Qfs*r.Cs,4)}}{${fmt(r.pileLength*r.qp,2)}} \\times 1000$</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$S_{ps} = ${fmt(r.Sps,3)}$ mm</div>
+  </div></div>`;
+
+  // ── 최종 판정 ──
+  html += `<div class="report-section"><div class="report-title">Step 2. 침하량 판정</div>
+  <div style="padding:12px;background:${ok?'#e8f5e9':'#ffebee'};border-radius:6px;border:1px solid ${ok?'#a5d6a7':'#ef9a9a'}">
+  <div style="font-size:11px;margin-bottom:4px">$S_t = S_s + S_p + S_{ps}$</div>
+  <div style="font-size:11px">$= ${fmt(r.Ss)} + ${fmt(r.Sp)} + ${fmt(r.Sps,3)}$</div>
+  <div style="font-size:14px;font-weight:800;color:${ok?'var(--status-pass)':'var(--status-fail)'};margin-top:6px">$$S_t = ${fmt(r.St)} \\text{ mm}$$</div>
+  <div style="font-size:12px;font-weight:700;color:${ok?'var(--status-pass)':'var(--status-fail)'};margin-top:4px">판정: ${fmt(r.St)} mm ${ok ? '< 25 mm → OK ✓' : '≥ 25 mm → NG ✗'}</div>
+  <div style="font-size:10px;color:var(--text-secondary);margin-top:4px">허용 침하량 기준: 25 mm (KDS 11 50 40)</div>
+  </div></div>`;
+
+  el.innerHTML = html;
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
+}
+
+// ===== SUMMARY TAB =====
+function renderSummaryTab() {
+  const r = STATE.result;
+  if (!r) { document.getElementById('tab-summary').innerHTML = '<p style="color:var(--text-muted)">계산 결과가 없습니다.</p>'; return; }
+  const isPHC = STATE.pileType === "PHC";
+  const ok = r.St < 25;
+  let html = `<h3 class="sec-title">지지력 종합</h3>
+  <div class="spec-card ${isPHC?'phc':'steel'}" style="margin-bottom:14px">
+    <div class="form-grid cols-3" style="font-size:11px">
+      <div>Pile: <strong>${isPHC?`PHC ${STATE.phcGrade}`:'Steel'} D${STATE.diameter_mm}x${STATE.thickness_mm}t</strong></div>
+      <div>BH: <strong>${STATE.boreholeNo}</strong></div>
+      <div>L: <strong>${fmt(r.pileLength)} m</strong></div>
+    </div>
+    ${!isPHC && r.rockCalcDetails ? `<div style="margin-top:6px;font-size:10px;color:var(--text-secondary)">Rock: qu=${fmt(r.rockCalcDetails.qu_lab)}kPa | Corr=${STATE.corrosionThk}mm | Pu(min)=${fmt(r.rockCalcDetails.Pu_selected)}kN</div>` : ''}
+  </div>
+  <div class="summary-cards">
+    <div class="summary-card" style="border-color:var(--primary-navy)"><div class="sc-label">수직지지력</div><div class="sc-value" style="color:var(--primary-navy)">${fmt(r.Qa_applied)}</div><div class="sc-unit">kN/본</div></div>
+    <div class="summary-card" style="border-color:var(--accent-coral)"><div class="sc-label">수평지지력</div><div class="sc-value" style="color:var(--accent-coral)">${fmt(r.Ha_applied)}</div><div class="sc-unit">kN/본</div></div>
+    <div class="summary-card" style="border-color:var(--accent-green)"><div class="sc-label">인발 저항력</div><div class="sc-value" style="color:var(--accent-green)">${fmt(r.Qpull)}</div><div class="sc-unit">kN/본</div></div>
+  </div>
+  <table><thead><tr><th>구분</th><th>수직(kN)</th><th>수평(kN)</th><th>인발(kN)</th><th>침하(mm)</th></tr></thead><tbody>
+  <tr><td class="left" style="font-weight:600">${isPHC?`PHC ${STATE.phcGrade}`:'Steel'} D${STATE.diameter_mm}x${STATE.thickness_mm}t</td>
+  <td style="font-weight:700;color:var(--primary-navy)">${fmt(r.Qa_applied)}</td>
+  <td style="font-weight:700;color:var(--accent-coral)">${fmt(r.Ha_applied)}</td>
+  <td style="font-weight:700;color:var(--accent-green)">${fmt(r.Qpull)}</td>
+  <td style="font-weight:700;color:${ok?'var(--status-pass)':'var(--status-fail)'}">${fmt(r.St)} ${ok?'OK':'NG'}</td></tr>
+  </tbody></table>
+  <div class="result-bar ${ok?'ok':'ng'}"><span class="rb-label">Settlement: ${fmt(r.Ss)}+${fmt(r.Sp)}+${fmt(r.Sps,3)}</span><span class="rb-val">${fmt(r.St)} mm ${ok?'OK':'NG'}</span></div>
+  <div id="svgArea" style="margin-top:16px"></div>
+  <div style="margin-top:16px;padding:8px 12px;background:#f1f5f9;border-radius:5px;font-size:10px;color:#64748b;line-height:1.4">
+    <strong>Ref:</strong> KDS 11 50 40 (2018) | Road Bridge (2008) | Geotechnical Society (1996)${!isPHC?' | Goodman (1980) | Canadian FEM':''}
+  </div>`;
+  document.getElementById('tab-summary').innerHTML = html;
+  drawSVGDesign();
+}
+
+// ===== SVG Design Drawing =====
+function drawSVGDesign() {
+  const r = STATE.result;
+  if (!r) return;
+  const container = document.getElementById('svgArea');
+  if (!container) return;
+  const maxDepth = STATE.sptData.length > 0 ? Math.max(...STATE.sptData.map(s => s.depth)) + 2 : 15;
+  const W = 900, margin = { top: 80, left: 60, bottom: 40 };
+  const H = Math.max(500, maxDepth * 28 + margin.top + margin.bottom);
+  const scale = (H - margin.top - margin.bottom) / maxDepth;
+  const colX = { depth: 0, strat: 70, nval: 230, cap: 410, info: 580 };
+  const colW = { depth: 60, strat: 150, nval: 170, cap: 160, info: 200 };
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="font-family:'Noto Sans KR',sans-serif">`;
+  // Header
+  svg += `<defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#2c5282"/></linearGradient></defs>`;
+  svg += `<rect x="0" y="0" width="${W}" height="60" fill="url(#hg)"/>`;
+  svg += `<text x="20" y="28" fill="#fff" font-size="15" font-weight="700">시추주상도 및 말뚝 설계 현황</text>`;
+  svg += `<text x="20" y="48" fill="#90caf9" font-size="13" font-weight="600">${STATE.boreholeNo}</text>`;
+  svg += `<text x="${W-20}" y="28" fill="#b0bec5" font-size="10" text-anchor="end">GL: EL.${fmt(STATE.groundEL,1)}m | Pile: ${STATE.pileType==='PHC'?`PHC ${STATE.phcGrade}`:'Steel'} D${STATE.diameter_mm}</text>`;
+  // Column headers
+  const chy = 68;
+  svg += `<rect x="0" y="60" width="${W}" height="20" fill="#f8f9fa" stroke="#ddd"/>`;
+  svg += `<text x="${margin.left + colX.depth + colW.depth/2}" y="${chy}" font-size="9" font-weight="600" text-anchor="middle" fill="#455A64">깊이/표고</text>`;
+  svg += `<text x="${margin.left + colX.strat + colW.strat/2}" y="${chy}" font-size="9" font-weight="600" text-anchor="middle" fill="#455A64">시추주상도</text>`;
+  svg += `<text x="${margin.left + colX.nval + colW.nval/2}" y="${chy}" font-size="9" font-weight="600" text-anchor="middle" fill="#455A64">N값 (0~50)</text>`;
+  svg += `<text x="${margin.left + colX.cap + colW.cap/2}" y="${chy}" font-size="9" font-weight="600" text-anchor="middle" fill="#455A64">누적 지지력</text>`;
+  svg += `<text x="${margin.left + colX.info + colW.info/2}" y="${chy}" font-size="9" font-weight="600" text-anchor="middle" fill="#455A64">설계 정보</text>`;
+
+  // Depth marks
+  const interval = maxDepth > 20 ? 5 : maxDepth > 10 ? 2 : 1;
+  for (let d = 0; d <= maxDepth; d += interval) {
+    const y = margin.top + d * scale;
+    svg += `<line x1="${margin.left}" y1="${y}" x2="${W-20}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
+    svg += `<text x="${margin.left + 5}" y="${y+4}" font-size="9" fill="#455A64" font-weight="600">GL-${d}m</text>`;
+    svg += `<text x="${margin.left + 5}" y="${y+14}" font-size="8" fill="#888">EL.${fmt(STATE.groundEL - d, 1)}</text>`;
+  }
+
+  // Stratigraphy
+  let cumD = 0;
+  STATE.layers.forEach(l => {
+    const y1 = margin.top + cumD * scale;
+    const h = l.thickness * scale;
+    const color = getSoilColor(l.soilType);
+    svg += `<rect x="${margin.left + colX.strat}" y="${y1}" width="${colW.strat}" height="${h}" fill="${color}" stroke="#888" rx="2"/>`;
+    if (h > 14) svg += `<text x="${margin.left + colX.strat + 5}" y="${y1 + h/2 + 4}" font-size="9" font-weight="600" fill="rgba(0,0,0,0.7)">${l.soilType}</text>`;
+    cumD += l.thickness;
+  });
+
+  // N-value bars
+  STATE.sptData.forEach(s => {
+    const y = margin.top + s.depth * scale;
+    const nCapped = Math.min(s.N, 50);
+    const barW = (nCapped / 50) * colW.nval * 0.85;
+    const isRefusal = s.N >= 50;
+    svg += `<rect x="${margin.left + colX.nval + 5}" y="${y - 5}" width="${Math.max(barW, 3)}" height="10" fill="${isRefusal ? '#2E7D32' : '#1976d2'}" rx="1"/>`;
+    svg += `<text x="${margin.left + colX.nval + barW + 10}" y="${y + 3}" font-size="8" font-weight="700" fill="${isRefusal ? '#2E7D32' : '#1976d2'}">${s.N}</text>`;
+  });
+
+  // Cumulative capacity line
+  let cumCap = 0;
+  const maxCap = r.Qu || 1;
+  const capPoints = [];
+  r.processedLayers.forEach((l, i) => {
+    const startD = STATE.layers.slice(0, i).reduce((s, la) => s + la.thickness, 0);
+    cumCap += l.skinFriction_sand + l.skinFriction_clay;
+    capPoints.push({ d: startD + l.thickness, cap: cumCap });
+  });
+  capPoints.unshift({ d: 0, cap: 0 });
+  if (capPoints.length > 1) {
+    const pts = capPoints.map(p => `${margin.left + colX.cap + 10 + (p.cap / maxCap) * (colW.cap - 20)},${margin.top + p.d * scale}`).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="#e94560" stroke-width="2"/>`;
+    capPoints.forEach(p => {
+      if (p.cap > 0) svg += `<circle cx="${margin.left + colX.cap + 10 + (p.cap / maxCap) * (colW.cap - 20)}" cy="${margin.top + p.d * scale}" r="3" fill="#e94560"/>`;
+    });
+  }
+
+  // Design info
+  const infoX = margin.left + colX.info + 5;
+  let infoY = margin.top + 15;
+  const infoLines = [
+    `Qa(V): ${fmt(r.Qa_applied)} kN`, `Ha(H): ${fmt(r.Ha_applied)} kN`, `Qpull: ${fmt(r.Qpull)} kN`,
+    `St: ${fmt(r.St)} mm ${r.St<25?'OK':'NG'}`, `L: ${fmt(r.pileLength)} m`, `FS: ${r.FS}`
+  ];
+  infoLines.forEach(line => {
+    svg += `<text x="${infoX}" y="${infoY}" font-size="9" fill="#455A64">${line}</text>`;
+    infoY += 16;
+  });
+
+  svg += `</svg>`;
+  container.innerHTML = `<div class="svg-container">${svg}</div>`;
+}
+
+// ===== LOG PANEL RENDERING =====
+function renderLogPanel() {
+  const maxDepth = STATE.sptData.length > 0 ? Math.max(...STATE.sptData.map(s => s.depth)) + 1 : 10;
+  const availH = window.innerHeight - 280;
+  const pxPerM = Math.max(25, Math.min(40, availH / maxDepth));
+  const totalH = maxDepth * pxPerM;
+
+  // Header
+  document.getElementById('panelTitle').textContent = STATE.boreholeNo;
+  const gwlEL = STATE.groundEL - STATE.gwlDepth;
+  document.getElementById('panelMeta').innerHTML = `
+    <div><span class="pm-label">지반고: </span><span class="pm-value">EL.${fmt(STATE.groundEL,1)}m</span></div>
+    <div><span class="pm-label">시추깊이: </span><span class="pm-value">${STATE.sptData.length > 0 ? fmt(Math.max(...STATE.sptData.map(s=>s.depth)),1) : '-'}m</span></div>
+    <div><span class="pm-label">지하수위: </span><span class="pm-value">GL-${fmt(STATE.gwlDepth,1)}m</span></div>
+    <div><span class="pm-label">Bearing EL: </span><span class="pm-value" style="color:#FFCC80">EL.${fmt(STATE.bearingEL,1)}m</span></div>`;
+
+  // Legend
+  const legendSoils = [...new Set(STATE.layers.map(l => l.soilType))];
+  document.getElementById('panelLegend').innerHTML = legendSoils.map(s => `<div class="pl-item"><div class="pl-swatch" style="background:${getSoilColor(s)}"></div>${s}</div>`).join('');
+
+  // Body: 3 columns
+  let bodyHTML = `<div class="panel-columns">`;
+  // Col headers
+  bodyHTML += `<div class="panel-col-header">깊이</div><div class="panel-col-header">지층</div><div class="panel-col-header">N값</div>`;
+
+  // Depth column
+  bodyHTML += `<div style="position:relative;height:${totalH}px">`;
+  const dInterval = maxDepth > 20 ? 5 : maxDepth > 10 ? 2 : 1;
+  for (let d = 0; d <= maxDepth; d += dInterval) {
+    const y = d * pxPerM;
+    bodyHTML += `<div class="depth-mark ${d % (dInterval*2) === 0 ? 'major' : ''}" style="top:${y}px">GL-${d}m<br><span style="font-size:8px;color:#888">EL.${fmt(STATE.groundEL-d,1)}</span></div>`;
+  }
+  bodyHTML += `</div>`;
+
+  // Strat column
+  bodyHTML += `<div style="position:relative;height:${totalH}px">`;
+  let cumDepth = 0;
+  STATE.layers.forEach(l => {
+    const y = cumDepth * pxPerM;
+    const h = Math.max(l.thickness * pxPerM, 20);
+    const color = getSoilColor(l.soilType);
+    bodyHTML += `<div class="strat-layer" style="top:${y}px;height:${h}px">
+      <div class="strat-color-strip" style="background:${color}">${l.soilType.substring(0,3)}</div>
+      <div class="strat-info" style="background:linear-gradient(to right,${color}15,#fff)">${l.soilType}<br><span style="font-size:9px;color:#888">N=${l.avgN}</span></div>
+    </div>`;
+    cumDepth += l.thickness;
+  });
+  // Water table marker
+  if (STATE.gwlDepth < maxDepth) {
+    bodyHTML += `<div class="marker-line water" style="top:${STATE.gwlDepth * pxPerM}px"><span class="marker-badge water">GWL</span></div>`;
+  }
+  // Bearing level marker
+  const bearingDepth = STATE.groundEL - STATE.bearingEL;
+  if (bearingDepth > 0 && bearingDepth < maxDepth) {
+    bodyHTML += `<div class="marker-line excavation" style="top:${bearingDepth * pxPerM}px"><span class="marker-badge excavation">Bearing</span></div>`;
+  }
+  bodyHTML += `</div>`;
+
+  // N-value column
+  bodyHTML += `<div style="position:relative;height:${totalH}px">`;
+  // Scale labels
+  bodyHTML += `<div style="display:flex;justify-content:space-between;font-size:8px;color:#888;margin-bottom:2px"><span>0</span><span>25</span><span>50</span></div>`;
+  STATE.sptData.forEach(s => {
+    const y = s.depth * pxPerM - 5;
+    const nCapped = Math.min(s.N, 50);
+    const barW = (nCapped / 50) * 100;
+    const isRefusal = s.N >= 50;
+    bodyHTML += `<div class="nval-bar-row" style="top:${y}px">
+      <div class="nval-bar ${isRefusal?'refusal':'normal'}" style="width:${Math.max(barW, 3)}%"></div>
+      <span class="nval-label ${isRefusal?'refusal':'normal'}">${s.N}</span>
+    </div>`;
+  });
+  bodyHTML += `</div>`;
+  bodyHTML += `</div>`; // close panel-columns
+
+  document.getElementById('panelBody').innerHTML = bodyHTML;
+}
+
+// ===== VERIFICATION MODAL =====
+function renderVerifyModal(type) {
+  const vd = type === 'steel' ? VERIFY_DATA.steel : VERIFY_DATA.phc;
+  const vResult = calcPile({
+    pileType: vd.pileType, diameter_mm: vd.diameter_mm, thickness_mm: vd.thickness_mm,
+    phcGrade: vd.phcGrade, pileTopEL: vd.pileTopEL, groundEL: vd.groundEL,
+    bearingEL: vd.bearingEL, gwlDepth: vd.gwlDepth, sptData: vd.sptData,
+    layers: vd.layers, alpha_kh: vd.alpha_kh || 1, delta_cm: vd.delta_cm || 1.5,
+    sigmaMax_kN: vd.sigmaMax, corrosionThickness_mm: vd.corrosionThk || 2,
+    qu_kPa: vd.qu_kPa || 32460, Sd_m: vd.Sd_m || 0.15, td_m: vd.td_m || 0.002,
+    rockPhi_deg: vd.rockPhi || 35, bearingMethod: vd.bearingMethod, jointCount: vd.jointCount || 1, jointType: vd.jointType || "welding"
+  });
+
+  const cur = STATE.result;
+  let html = `<div class="modal-tabs">
+    <button class="modal-tab ${type==='phc'?'active':''}" onclick="renderVerifyModal('phc')">PHC 검증 (NBH-03)</button>
+    <button class="modal-tab ${type==='steel'?'active':''}" onclick="renderVerifyModal('steel')">강관 검증 (NBH-09)</button>
+  </div>`;
+
+  html += `<div class="verify-compare">
+    <div class="verify-col">
+      <h3>&#128203; 검증 데이터: ${vd.label}</h3>
+      <table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody>
+        <tr><td class="left">Pile</td><td>${vd.pileType} D${vd.diameter_mm}x${vd.thickness_mm}t</td></tr>
+        <tr><td class="left">Length</td><td>${fmt(vResult.pileLength)} m</td></tr>
+        <tr><td class="left">Qa (Vertical)</td><td style="font-weight:700;color:var(--primary-navy)">${fmt(vResult.Qa_applied)} kN</td></tr>
+        <tr><td class="left">Ha (Horizontal)</td><td style="font-weight:700;color:var(--accent-coral)">${fmt(vResult.Ha_applied)} kN</td></tr>
+        <tr><td class="left">Pull-out</td><td style="font-weight:700;color:var(--accent-green)">${fmt(vResult.Qpull)} kN</td></tr>
+        <tr><td class="left">Settlement</td><td style="font-weight:700">${fmt(vResult.St)} mm ${vResult.St<25?'OK':'NG'}</td></tr>
+        <tr><td class="left">Qu (극한)</td><td>${fmt(vResult.Qu)} kN</td></tr>
+        <tr><td class="left">Qp (재료)</td><td>${fmt(vResult.Qp_material)} kN</td></tr>
+        <tr><td class="left">Qa (지반)</td><td>${fmt(vResult.Qa_ground)} kN</td></tr>
+        <tr><td class="left">Kh_min</td><td>${fmt(vResult.Kh_min,1)} kN/m3</td></tr>
+        <tr><td class="left">Pile Class</td><td>${vResult.pileClass}</td></tr>
+      </tbody></table>
+      <button class="btn" style="margin-top:10px;width:100%" onclick="applyVerifyData('${type}')">&#8594; 이 데이터를 메인에 적용</button>
+    </div>
+    <div class="verify-col">
+      <h3>&#128200; 현재 계산 결과${cur ? ` (${STATE.boreholeNo})` : ''}</h3>
+      ${cur ? `<table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody>
+        <tr><td class="left">Pile</td><td>${STATE.pileType} D${STATE.diameter_mm}x${STATE.thickness_mm}t</td></tr>
+        <tr><td class="left">Length</td><td>${fmt(cur.pileLength)} m</td></tr>
+        <tr><td class="left">Qa (Vertical)</td><td style="font-weight:700;color:var(--primary-navy)">${fmt(cur.Qa_applied)} kN</td></tr>
+        <tr><td class="left">Ha (Horizontal)</td><td style="font-weight:700;color:var(--accent-coral)">${fmt(cur.Ha_applied)} kN</td></tr>
+        <tr><td class="left">Pull-out</td><td style="font-weight:700;color:var(--accent-green)">${fmt(cur.Qpull)} kN</td></tr>
+        <tr><td class="left">Settlement</td><td style="font-weight:700">${fmt(cur.St)} mm ${cur.St<25?'OK':'NG'}</td></tr>
+        <tr><td class="left">Qu (극한)</td><td>${fmt(cur.Qu)} kN</td></tr>
+        <tr><td class="left">Qp (재료)</td><td>${fmt(cur.Qp_material)} kN</td></tr>
+        <tr><td class="left">Qa (지반)</td><td>${fmt(cur.Qa_ground)} kN</td></tr>
+        <tr><td class="left">Kh_min</td><td>${fmt(cur.Kh_min,1)} kN/m3</td></tr>
+        <tr><td class="left">Pile Class</td><td>${cur.pileClass}</td></tr>
+      </tbody></table>` : '<p style="color:var(--text-muted);padding:20px">아직 계산 결과가 없습니다. Input 탭에서 데이터를 입력하세요.</p>'}
+    </div>
+  </div>`;
+
+  document.getElementById('verifyBody').innerHTML = html;
+}
+
+function applyVerifyData(type) {
+  const vd = type === 'steel' ? VERIFY_DATA.steel : VERIFY_DATA.phc;
+  STATE.pileType = vd.pileType; STATE.diameter_mm = vd.diameter_mm; STATE.thickness_mm = vd.thickness_mm;
+  STATE.phcGrade = vd.phcGrade || "A"; STATE.boreholeNo = vd.boreholeNo;
+  STATE.groundEL = vd.groundEL; STATE.bearingEL = vd.bearingEL; STATE.pileTopEL = vd.pileTopEL;
+  STATE.gwlDepth = vd.gwlDepth; STATE.bearingMethod = vd.bearingMethod; STATE.sigmaMax = vd.sigmaMax;
+  STATE.alpha_kh = vd.alpha_kh || 1; STATE.delta_cm = vd.delta_cm || 1.5;
+  STATE.corrosionThk = vd.corrosionThk || 2; STATE.qu_kPa = vd.qu_kPa || 32460;
+  STATE.Sd_m = vd.Sd_m || 0.15; STATE.td_m = vd.td_m || 0.002; STATE.rockPhi = vd.rockPhi || 35;
+  STATE.jointCount = vd.jointCount || 1; STATE.jointType = vd.jointType || "welding";
+  STATE.sptData = JSON.parse(JSON.stringify(vd.sptData));
+  STATE.layers = JSON.parse(JSON.stringify(vd.layers));
+  closeVerifyModal();
+  recalculate();
+  showToast(`${vd.label} 데이터가 메인에 적용되었습니다`, 'success');
+}
+
+function openVerifyModal() {
+  document.getElementById('verifyOverlay').classList.add('open');
+  renderVerifyModal('phc');
+}
+
+// ===== SPT PASTE =====
+function openPasteModal() { document.getElementById('pasteOverlay').classList.add('open'); }
+function closePasteModal() { document.getElementById('pasteOverlay').classList.remove('open'); }
+
+function parsePastedSPT() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showToast('데이터를 입력하세요', 'warning'); return; }
+  const lines = text.split('\n').filter(l => l.trim());
+  const parsed = [];
+  lines.forEach(line => {
+    const cols = line.split('\t');
+    if (cols.length >= 4) {
+      const depth = parseFloat(cols[2]);
+      const N = parseInt(cols[3]);
+      const remark = cols[4] ? cols[4].trim() : '퇴적층(SM)';
+      if (!isNaN(depth) && !isNaN(N)) {
+        parsed.push({ depth, N: Math.min(N, 50), remark: mapSoilName(remark) || remark });
+      }
+    }
+  });
+  if (parsed.length === 0) { showToast('유효한 데이터를 찾을 수 없습니다', 'error'); return; }
+  STATE.sptData = parsed;
+  autoGenerateLayers();
+  closePasteModal();
+  recalculate();
+  showToast(parsed.length + '개 SPT 데이터 적용 완료', 'success');
+}
+
+function autoGenerateLayers() {
+  if (STATE.sptData.length === 0) return;
+  const groups = [];
+  let cur = null;
+  STATE.sptData.forEach(s => {
+    const soil = s.remark || '퇴적층(SM)';
+    if (!cur || cur.soilType !== soil) {
+      if (cur) cur.depthTo = s.depth - 0.5;
+      cur = { soilType: soil, depthFrom: cur ? cur.depthTo : 0, depthTo: s.depth + 0.5, ns: [s.N] };
+      groups.push(cur);
+    } else { cur.ns.push(s.N); cur.depthTo = s.depth + 0.5; }
+  });
+  STATE.layers = groups.map(g => ({
+    soilType: g.soilType,
+    thickness: parseFloat((g.depthTo - g.depthFrom).toFixed(2)),
+    avgN: parseFloat((g.ns.reduce((a,b)=>a+b,0)/g.ns.length).toFixed(1)),
+    unitWeight: UW_DEF[g.soilType] || 18,
+    _sptDetail: g.ns.map((n,i) => (g.depthFrom + i + 0.5).toFixed(0) + 'm(N=' + n + ')').join(', '),
+    _sptCount: g.ns.length
+  }));
+}
+
+// ===== MULTI-BOREHOLE STORE =====
+const BH_RESULTS = {};
+
+function calcAllBoreholes() {
+  if (!STATE.uploadedData) return;
+  STATE.uploadedData.forEach(bh => {
+    const p = {
+      pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
+      phcGrade: STATE.phcGrade, pileTopEL: STATE.pileTopEL, groundEL: bh.groundEL || STATE.groundEL,
+      bearingEL: STATE.bearingEL, gwlDepth: bh.gwlDepth || STATE.gwlDepth,
+      sptData: bh.sptData, layers: bh.layers,
+      alpha_kh: STATE.alpha_kh, delta_cm: STATE.delta_cm, sigmaMax_kN: STATE.sigmaMax,
+      corrosionThickness_mm: STATE.corrosionThk, qu_kPa: STATE.qu_kPa,
+      Sd_m: STATE.Sd_m, td_m: STATE.td_m, rockPhi_deg: STATE.rockPhi,
+      bearingMethod: STATE.bearingMethod, jointCount: STATE.jointCount, jointType: STATE.jointType
+    };
+    try { BH_RESULTS[bh.holeNo] = calcPile(p); } catch(e) { BH_RESULTS[bh.holeNo] = null; }
+  });
+}
+
+// ===== DASHBOARD TAB =====
+function renderDashboardTab() {
+  const el = document.getElementById('tab-dashboard');
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)"><p style="font-size:16px;margin-bottom:8px">대시보드</p><p>JSON 파일을 업로드하면 전체 시추공 현황을 확인할 수 있습니다.</p></div>';
+    return;
+  }
+  calcAllBoreholes();
+  const bhs = STATE.uploadedData;
+  const count = bhs.length;
+  const results = Object.values(BH_RESULTS).filter(r => r);
+  const avgQa = results.length > 0 ? (results.reduce((s,r) => s + r.Qa_applied, 0) / results.length).toFixed(1) : '-';
+  const avgHa = results.length > 0 ? (results.reduce((s,r) => s + r.Ha_applied, 0) / results.length).toFixed(1) : '-';
+  const okCount = results.filter(r => r.St < 25).length;
+
+  let html = `<h3 class="sec-title">전체 시추공 현황</h3>
+  <div class="dash-stats">
+    <div class="dash-stat"><div class="ds-val">${count}</div><div class="ds-label">시추공 수</div></div>
+    <div class="dash-stat"><div class="ds-val">${avgQa}</div><div class="ds-label">평균 Qa (kN)</div></div>
+    <div class="dash-stat"><div class="ds-val">${avgHa}</div><div class="ds-label">평균 Ha (kN)</div></div>
+    <div class="dash-stat"><div class="ds-val">${okCount}/${results.length}</div><div class="ds-label">침하 OK</div></div>
+  </div>
+  <div class="dash-toolbar">
+    <input type="text" id="dashSearch" placeholder="시추공 검색..." oninput="filterDashboard(this.value)">
+    <button class="btn btn-sm" onclick="exportExcel()">엑셀 내보내기</button>
+  </div>
+  <div id="dashTableWrap">`;
+  html += buildDashTable(bhs);
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function buildDashTable(bhs) {
+  let html = `<table class="dash-table"><thead><tr>
+    <th>시추공</th><th>지반고(m)</th><th>지하수위(m)</th><th>N값 분포</th>
+    <th>Qa(kN)</th><th>Ha(kN)</th><th>인발(kN)</th><th>침하(mm)</th><th>판정</th><th></th>
+  </tr></thead><tbody>`;
+  bhs.forEach((bh, i) => {
+    const r = BH_RESULTS[bh.holeNo];
+    const maxN = bh.sptData ? Math.max(...bh.sptData.map(s=>s.N)) : 0;
+    const sparkW = 80;
+    let spark = `<svg width="${sparkW}" height="16" style="vertical-align:middle">`;
+    if (bh.sptData) {
+      const step = sparkW / Math.max(bh.sptData.length - 1, 1);
+      bh.sptData.forEach((s, j) => {
+        const h = (Math.min(s.N,50)/50)*14;
+        spark += `<rect x="${j*step}" y="${16-h}" width="${Math.max(step-1,2)}" height="${h}" fill="${s.N>=50?'#2E7D32':'#1976d2'}" rx="1"/>`;
+      });
+    }
+    spark += '</svg>';
+    const ok = r && r.St < 25;
+    html += `<tr>
+      <td style="font-weight:700;color:var(--primary-navy);cursor:pointer" onclick="selectBoreholeFromDash(${i})">${bh.holeNo}</td>
+      <td>${bh.groundEL != null ? bh.groundEL.toFixed(1) : '-'}</td>
+      <td>${bh.gwlDepth != null ? bh.gwlDepth.toFixed(1) : '-'}</td>
+      <td>${spark}</td>
+      <td style="font-weight:700">${r ? fmt(r.Qa_applied) : '-'}</td>
+      <td>${r ? fmt(r.Ha_applied) : '-'}</td>
+      <td>${r ? fmt(r.Qpull) : '-'}</td>
+      <td>${r ? fmt(r.St) : '-'}</td>
+      <td><span style="color:${ok?'var(--status-pass)':'var(--status-fail)'};font-weight:700">${r ? (ok?'OK':'NG') : '-'}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="selectBoreholeFromDash(${i})">선택</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function selectBoreholeFromDash(idx) {
+  if (STATE.uploadedData && STATE.uploadedData[idx]) {
+    applyBoreholeData(STATE.uploadedData[idx]);
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-tab="input"]').classList.add('active');
+    document.getElementById('tab-input').classList.add('active');
+  }
+}
+
+function filterDashboard(q) {
+  if (!STATE.uploadedData) return;
+  const filtered = q ? STATE.uploadedData.filter(b => b.holeNo.toLowerCase().includes(q.toLowerCase())) : STATE.uploadedData;
+  document.getElementById('dashTableWrap').innerHTML = buildDashTable(filtered);
+}
+
+// ===== EXCEL EXPORT =====
+function exportExcel() {
+  if (typeof XLSX === 'undefined') { showToast('SheetJS 라이브러리 로딩 중...', 'warning'); return; }
+  const wb = XLSX.utils.book_new();
+  // Sheet 1: Summary
+  const sumData = [['시추공','말뚝종류','직경(mm)','두께(mm)','Qa(kN)','Ha(kN)','인발(kN)','침하(mm)','판정']];
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    STATE.uploadedData.forEach(bh => {
+      const r = BH_RESULTS[bh.holeNo];
+      sumData.push([bh.holeNo, STATE.pileType, STATE.diameter_mm, STATE.thickness_mm,
+        r?Number(r.Qa_applied.toFixed(2)):'-', r?Number(r.Ha_applied.toFixed(2)):'-',
+        r?Number(r.Qpull.toFixed(2)):'-', r?Number(r.St.toFixed(2)):'-', r?(r.St<25?'OK':'NG'):'-']);
+    });
+  } else {
+    const r = STATE.result;
+    sumData.push([STATE.boreholeNo, STATE.pileType, STATE.diameter_mm, STATE.thickness_mm,
+      r?Number(r.Qa_applied.toFixed(2)):'-', r?Number(r.Ha_applied.toFixed(2)):'-',
+      r?Number(r.Qpull.toFixed(2)):'-', r?Number(r.St.toFixed(2)):'-', r?(r.St<25?'OK':'NG'):'-']);
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumData), '요약');
+  // Sheet 2: SPT
+  const sptSheet = [['시추공','깊이(m)','N값','비고']];
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    STATE.uploadedData.forEach(bh => {
+      (bh.sptData||[]).forEach(s => sptSheet.push([bh.holeNo, s.depth, s.N, s.remark||'']));
+    });
+  } else {
+    STATE.sptData.forEach(s => sptSheet.push([STATE.boreholeNo, s.depth, s.N, s.remark||'']));
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sptSheet), 'SPT데이터');
+  // Sheet 3: Layers
+  const laySheet = [['시추공','지층','두께(m)','평균N','단위중량']];
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    STATE.uploadedData.forEach(bh => {
+      (bh.layers||[]).forEach(l => laySheet.push([bh.holeNo, l.soilType, l.thickness, l.avgN, l.unitWeight]));
+    });
+  } else {
+    STATE.layers.forEach(l => laySheet.push([STATE.boreholeNo, l.soilType, l.thickness, l.avgN, l.unitWeight]));
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(laySheet), '지층정보');
+  XLSX.writeFile(wb, '말뚝설계_' + (new Date()).toISOString().slice(0,10) + '.xlsx');
+  showToast('엑셀 파일 다운로드 완료', 'success');
+}
+
+// ===== OVERALL RESULTS TAB =====
+function renderOverallTab() {
+  const el = document.getElementById('tab-overall');
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
+    const r = STATE.result;
+    if (!r) { el.innerHTML = '<p style="color:var(--text-muted);padding:20px">계산 결과가 없습니다.</p>'; return; }
+    el.innerHTML = `<h3 class="sec-title">종합 계산 결과</h3>
+    <table><thead><tr><th>시추공</th><th>수직 Qa(kN)</th><th>수평 Ha(kN)</th><th>인발(kN)</th><th>침하(mm)</th><th>판정</th></tr></thead>
+    <tbody><tr><td style="font-weight:700">${STATE.boreholeNo}</td>
+    <td style="font-weight:700;color:var(--primary-navy)">${fmt(r.Qa_applied)}</td>
+    <td style="font-weight:700;color:var(--accent-coral)">${fmt(r.Ha_applied)}</td>
+    <td style="font-weight:700;color:var(--accent-green)">${fmt(r.Qpull)}</td>
+    <td>${fmt(r.St)}</td>
+    <td style="font-weight:700;color:${r.St<25?'var(--status-pass)':'var(--status-fail)'}">${r.St<25?'OK':'NG'}</td>
+    </tr></tbody></table>`;
+    return;
+  }
+  calcAllBoreholes();
+  let html = `<h3 class="sec-title">종합 계산 결과 (전체 시추공)</h3>`;
+  // Bar chart
+  const bhs = STATE.uploadedData;
+  const maxQa = Math.max(...Object.values(BH_RESULTS).filter(r=>r).map(r=>r.Qa_applied), 1);
+  html += `<div style="margin-bottom:20px">
+  <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">수직지지력 비교</div>`;
+  bhs.forEach(bh => {
+    const r = BH_RESULTS[bh.holeNo];
+    if (!r) return;
+    const pct = (r.Qa_applied / maxQa * 100).toFixed(0);
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:60px;font-size:10px;font-weight:600;text-align:right">${bh.holeNo}</span>
+      <div style="flex:1;height:18px;background:#f1f5f9;border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:linear-gradient(to right,var(--primary-steel),var(--primary-navy));border-radius:3px"></div>
+      </div>
+      <span style="font-size:11px;font-weight:700;font-family:var(--font-mono);min-width:60px">${fmt(r.Qa_applied)}</span>
+    </div>`;
+  });
+  html += `</div>`;
+  // Table
+  html += `<table><thead><tr><th>시추공</th><th>지반고</th><th>말뚝길이(m)</th><th>Qa(kN)</th><th>Ha(kN)</th><th>인발(kN)</th><th>침하(mm)</th><th>판정</th></tr></thead><tbody>`;
+  bhs.forEach(bh => {
+    const r = BH_RESULTS[bh.holeNo];
+    if (!r) return;
+    const ok = r.St < 25;
+    html += `<tr>
+      <td style="font-weight:700">${bh.holeNo}</td>
+      <td>${bh.groundEL != null ? bh.groundEL.toFixed(1) : '-'}</td>
+      <td>${fmt(r.pileLength)}</td>
+      <td style="font-weight:700;color:var(--primary-navy)">${fmt(r.Qa_applied)}</td>
+      <td style="font-weight:700;color:var(--accent-coral)">${fmt(r.Ha_applied)}</td>
+      <td style="font-weight:700;color:var(--accent-green)">${fmt(r.Qpull)}</td>
+      <td>${fmt(r.St)}</td>
+      <td style="font-weight:700;color:${ok?'var(--status-pass)':'var(--status-fail)'}">${ok?'OK':'NG'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  el.innerHTML = html;
+}
+
+// ===== REPORT TAB =====
+function renderReportTab() {
+  const el = document.getElementById('tab-report');
+  const r = STATE.result;
+  if (!r) { el.innerHTML = '<p style="color:var(--text-muted);padding:20px">계산 결과가 없습니다.</p>'; return; }
+  const isPHC = STATE.pileType === "PHC";
+  const spec = getSpecInfo();
+  let html = `<h3 class="sec-title">상세 계산서 — ${STATE.boreholeNo}</h3>`;
+
+  // ============ Section 1: 설계 조건 ============
+  html += `<div class="report-section"><div class="report-title">1. 설계 조건</div>
+  <table><thead><tr><th>항목</th><th>값</th><th>항목</th><th>값</th></tr></thead><tbody>
+  <tr><td class="left">말뚝 종류</td><td>${isPHC?'PHC '+STATE.phcGrade+'종':'강관말뚝'}</td><td class="left">직경 (D)</td><td>${STATE.diameter_mm} mm = ${fmt(r.D,4)} m</td></tr>
+  <tr><td class="left">두께 (t)</td><td>${STATE.thickness_mm} mm = ${fmt(r.t,4)} m</td><td class="left">말뚝 길이 (L)</td><td>${fmt(r.pileLength)} m</td></tr>
+  <tr><td class="left">지반고 (GL)</td><td>EL.${fmt(STATE.groundEL,2)} m</td><td class="left">지하수위 (GWL)</td><td>GL-${fmt(STATE.gwlDepth,2)} m (EL.${fmt(r.gwlEL,2)} m)</td></tr>
+  <tr><td class="left">말뚝두부 EL</td><td>EL.${fmt(STATE.pileTopEL,2)} m</td><td class="left">지지층 EL</td><td>EL.${fmt(STATE.bearingEL,2)} m</td></tr>
+  <tr><td class="left">절성토 깊이</td><td>${fmt(r.cutFillDepth)} m</td><td class="left">둘레 (U)</td><td>$\\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</td></tr>
+  <tr><td class="left">탄성계수 (E)</td><td>${(r.E/1e6).toFixed(0)} MPa = ${(r.E/1e3).toFixed(0)} kN/m²</td><td class="left">단면2차모멘트 (I)</td><td>${fmtE(r.I)} m⁴</td></tr>
+  <tr><td class="left">선단면적 (Ap)</td><td>${fmt(r.Ap_tip,4)} m²</td><td class="left">순단면적 (An)</td><td>${fmt(r.Ap_net,4)} m²</td></tr>
+  <tr><td class="left">단면계수 (Zp)</td><td>${fmtE(r.Zp)} m³</td><td class="left">휨강성 (EI)</td><td>${fmt(r.EI,1)} kN·m²</td></tr>
+  <tr><td class="left">자중 (W)</td><td>${fmt(r.W_unit,2)} kN/m</td><td class="left">이음부</td><td>${STATE.jointType} × ${STATE.jointCount}개소</td></tr>
+  ${!isPHC?`<tr><td class="left">부식두께</td><td>${STATE.corrosionThk} mm</td><td class="left">강관단면적 (At)</td><td>${fmt(r.At_steel,6)} m²</td></tr>
+  <tr><td class="left">내부면적 (Ai)</td><td>${fmt(r.Ai_steel,6)} m²</td><td class="left">지지방법</td><td>${STATE.bearingMethod==='rock'?'암반근입':'Meyerhof(토사)'}</td></tr>`:''}
+  </tbody></table>`;
+
+  // SPT Data Table
+  html += `<div style="margin-top:14px"><strong style="font-size:11px;color:var(--primary-navy)">SPT N값 현황</strong></div>
+  <table style="margin-top:6px"><thead><tr><th>깊이(m)</th><th>N값</th><th>지층</th></tr></thead><tbody>
+  ${STATE.sptData.map(s => `<tr><td>${fmt(s.depth,1)}</td><td style="font-weight:700;color:${s.N>=50?'var(--status-pass)':'var(--primary-navy)'}">${s.N}</td><td class="left">${s.remark||''}</td></tr>`).join('')}
+  </tbody></table>`;
+
+  // Layer Table
+  html += `<div style="margin-top:14px"><strong style="font-size:11px;color:var(--primary-navy)">지층 평균 정리</strong></div>
+  <table style="margin-top:6px"><thead><tr><th>지층</th><th>두께(m)</th><th>평균N</th><th>단위중량(kN/m³)</th><th>분류</th></tr></thead><tbody>
+  ${STATE.layers.map(l => { const d = l._sptDetail || ''; const c = l._sptCount || 0; const tip = c > 0 ? '산정근거: ' + c + '개 SPT\\n' + d : 'SPT없음, 기본값 적용'; return `<tr><td class="left">${l.soilType}</td><td>${fmt(l.thickness)}</td><td><span class="calc-tip">${fmt(l.avgN,1)}<span class="tip-content">${tip}</span></span></td><td>${l.unitWeight}</td><td><span class="soil-badge ${SOIL_CLS[l.soilType]||'sand'}">${SOIL_CLS[l.soilType]||'sand'}</span></td></tr>`; }).join('')}
+  </tbody></table></div>`;
+
+  // ============ Section 2: 수직지지력 ============
+  html += `<div class="report-section"><div class="report-title">2. 수직 허용지지력 (KDS 11 50 40)</div>`;
+
+  // 2.1 Material
+  html += `<div class="report-step"><span class="step-num">1</span><strong>재료 허용연직지지력 (Qp)</strong>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">기준: KDS 11 50 40 (2018) — 말뚝재료의 허용연직지지력</div>
+  <div style="margin-top:6px">$$Q_p = \\left(1 - \\frac{\\mu_1 + \\mu_2}{100}\\right) \\times Q_{ap}$$</div>
+
+  <div style="margin-top:10px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy);margin-bottom:4px">▸ 세장비 감소율 (μ₁)</div>
+  <div style="font-size:11px">$L/d = ${fmt(r.pileLength)} \\div ${fmt(r.D,4)} = ${fmt(r.L_over_d,1)}$</div>
+  <div style="font-size:11px">세장비 한계값 $n = ${r.n_slender}$ ${isPHC?'(PHC말뚝)':'(강관말뚝)'}</div>
+  <div style="font-size:11px">${r.L_over_d > r.n_slender ?
+    `$L/d = ${fmt(r.L_over_d,1)} > n = ${r.n_slender}$ 이므로 세장비 감소 적용` :
+    `$L/d = ${fmt(r.L_over_d,1)} \\leq n = ${r.n_slender}$ 이므로 세장비 감소 없음`}</div>
+  <div style="font-size:11px;font-weight:600">$\\mu_1 = ${r.mu1 > 0 ? `\\min\\left(\\left(\\frac{${fmt(r.L_over_d,1)}}{${r.n_slender}} - 1\\right) \\times 100,\\; 30\\right)` : '0'} = ${fmt(r.mu1)}\\%$</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy);margin-bottom:4px">▸ 이음부 감소율 (μ₂)</div>
+  <div style="font-size:11px">이음방법: ${STATE.jointType==='welding'?'용접':STATE.jointType==='bolt'?'볼트':'충전'}, 이음수: ${STATE.jointCount}개소</div>
+  <div style="font-size:11px">${STATE.jointType==='welding' ? `용접이음: 1개소당 5% → ${STATE.jointCount} × 5 = ${fmt(r.mu2)}%` : STATE.jointType==='bolt' ? `볼트이음: 1개소당 10% → ${STATE.jointCount} × 10 = ${fmt(r.mu2)}%` : `충전이음: min(${STATE.jointCount},2)×20 + max(${STATE.jointCount}-2,0)×30 = ${fmt(r.mu2)}%`}</div>
+  <div style="font-size:11px;font-weight:600">$\\mu_2 = ${fmt(r.mu2)}\\%$</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy);margin-bottom:4px">▸ 허용축하중 (Qap)</div>
+  <div style="font-size:11px">${isPHC ? `PHC ${STATE.phcGrade}종 D${STATE.diameter_mm}×${STATE.thickness_mm}t 규격값 (KS F 4306)` : `강관 D${STATE.diameter_mm}×${STATE.thickness_mm}t 규격값`}</div>
+  <div style="font-size:11px;font-weight:600">$Q_{ap} = ${fmt(r.Qap)}$ kN</div>
+  </div>
+
+  <div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:4px;border:1px solid #a5d6a7">
+  <div style="font-size:12px;font-weight:700;color:var(--status-pass)">$Q_p = \\left(1 - \\frac{${fmt(r.mu1)} + ${fmt(r.mu2)}}{100}\\right) \\times ${fmt(r.Qap)} = \\left(1 - \\frac{${fmt(r.mu1+r.mu2)}}{100}\\right) \\times ${fmt(r.Qap)} = ${fmt(1-(r.mu1+r.mu2)/100, 4)} \\times ${fmt(r.Qap)} = ${fmt(r.Qp_material)}$ kN</div>
+  </div></div>`;
+
+  // 2.2 Rock tip (if applicable)
+  if (!isPHC && r.rockCalcDetails) {
+    const rc = r.rockCalcDetails;
+    html += `<div class="report-step"><span class="step-num">2</span><strong>암반 선단지지력 — 구조물기초설계기준 (p305)</strong>
+    <div style="margin-top:8px">$$P_u = 443 \\times q_u^{1/2} \\times A_t^{2/5} \\times A_i^{1/3}$$</div>
+    <div style="margin-top:6px;font-size:11px">$q_u = \\min(${fmt(rc.qu_lab)},\\;10000) = ${fmt(rc.qu_eff)}$ kPa (일축압축강도, 상한 10,000 kPa 적용)</div>
+    <div style="font-size:11px">$A_t = ${fmt(rc.At_m2,6)}$ m² (강관 순단면적)</div>
+    <div style="font-size:11px">$A_i = ${fmt(rc.Ai_m2,6)}$ m² (강관 내부면적)</div>
+    <div style="margin-top:6px;padding:8px;background:#fff3e0;border-radius:4px">
+    <div style="font-size:11px;font-weight:700">$P_u = 443 \\times ${fmt(rc.qu_eff)}^{0.5} \\times ${fmt(rc.At_m2,6)}^{0.4} \\times ${fmt(rc.Ai_m2,6)}^{0.333}$</div>
+    <div style="font-size:11px;font-weight:700">$= 443 \\times ${fmt(Math.pow(rc.qu_eff,0.5),2)} \\times ${fmt(Math.pow(rc.At_m2,0.4),4)} \\times ${fmt(Math.pow(rc.Ai_m2,1/3),4)} = ${fmt(rc.Pu_tip)}$ kN</div>
+    </div></div>`;
+
+    html += `<div class="report-step"><span class="step-num">3</span><strong>Goodman 방법 (도로교설계기준 2008, p863)</strong>
+    <div style="margin-top:8px">$$Q_u = q_u \\times (N_\\phi + 1) \\times A_p$$</div>
+    <div style="margin-top:6px;font-size:11px">$\\phi_{rock} = ${rc.phi_rock}°$ (암반 내부마찰각)</div>
+    <div style="font-size:11px">$N_\\phi = \\tan^2\\left(45° + \\frac{${rc.phi_rock}°}{2}\\right) = \\tan^2(${45+rc.phi_rock/2}°) = ${fmt(rc.N_phi,3)}$</div>
+    <div style="font-size:11px">$A_p = \\frac{\\pi}{4} D^2 = \\frac{\\pi}{4} \\times ${fmt(r.D,4)}^2 = ${fmt(rc.Ap_full,4)}$ m²</div>
+    <div style="margin-top:6px;padding:8px;background:#fff3e0;border-radius:4px">
+    <div style="font-size:11px;font-weight:700">$Q_u = ${fmt(rc.qu_lab)} \\times (${fmt(rc.N_phi,3)} + 1) \\times ${fmt(rc.Ap_full,4)} = ${fmt(rc.qu_lab)} \\times ${fmt(rc.N_phi+1,3)} \\times ${fmt(rc.Ap_full,4)} = ${fmt(rc.Pu_goodman)}$ kN</div>
+    </div></div>`;
+
+    html += `<div class="report-step"><span class="step-num">4</span><strong>Canadian FEM (도로교설계기준 2008, p862)</strong>
+    <div style="margin-top:8px">$$Q_u = 3 \\times q_u \\times K_{sp} \\times d \\times A_p$$</div>
+    <div style="margin-top:6px;font-size:11px">$S_d = ${rc.Sd}$ m (불연속면 간격), $t_d = ${rc.td}$ m (불연속면 두께)</div>
+    <div style="font-size:11px">$$K_{sp} = \\frac{3 + S_d/D}{10\\sqrt{1 + 300 \\cdot t_d / S_d}} = \\frac{3 + ${rc.Sd}/${fmt(r.D,4)}}{10\\sqrt{1 + 300 \\times ${rc.td}/${rc.Sd}}} = \\frac{${fmt(3+rc.Sd/r.D,3)}}{10 \\times ${fmt(Math.sqrt(1+300*rc.td/rc.Sd),3)}} = ${fmt(rc.Ksp,4)}$$</div>
+    <div style="margin-top:6px;padding:8px;background:#fff3e0;border-radius:4px">
+    <div style="font-size:11px;font-weight:700">$Q_u = 3 \\times ${fmt(rc.qu_lab)} \\times ${fmt(rc.Ksp,4)} \\times 2 \\times ${fmt(rc.Ap_full,4)} = ${fmt(rc.Pu_canadian)}$ kN</div>
+    </div></div>`;
+
+    html += `<div class="report-step" style="background:#e3f2fd"><span class="step-num">5</span><strong>선단지지력 선정</strong>
+    <div style="margin-top:6px;font-size:11px">3가지 방법 비교:</div>
+    <table style="margin-top:4px"><thead><tr><th>방법</th><th>Pu (kN)</th></tr></thead><tbody>
+    <tr><td class="left">구조물기초설계기준</td><td style="font-weight:700${rc.Pu_tip===rc.Pu_selected?';color:var(--status-pass)':''}">${fmt(rc.Pu_tip)}</td></tr>
+    <tr><td class="left">Goodman</td><td style="font-weight:700${rc.Pu_goodman===rc.Pu_selected?';color:var(--status-pass)':''}">${fmt(rc.Pu_goodman)}</td></tr>
+    <tr><td class="left">Canadian FEM</td><td style="font-weight:700${rc.Pu_canadian===rc.Pu_selected?';color:var(--status-pass)':''}">${fmt(rc.Pu_canadian)}</td></tr>
+    </tbody></table>
+    <div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--status-pass)">$P_u = \\min(${fmt(rc.Pu_tip)},\\; ${fmt(rc.Pu_goodman)},\\; ${fmt(rc.Pu_canadian)}) = ${fmt(rc.Pu_selected)}$ kN ← 최솟값 채택</div>
+    </div>`;
+  }
+
+  // 2.3 Ground capacity
+  const tipStepNo = (!isPHC && r.rockCalcDetails) ? 6 : 2;
+  html += `<div class="report-step"><span class="step-num">${tipStepNo}</span><strong>지반 허용연직지지력</strong>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">기준: Meyerhof 공식 (사질토), KDS 11 50 40</div>
+  <div style="margin-top:6px">$$Q_u = ${r.rockCalcDetails?'P_u':'250 \\cdot N_{tip} \\cdot A_p'} + \\sum 2 N_s A_s + \\sum 6.25 N_c A_c$$</div>`;
+
+  // Tip
+  if (!r.rockCalcDetails) {
+    const tipN = r.N_tip;
+    html += `<div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+    <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 선단지지력</div>
+    <div style="font-size:11px">$N_{tip} = \\min(N_{최하단},\\; 50) = \\min(${STATE.sptData.length>0?STATE.sptData[STATE.sptData.length-1].N:50},\\; 50) = ${tipN}$</div>
+    <div style="font-size:11px">$A_p = \\frac{\\pi}{4} D^2 = \\frac{\\pi}{4} \\times ${fmt(r.D,4)}^2 = ${fmt(r.Ap_tip,4)}$ m²</div>
+    <div style="font-size:11px;font-weight:700">$P_u = 250 \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
+    </div>`;
+  } else {
+    html += `<div style="margin-top:6px;font-size:11px;font-weight:700">선단지지력: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN (암반근입, 위에서 산정)</div>`;
+  }
+
+  // Skin friction table
+  html += `<div style="margin-top:10px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy);margin-bottom:4px">▸ 주면마찰력 상세</div>
+  <div style="font-size:11px;margin-bottom:4px">둘레 $U = ${fmt(r.U,4)}$ m</div>
+  <table style="margin-top:4px"><thead><tr><th>지층</th><th>분류</th><th>L(m)</th><th>N</th><th>As=U×L</th><th>사질토: 2NAs</th><th>점성토: 6.25NAc</th></tr></thead><tbody>`;
+  r.processedLayers.forEach(l => {
+    html += `<tr>
+    <td class="left">${l.soilType}</td>
+    <td><span class="soil-badge ${l.soilClass}">${l.soilClass}</span></td>
+    <td>${fmt(l.thickness)}</td><td>${fmt(l.avgN,1)}</td>
+    <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
+    <td>${l.soilClass==='sand'?`$2 \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
+    <td>${l.soilClass==='clay'?`$6.25 \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
+    </tr>`;
+  });
+  html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="5">합계</td><td>${fmt(r.sum_2NsAs)}</td><td>${fmt(r.sum_625NcAc)}</td></tr>`;
+  html += `</tbody></table></div>`;
+
+  // Qu and Qa
+  html += `<div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:4px;border:1px solid #a5d6a7">
+  <div style="font-size:11px;font-weight:700">$Q_u = ${fmt(r.Qu_tip)} + ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu)}$ kN</div>
+  <div style="font-size:11px;font-weight:700;margin-top:4px">$Q_a = \\frac{Q_u}{FS} = \\frac{${fmt(r.Qu)}}{${r.FS}} = ${fmt(r.Qa_ground)}$ kN</div>
+  </div>`;
+
+  // Final selection
+  const sumStepNo = tipStepNo + 1;
+  html += `<div class="report-step" style="margin-top:10px;background:#e3f2fd"><span class="step-num">${sumStepNo}</span><strong>수직지지력 종합 비교</strong>
+  <table style="margin-top:6px"><thead><tr><th>구분</th><th>지지력 (kN)</th><th>비고</th></tr></thead><tbody>
+  <tr><td class="left">재료 허용지지력 (Qp)</td><td style="font-weight:700">${fmt(r.Qp_material)}</td><td class="left">${isPHC?'PHC '+STATE.phcGrade+'종':'강관'} 규격기반</td></tr>
+  <tr><td class="left">지반 허용지지력 (Qa)</td><td style="font-weight:700">${fmt(r.Qa_ground)}</td><td class="left">Qu/${r.FS} 적용</td></tr>
+  </tbody></table>
+  <div style="margin-top:8px;font-size:13px;font-weight:800;color:var(--status-pass)">$$\\therefore Q_{a,적용} = \\min(${fmt(r.Qp_material)},\\; ${fmt(r.Qa_ground)}) = ${fmt(r.Qa_applied)} \\text{ kN}$$</div>
+  <div style="font-size:10px;color:var(--text-secondary)">${r.Qa_applied === r.Qp_material ? '→ 재료 허용지지력이 지배 (Qp < Qa)' : '→ 지반 허용지지력이 지배 (Qa < Qp)'}</div>
+  </div>`;
+  html += `</div>`;
+
+  // ============ Section 3: 수평지지력 ============
+  html += `<div class="report-section"><div class="report-title">3. 수평 허용지지력</div>`;
+
+  // 3.1 Kh
+  html += `<div class="report-step"><span class="step-num">1</span><strong>수평 지반반력계수 (Kh) 산정</strong>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">N값 50 미만 데이터의 평균 사용</div>
+  <div style="font-size:11px;font-weight:600">$N_{평균} = ${r.N_kh}$, $\\alpha = ${STATE.alpha_kh}$</div>
+  <div style="margin-top:6px;font-size:11px">$E_0 = 2800N = 2800 \\times ${r.N_kh} = ${r.Eo2800}$ kN/m²</div>
+  <div style="font-size:11px">$E_0' = 1000N = 1000 \\times ${r.N_kh} = ${r.Eo1000}$ kN/m²</div>
+
+  <table style="margin-top:8px"><thead><tr><th>산정 방법</th><th>산정식</th><th>Kh (kN/m³)</th></tr></thead><tbody>
+  <tr style="background:${r.Kh_min===r.Kh1?'#fef9c3':'inherit'}"><td class="left">도로교 (2008)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha E_0)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh1,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh2?'#fef9c3':'inherit'}"><td class="left">福岡 (Fukuoka)</td><td class="left" style="font-size:10px">$6910 \\times N^{0.406} = 6910 \\times ${r.N_kh}^{0.406}$</td><td style="font-weight:700">${fmt(r.Kh2,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh3?'#fef9c3':'inherit'}"><td class="left">横山 (Yokoyama)</td><td class="left" style="font-size:10px">$2000N = 2000 \\times ${r.N_kh}$</td><td style="font-weight:700">${fmt(r.Kh3,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh4?'#fef9c3':'inherit'}"><td class="left">지반공학회 (1996)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha \\times 1000N)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh4,1)}</td></tr>
+  </tbody></table>
+  <div style="margin-top:8px;font-size:12px;font-weight:700;color:var(--status-pass)">$K_h = \\min(${fmt(r.Kh1,1)},\\; ${fmt(r.Kh2,1)},\\; ${fmt(r.Kh3,1)},\\; ${fmt(r.Kh4,1)}) = ${fmt(r.Kh_min,1)}$ kN/m³ ← 최솟값 채택</div>
+  </div>`;
+
+  // 3.2 Pile classification
+  html += `<div class="report-step"><span class="step-num">2</span><strong>말뚝 분류 및 특성치</strong>
+  <div style="margin-top:8px;font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="font-size:11px">$n_h = K_h \\cdot D \\div (1/\\beta) = ${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)} \\div ${fmt(1/r.beta,4)} = ${fmt(r.Kh_min*r.D*r.beta,2)}$ kN/m³</div>
+  <div style="font-size:11px">$\\eta = (n_h / EI)^{0.2} = ${fmt(r.eta,6)}$ m⁻¹</div>
+  <div style="font-size:11px;font-weight:700;margin-top:4px">$\\eta L = ${fmt(r.eta,6)} \\times ${fmt(r.pileLength)} = ${fmt(r.etaL,2)}$</div>
+  <div style="font-size:11px;margin-top:4px;padding:6px;background:#e0f2fe;border-radius:4px">
+  ${r.etaL < 2 ? '$\\eta L < 2$ → <strong>짧은말뚝 (short pile)</strong>' : r.etaL <= 4 ? '$2 \\leq \\eta L \\leq 4$ → <strong>중간말뚝 (intermediate)</strong>' : '$\\eta L > 4$ → <strong>긴말뚝 (long pile)</strong>'}
+  </div></div>`;
+
+  // 3.3 Brom Case-1
+  html += `<div class="report-step"><span class="step-num">3</span><strong>Brom 방법 — Case-1 (변위 제한)</strong>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">허용수평변위: $\\delta = ${STATE.delta_cm}$ cm = ${fmt(STATE.delta_cm/100,4)} m</div>
+  <div style="font-size:11px">$\\phi = \\sqrt{12 N} + 15 = \\sqrt{12 \\times ${r.N_kh}} + 15 = ${fmt(r.phi_deg,1)}°$</div>
+  <div style="font-size:11px">$K_p = \\frac{1+\\sin\\phi}{1-\\sin\\phi} = \\frac{1+\\sin${fmt(r.phi_deg,1)}°}{1-\\sin${fmt(r.phi_deg,1)}°} = ${fmt(r.Kp,3)}$</div>
+  <div style="font-size:11px">$\\gamma = ${r.gamma_top}$ kN/m³ (최상위 지층 단위중량)</div>
+
+  <div style="margin-top:6px;font-size:11px">변위에 의한 수평하중:</div>
+  <div style="font-size:11px">$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
+  <div style="font-size:11px">$M_y = \\frac{H}{2\\beta} = \\frac{${fmt(r.H_disp)}}{2 \\times ${fmt(r.beta,6)}} = ${fmt(r.My_case1)}$ kN·m</div>
+
+  <div style="margin-top:4px;font-size:11px">${r.pileClass === '긴말뚝' ?
+    `긴말뚝: $H_u = 2.38 \\times \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} \\times K_p \\gamma D^3 = ${fmt(r.Hu_brom1)}$ kN` :
+    r.pileClass === '짧은말뚝' ?
+    `짧은말뚝: $H_u = 1.5 K_p \\gamma D L^2 = 1.5 \\times ${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)} \\times ${fmt(r.pileLength)}^2 = ${fmt(r.Hu_brom1)}$ kN` :
+    `중간말뚝: 보간법 적용 → $H_u = ${fmt(r.Hu_brom1)}$ kN`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$H_a = \\frac{H_u}{2.5} = \\frac{${fmt(r.Hu_brom1)}}{2.5} = ${fmt(r.Ha_brom1)}$ kN</div>
+  </div>`;
+
+  // 3.4 Brom Case-2
+  html += `<div class="report-step"><span class="step-num">4</span><strong>Brom 방법 — Case-2 (항복 응력)</strong>
+  <div style="margin-top:8px;font-size:11px">$\\sigma_{max} = ${STATE.sigmaMax}$ kN/m² ${isPHC?'(PHC 허용압축응력)':'(강관 항복응력)'}</div>
+  <div style="font-size:11px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
+  <div style="font-size:11px">${r.pileClass === '긴말뚝' ?
+    `긴말뚝: $H_u = 2.38 \\times \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} \\times K_p \\gamma D^3 = ${fmt(r.Hu_brom2)}$ kN` :
+    `$H_u = ${fmt(r.Hu_brom2)}$ kN (Case-1과 동일 적용)`}</div>
+  <div style="font-size:12px;font-weight:700;margin-top:4px">$H_a = \\frac{H_u}{2.5} = \\frac{${fmt(r.Hu_brom2)}}{2.5} = ${fmt(r.Ha_brom2)}$ kN</div>
+
+  <div style="margin-top:8px;font-size:11px;font-weight:700">Brom 결과: $H_a = \\min(${fmt(r.Ha_brom1)},\\; ${fmt(r.Ha_brom2)}) = ${fmt(r.Ha_brom)}$ kN</div>
+  </div>`;
+
+  // 3.5 Chang
+  html += `<div class="report-step"><span class="step-num">5</span><strong>Chang 방법</strong>
+  <div style="margin-top:8px">$$H_a = \\frac{\\delta \\cdot K_h \\cdot D}{\\beta} = \\frac{${fmt(STATE.delta_cm/100,4)} \\times ${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{${fmt(r.beta,6)}} = ${fmt(r.Ha_chang)}\\text{ kN}$$</div>
+  </div>`;
+
+  // Final horizontal
+  html += `<div class="report-step" style="background:#e3f2fd"><span class="step-num">6</span><strong>수평지지력 종합</strong>
+  <table style="margin-top:6px"><thead><tr><th>방법</th><th>Ha (kN)</th></tr></thead><tbody>
+  <tr><td class="left">Brom (Case-1: 변위)</td><td style="font-weight:700">${fmt(r.Ha_brom1)}</td></tr>
+  <tr><td class="left">Brom (Case-2: 항복)</td><td style="font-weight:700">${fmt(r.Ha_brom2)}</td></tr>
+  <tr><td class="left">Brom (최솟값)</td><td style="font-weight:700">${fmt(r.Ha_brom)}</td></tr>
+  <tr><td class="left">Chang</td><td style="font-weight:700">${fmt(r.Ha_chang)}</td></tr>
+  </tbody></table>
+  <div style="margin-top:8px;font-size:13px;font-weight:800;color:var(--status-pass)">$$\\therefore H_{a,적용} = \\min(${fmt(r.Ha_brom)},\\; ${fmt(r.Ha_chang)}) = ${fmt(r.Ha_applied)} \\text{ kN}$$</div>
+  <div style="font-size:10px;color:var(--text-secondary)">${r.Ha_applied === r.Ha_brom ? '→ Brom 방법이 지배' : '→ Chang 방법이 지배'}</div>
+  </div></div>`;
+
+  // ============ Section 4: 인발 ============
+  html += `<div class="report-section"><div class="report-title">4. 인발 저항력</div>
+  <div class="report-step"><span class="step-num">1</span><strong>인발 저항력 산정</strong>
+  <div style="margin-top:8px">$$Q_{pull} = \\frac{Q_{u,skin}}{FS} + W_p$$</div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 주면마찰력</div>
+  <div style="font-size:11px">$Q_{u,skin} = \\sum 2N_sA_s + \\sum 6.25N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 말뚝 유효자중 (Wp)</div>
+  <div style="font-size:11px">지하수위 위 길이: $l_1 = \\max(${fmt(STATE.pileTopEL)} - ${fmt(r.gwlEL,2)},\\; 0) = ${fmt(r.l1)}$ m</div>
+  <div style="font-size:11px">지하수위 아래 길이: $l_2 = L - l_1 = ${fmt(r.pileLength)} - ${fmt(r.l1)} = ${fmt(r.l2)}$ m</div>
+  <div style="font-size:11px">$W_p = W_{단위} \\times L - A_p \\times l_2 \\times \\gamma_w = ${fmt(r.W_unit,2)} \\times ${fmt(r.pileLength)} - ${fmt(r.Ap_tip,4)} \\times ${fmt(r.l2)} \\times 10 = ${fmt(r.Wp)}$ kN</div>
+  </div>
+
+  <div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:4px;border:1px solid #a5d6a7">
+  <div style="font-size:12px;font-weight:700;color:var(--status-pass)">$$Q_{pull} = \\frac{${fmt(r.Qu_skin)}}{${r.FS}} + ${fmt(r.Wp)} = ${fmt(r.Qu_skin/r.FS)} + ${fmt(r.Wp)} = ${fmt(r.Qpull)} \\text{ kN}$$</div>
+  </div></div></div>`;
+
+  // ============ Section 5: 침하량 ============
+  const ok = r.St < 25;
+  html += `<div class="report-section"><div class="report-title">5. 침하량 검토</div>
+  <div class="report-step"><span class="step-num">1</span><strong>침하량 산정 (Vesic, 1977)</strong>
+  <div style="margin-top:8px">$$S_t = S_s + S_p + S_{ps}$$</div>
+  <div style="font-size:11px;color:var(--text-secondary)">$S_s$: 축방향 압축침하 | $S_p$: 선단부 침하 | $S_{ps}$: 주면부 침하</div>
+
+  <div style="margin-top:10px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 하중 분배</div>
+  <div style="font-size:11px">선단비: $Q_{tip}/Q_u = ${fmt(r.Qu_tip)}/${fmt(r.Qu)} = ${fmt(r.ratio_tip,3)}$</div>
+  <div style="font-size:11px">$Q_{ps} = Q_a \\times 선단비 = ${fmt(r.Qa_applied)} \\times ${fmt(r.ratio_tip,3)} = ${fmt(r.Qps)}$ kN (선단 분담)</div>
+  <div style="font-size:11px">$Q_{fs} = Q_a \\times (1 - 선단비) = ${fmt(r.Qa_applied)} \\times ${fmt(1-r.ratio_tip,3)} = ${fmt(r.Qfs)}$ kN (주면 분담)</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 축방향 압축침하 (Ss)</div>
+  <div style="font-size:11px">$$S_s = \\frac{(Q_{ps} + 0.67 Q_{fs}) \\times L}{A_n \\times E} = \\frac{(${fmt(r.Qps)} + 0.67 \\times ${fmt(r.Qfs)}) \\times ${fmt(r.pileLength)} \\times 1000}{${fmt(r.Ap_net,4)} \\times ${r.E}} = ${fmt(r.Ss)} \\text{ mm}$$</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 선단부 하중에 의한 침하 (Sp)</div>
+  <div style="font-size:11px">$C_p = ${r.Cp}$ (점성토/모래 경험상수)</div>
+  <div style="font-size:11px">$q_p = Q_{u,tip}/A_p = ${fmt(r.Qu_tip)}/${fmt(r.Ap_tip,4)} = ${fmt(r.qp,1)}$ kN/m²</div>
+  <div style="font-size:11px">$$S_p = \\frac{Q_{ps} \\times C_p}{D \\times q_p} \\times 1000 = \\frac{${fmt(r.Qps)} \\times ${r.Cp}}{${fmt(r.D,4)} \\times ${fmt(r.qp,1)}} \\times 1000 = ${fmt(r.Sp)} \\text{ mm}$$</div>
+  </div>
+
+  <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
+  <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 주면부 하중에 의한 침하 (Sps)</div>
+  <div style="font-size:11px">$C_s = (0.93 + 0.16\\sqrt{L/D}) \\times C_p = (0.93 + 0.16\\sqrt{${fmt(r.pileLength)}/${fmt(r.D,4)}}) \\times ${r.Cp} = ${fmt(r.Cs,4)}$</div>
+  <div style="font-size:11px">$$S_{ps} = \\frac{Q_{fs} \\times C_s}{L \\times q_p} \\times 1000 = \\frac{${fmt(r.Qfs)} \\times ${fmt(r.Cs,4)}}{${fmt(r.pileLength)} \\times ${fmt(r.qp,1)}} \\times 1000 = ${fmt(r.Sps,3)} \\text{ mm}$$</div>
+  </div>
+
+  <div style="margin-top:10px;padding:10px;background:${ok?'#e8f5e9':'#ffebee'};border-radius:4px;border:1px solid ${ok?'#a5d6a7':'#ef9a9a'}">
+  <div style="font-size:13px;font-weight:800;color:${ok?'var(--status-pass)':'var(--status-fail)'}">$$S_t = ${fmt(r.Ss)} + ${fmt(r.Sp)} + ${fmt(r.Sps,3)} = ${fmt(r.St)} \\text{ mm}$$</div>
+  <div style="font-size:12px;font-weight:700;color:${ok?'var(--status-pass)':'var(--status-fail)'}">판정: ${fmt(r.St)} mm ${ok ? '< 25 mm → OK ✓' : '≥ 25 mm → NG ✗'}</div>
+  </div></div></div>`;
+
+  // ============ Section 6: 최종 종합 ============
+  html += `<div class="report-section"><div class="report-title">6. 최종 종합 결과</div>
+  <table><thead><tr><th>검토 항목</th><th>산정값</th><th>단위</th><th>비고</th></tr></thead><tbody>
+  <tr><td class="left" style="font-weight:600">수직 허용지지력 (Qa)</td><td style="font-weight:800;color:var(--primary-navy);font-size:13px">${fmt(r.Qa_applied)}</td><td>kN/본</td><td class="left">min(재료 ${fmt(r.Qp_material)}, 지반 ${fmt(r.Qa_ground)})</td></tr>
+  <tr><td class="left" style="font-weight:600">수평 허용지지력 (Ha)</td><td style="font-weight:800;color:var(--accent-coral);font-size:13px">${fmt(r.Ha_applied)}</td><td>kN/본</td><td class="left">min(Brom ${fmt(r.Ha_brom)}, Chang ${fmt(r.Ha_chang)})</td></tr>
+  <tr><td class="left" style="font-weight:600">인발 저항력 (Qpull)</td><td style="font-weight:800;color:var(--accent-green);font-size:13px">${fmt(r.Qpull)}</td><td>kN/본</td><td class="left">Qu_skin/FS + Wp</td></tr>
+  <tr><td class="left" style="font-weight:600">침하량 (St)</td><td style="font-weight:800;color:${ok?'var(--status-pass)':'var(--status-fail)'}; font-size:13px">${fmt(r.St)}</td><td>mm</td><td class="left" style="font-weight:700;color:${ok?'var(--status-pass)':'var(--status-fail)'}">${ok?'OK (< 25mm)':'NG (≥ 25mm)'}</td></tr>
+  </tbody></table>
+  <div style="margin-top:12px;padding:8px 12px;background:#f1f5f9;border-radius:5px;font-size:10px;color:#64748b;line-height:1.4">
+  <strong>적용기준:</strong> KDS 11 50 40 (2018) | 도로교설계기준 (2008) | 지반공학회 (1996) | Meyerhof (1976)${!isPHC?' | Goodman (1980) | Canadian FEM':''}
+  </div></div>`;
+
+  el.innerHTML = html;
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([el]).catch(function(err) { console.log('MathJax error:', err); });
+  }
+}
+
+// ===== RENDER ALL TABS =====
+function renderAllTabs() {
+  updateHeader();
+  renderInputTab();
+  renderVerticalTab();
+  renderHorizontalTab();
+  renderPulloutTab();
+  renderSettlementTab();
+  renderSummaryTab();
+  renderDashboardTab();
+  renderOverallTab();
+  renderReportTab();
+}
+
+// ===== INIT =====
+recalculate();
+
+// Tab switching (already bound above, just close script)
+</script>
+
+</body>
+</html>
