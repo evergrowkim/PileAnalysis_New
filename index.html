@@ -514,7 +514,7 @@ function calcPile(p) {
       I = Math.PI / 64 * (Math.pow(D, 4) - Math.pow(D - 2 * t, 4));
       Zp = I / (D / 2); Qap = Ap_net * 235000 / 3; W_unit = Ap_net * 78.5;
     }
-    E = 210000000; n_slender = 100;
+    E = 200000000; n_slender = 100;
   }
   const U = Math.PI * D, EI = E * I;
   // 2.1.1 Material
@@ -590,27 +590,82 @@ function calcPile(p) {
   const Qu_tip = Pu_selected, Qu_skin = sum_2NsAs + sum_625NcAc;
   const FS = 3, Qa_ground = Qu / FS;
   const Qa_applied = Math.min(Qp_material, Qa_ground);
-  // 2.2 Horizontal
-  const topN = p.sptData && p.sptData.length > 0 ? p.sptData.filter(s => s.N < 50).reduce((s, d) => s + d.N, 0) / Math.max(p.sptData.filter(s => s.N < 50).length, 1) : 10;
-  const N_kh = Math.max(topN, 1);
+  // 2.2 Horizontal — 가이드 기준 수정
+  // 강관: 부식두께 적용한 I_h, Zp_h 사용
+  let I_h = I, Zp_h = Zp, EI_h = EI;
+  if (!isPHC) {
+    const corr_h = (p.corrosionThickness_mm || 2) / 1000;
+    const D_corr = D - 2 * corr_h;
+    I_h = Math.PI / 64 * (Math.pow(D, 4) - Math.pow(D_corr, 4));
+    Zp_h = I_h / (D / 2);
+    EI_h = E * I_h;
+  } else {
+    // PHC: Z = I/(D/2) per guide §6.4
+    Zp_h = I / (D / 2);
+  }
+  // N_kh: 설계지반면~1/β 상부지반 대표N 반복계산 (가이드 §2.2)
+  // 성토 적용 시: 설계지반면 = 계획고, SPT depth를 계획고 기준으로 환산
   const a = p.alpha_kh || 1;
+  const sptValid = p.sptData && p.sptData.length > 0;
+  // 성토 적용 시 SPT를 설계지반면(계획고) 기준으로 환산 + 성토층 N값 포함
+  const sptForKh = [];
+  if (fillHeight > 0) {
+    // 성토층: 1m 간격으로 fillN 가상 SPT 추가
+    const fillN_val = p.fillN || 5;
+    for (let d = 1; d <= fillHeight; d++) {
+      sptForKh.push({ depth: d, N: fillN_val });
+    }
+    // 원지반 SPT: depth에 fillHeight를 더해서 설계지반면 기준으로 환산
+    if (sptValid) {
+      p.sptData.forEach(s => {
+        sptForKh.push({ depth: s.depth + fillHeight, N: s.N });
+      });
+    }
+  } else if (sptValid) {
+    p.sptData.forEach(s => sptForKh.push({ depth: s.depth, N: s.N }));
+  }
+  function calcNkhForDepth(depthLimit) {
+    if (sptForKh.length === 0) return 10;
+    const inRange = sptForKh.filter(s => s.depth <= depthLimit && s.N < 50);
+    if (inRange.length === 0) {
+      const first = sptForKh.find(s => s.N < 50);
+      return first ? first.N : 10;
+    }
+    return inRange.reduce((s, d) => s + d.N, 0) / inRange.length;
+  }
+  function calcKhBeta(nVal) {
+    const eo2800 = 2800 * nVal, eo1000 = 1000 * nVal;
+    const kh1 = 1.208 * Math.pow(a * eo2800, 1.1) * Math.pow(D, -0.31) * Math.pow(EI_h, -0.1);
+    const kh2 = 6910 * Math.pow(nVal, 0.406);
+    const kh3 = 2000 * nVal;
+    const kh4 = 1.208 * Math.pow(a * eo1000, 1.1) * Math.pow(D, -0.31) * Math.pow(EI_h, -0.1);
+    const khMin = Math.min(kh1, kh2, kh3, kh4);
+    const b = Math.pow((khMin * D) / (4 * EI_h), 0.25);
+    return { kh1, kh2, kh3, kh4, khMin, beta: b, invBeta: 1 / b };
+  }
+  // 반복: 초기 N_kh(전체 평균) → β → 1/β 범위 N → 재계산 → 수렴
+  let N_kh = Math.max(calcNkhForDepth(9999), 1);
+  let khResult = calcKhBeta(N_kh);
+  for (let iter = 0; iter < 10; iter++) {
+    const newN = Math.max(calcNkhForDepth(khResult.invBeta), 1);
+    if (Math.abs(newN - N_kh) < 0.01) break;
+    N_kh = newN;
+    khResult = calcKhBeta(N_kh);
+  }
   const Eo2800 = 2800 * N_kh, Eo1000 = 1000 * N_kh;
-  const Kh1 = 1.208 * Math.pow(a * Eo2800, 1.1) * Math.pow(D, -0.31) * Math.pow(EI, -0.1);
-  const Kh2 = 6910 * Math.pow(N_kh, 0.406);
-  const Kh3 = 2000 * N_kh;
-  const Kh4 = 1.208 * Math.pow(a * Eo1000, 1.1) * Math.pow(D, -0.31) * Math.pow(EI, -0.1);
-  const Kh_min = Math.min(Kh1, Kh2, Kh3, Kh4);
-  const beta = Math.pow((Kh_min * D) / (4 * EI), 0.25);
+  const Kh1 = khResult.kh1, Kh2 = khResult.kh2, Kh3 = khResult.kh3, Kh4 = khResult.kh4;
+  const Kh_min = khResult.khMin;
+  const beta = khResult.beta;
   const nh = Kh_min * D / (1 / beta);
-  const eta = Math.pow(nh / EI, 0.2);
+  const eta = Math.pow(nh / EI_h, 0.2);
   const etaL = eta * pileLength;
   const pileClass = etaL < 2 ? "짧은말뚝" : etaL <= 4 ? "중간말뚝" : "긴말뚝";
   const phi_deg = Math.sqrt(12 * N_kh) + 15;
   const phi_rad = phi_deg * Math.PI / 180;
   const Kp = (1 + Math.sin(phi_rad)) / (1 - Math.sin(phi_rad));
-  const gamma_top = p.layers && p.layers.length > 0 ? p.layers[0].unitWeight : 18;
+  const gamma_top = processedLayers.length > 0 ? processedLayers[0].unitWeight : (p.layers && p.layers.length > 0 ? p.layers[0].unitWeight : 18);
   const deltaM = (p.delta_cm || 1.5) / 100;
-  const H_disp = 4 * Math.pow(beta, 3) * EI * deltaM;
+  const H_disp = 4 * Math.pow(beta, 3) * EI_h * deltaM;
   const My_case1 = H_disp / (2 * beta);
   let Hu_brom1;
   if (pileClass === "긴말뚝") { const term = My_case1 / (Kp * gamma_top * Math.pow(D, 4)); Hu_brom1 = 2.38 * Math.pow(term, 2 / 3) * Kp * gamma_top * Math.pow(D, 3); }
@@ -618,7 +673,7 @@ function calcPile(p) {
   else { const term = My_case1 / (Kp * Math.pow(D, 4) * gamma_top); Hu_brom1 = Kp * Math.pow(D, 3) * gamma_top * (term + 0.5 * Math.pow(pileLength / D, 3)) * (D / pileLength); }
   const Ha_brom1 = Hu_brom1 / 2.5;
   const sigma_max = p.sigmaMax_kN || (isPHC ? 20000 : 235000);
-  const My_case2 = Zp * sigma_max;
+  const My_case2 = Zp_h * sigma_max;
   let Hu_brom2;
   if (pileClass === "긴말뚝") { const t2 = My_case2 / (Kp * gamma_top * Math.pow(D, 4)); Hu_brom2 = 2.38 * Math.pow(t2, 2 / 3) * Kp * gamma_top * Math.pow(D, 3); }
   else { Hu_brom2 = Hu_brom1; }
@@ -642,11 +697,12 @@ function calcPile(p) {
   const Sps = (Qfs * Cs) / (pileLength * Math.max(qp, 1)) * 1000;
   const St = Ss + Sp + Sps;
   return { D, t, pileLength, cutFillDepth, gwlEL, U, Ap_tip, Ap_net, I, Zp, E, EI, W_unit,
+    I_h, Zp_h, EI_h,
     L_over_d, mu1, mu2, Qap, Qp_material, n_slender,
     N_tip, Qu, Qu_tip, Qu_skin, Qa_ground, FS, sum_2NsAs, sum_625NcAc, processedLayers, Qa_applied, bearingDepthFromGL,
     groundEL: p.groundEL, bearingEL: p.bearingEL, tipEL, embedDepth: p.embedDepth || 0,
     At_steel, Ai_steel, steelSpec, rockCalcDetails, method, Pu_tip, Pu_goodman, Pu_canadian, Pu_selected,
-    N_kh: Math.round(N_kh * 100) / 100, Eo2800, Eo1000,
+    N_kh: Math.round(N_kh * 100) / 100, Eo2800, Eo1000, invBeta: 1 / beta,
     Kh1, Kh2, Kh3, Kh4, Kh_min,
     beta, betaL: beta * pileLength, eta, etaL, pileClass,
     phi_deg, Kp, gamma_top,
@@ -1231,8 +1287,8 @@ function renderInputTab() {
   if (STATE.useFill && STATE.plannedEL != null) {
     const fH = Math.max(STATE.plannedEL - STATE.groundEL, 0);
     if (fH > 0) {
-      const fElFrom = fmt(STATE.plannedEL + 1);
-      const fElTo = fmt(STATE.groundEL + 1);
+      const fElFrom = fmt(STATE.plannedEL);
+      const fElTo = fmt(STATE.groundEL);
       html += `<tr style="background:#fffbeb">
         <td style="font-weight:600;color:#92400e">성토층(계획)</td>
         <td style="font-size:10.5px;color:#92400e;white-space:nowrap">EL.${fElFrom} ~ ${fElTo}</td>
@@ -1250,8 +1306,8 @@ function renderInputTab() {
       const tipText = cnt > 0 ? '산정근거: ' + cnt + '개 SPT\\n' + detail + '\\n평균 = ' + l.avgN : '해당 구간 SPT 없음\\n인접 SPT 또는 지층 기본값 적용: N=' + l.avgN;
       let depthRange = '-';
       if (l.depthFrom != null && l.depthTo != null) {
-        const elFrom = fmt(STATE.groundEL - l.depthFrom + 1);
-        const elTo = fmt(STATE.groundEL - l.depthTo + 1);
+        const elFrom = fmt(STATE.groundEL - l.depthFrom);
+        const elTo = fmt(STATE.groundEL - l.depthTo);
         depthRange = 'EL.' + elFrom + ' ~ ' + elTo;
       }
       return `<tr>
@@ -1595,18 +1651,18 @@ function renderHorizontalTab() {
   html += `<div class="report-section"><div class="report-title">Step 1. 수평 지반반력계수 (Kh) 산정</div>
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 기본 물성</div>
-  <div style="font-size:11px">N값 평균 (N<50 데이터): $N_{avg} = ${r.N_kh}$</div>
+  <div style="font-size:11px">N값 평균 (GL~1/β=${fmt(r.invBeta,2)}m, N<50): $N_{avg} = ${r.N_kh}$</div>
   <div style="font-size:11px">보정계수: $\\alpha = ${STATE.alpha_kh}$</div>
   <div style="font-size:11px">탄성계수: $E = ${(r.E/1e6).toFixed(1)}$ GPa</div>
-  <div style="font-size:11px">단면2차모멘트: $I = ${fmtE(r.I)}$ m⁴</div>
-  <div style="font-size:11px">휨강성: $EI = E \\times I = ${(r.E/1e3).toFixed(0)} \\times ${fmtE(r.I)} = ${fmt(r.EI,1)}$ kN·m²</div>
+  <div style="font-size:11px">단면2차모멘트${isPHC?'':'(부식적용)'}: $I = ${fmtE(r.I_h)}$ m⁴</div>
+  <div style="font-size:11px">휨강성: $EI = E \\times I = ${(r.E/1e3).toFixed(0)} \\times ${fmtE(r.I_h)} = ${fmt(r.EI_h,1)}$ kN·m²</div>
   <div style="font-size:11px;margin-top:4px">$E_0 = 2800N = 2800 \\times ${r.N_kh} = ${r.Eo2800}$ kN/m²</div>
   <div style="font-size:11px">$E_0' = 1000N = 1000 \\times ${r.N_kh} = ${r.Eo1000}$ kN/m²</div>
   </div>
 
   <table><thead><tr><th>산정 방법</th><th>산정식 및 대입</th><th>Kh (kN/m³)</th></tr></thead><tbody>
   <tr style="background:${r.Kh_min===r.Kh1?'#fef9c3':'inherit'}"><td class="left">도로교 설계기준<br>(2008)</td>
-  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha E_0)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td>
+  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha E_0)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI_h,1)}^{-0.1}$</td>
   <td style="font-weight:700">${fmt(r.Kh1,1)}</td></tr>
   <tr style="background:${r.Kh_min===r.Kh2?'#fef9c3':'inherit'}"><td class="left">福岡 (Fukuoka)</td>
   <td class="left" style="font-size:10px">$K_h = 6910 N^{0.406} = 6910 \\times ${r.N_kh}^{0.406}$</td>
@@ -1615,7 +1671,7 @@ function renderHorizontalTab() {
   <td class="left" style="font-size:10px">$K_h = 2000N = 2000 \\times ${r.N_kh}$</td>
   <td style="font-weight:700">${fmt(r.Kh3,1)}</td></tr>
   <tr style="background:${r.Kh_min===r.Kh4?'#fef9c3':'inherit'}"><td class="left">지반공학회<br>(1996)</td>
-  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha \\cdot 1000N)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td>
+  <td class="left" style="font-size:10px">$K_h = 1.208 (\\alpha \\cdot 1000N)^{1.1} D^{-0.31} (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI_h,1)}^{-0.1}$</td>
   <td style="font-weight:700">${fmt(r.Kh4,1)}</td></tr>
   </tbody></table>
   <div style="padding:10px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7;margin-top:8px">
@@ -1628,7 +1684,8 @@ function renderHorizontalTab() {
   html += `<div class="report-section"><div class="report-title">Step 2. 말뚝 특성치 및 분류</div>
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 특성치 산정</div>
-  <div style="font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI_h,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="font-size:11px">$1/\\beta = ${fmt(r.invBeta,2)}$ m (수평저항 관여 깊이)</div>
   <div style="font-size:11px">$n_h = K_h \\cdot D \\cdot \\beta^{-1}$... $\\eta = (n_h / EI)^{0.2} = ${fmt(r.eta,6)}$ m⁻¹</div>
   <div style="font-size:12px;font-weight:700;margin-top:6px">$\\eta L = ${fmt(r.eta,6)} \\times ${fmt(r.pileLength)} = ${fmt(r.etaL,2)}$</div>
   </div>
@@ -1649,8 +1706,8 @@ function renderHorizontalTab() {
 
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 변위에 의한 수평하중 (H)</div>
-  <div style="font-size:11px">$$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)}$$</div>
-  <div style="font-size:11px">$= 4 \\times ${fmtE(Math.pow(r.beta,3))} \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
+  <div style="font-size:11px">$$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI_h,1)} \\times ${fmt(STATE.delta_cm/100,4)}$$</div>
+  <div style="font-size:11px">$= 4 \\times ${fmtE(Math.pow(r.beta,3))} \\times ${fmt(r.EI_h,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
   </div>
 
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
@@ -1669,7 +1726,8 @@ function renderHorizontalTab() {
   html += `<div class="report-section"><div class="report-title">Step 4. Brom 방법 — Case-2 (항복 응력)</div>
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
   <div style="font-size:11px">$\\sigma_{max} = ${STATE.sigmaMax}$ kN/m² ${isPHC?'(PHC 허용압축응력)':'(강관 항복응력)'}</div>
-  <div style="font-size:11px;margin-top:4px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
+  <div style="font-size:11px;margin-top:4px">$Z_p = I / (D/2) = ${fmtE(r.I_h)} / ${fmt(r.D/2,4)} = ${fmtE(r.Zp_h)}$ m³</div>
+  <div style="font-size:11px;margin-top:4px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp_h)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
   <div style="font-size:11px;margin-top:6px">${r.pileClass === '긴말뚝' ?
     `긴말뚝: $H_u = 2.38 \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} K_p \\gamma D^3$<br>
     $= 2.38 \\left(\\frac{${fmt(r.My_case2)}}{${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^4}\\right)^{2/3} \\times ${fmt(r.Kp,3)} \\times ${r.gamma_top} \\times ${fmt(r.D,4)}^3 = ${fmt(r.Hu_brom2)}$ kN` :
@@ -2955,23 +3013,24 @@ function renderReportTab() {
 
   // 3.1 Kh
   html += `<div class="report-step"><span class="step-num">1</span><strong>수평 지반반력계수 (Kh) 산정</strong>
-  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">N값 50 미만 데이터의 평균 사용</div>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">GL~1/β (${fmt(r.invBeta,2)}m) 범위 N<50 평균 사용</div>
   <div style="font-size:11px;font-weight:600">$N_{평균} = ${r.N_kh}$, $\\alpha = ${STATE.alpha_kh}$</div>
   <div style="margin-top:6px;font-size:11px">$E_0 = 2800N = 2800 \\times ${r.N_kh} = ${r.Eo2800}$ kN/m²</div>
   <div style="font-size:11px">$E_0' = 1000N = 1000 \\times ${r.N_kh} = ${r.Eo1000}$ kN/m²</div>
 
   <table style="margin-top:8px"><thead><tr><th>산정 방법</th><th>산정식</th><th>Kh (kN/m³)</th></tr></thead><tbody>
-  <tr style="background:${r.Kh_min===r.Kh1?'#fef9c3':'inherit'}"><td class="left">도로교 (2008)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha E_0)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh1,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh1?'#fef9c3':'inherit'}"><td class="left">도로교 (2008)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha E_0)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo2800})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI_h,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh1,1)}</td></tr>
   <tr style="background:${r.Kh_min===r.Kh2?'#fef9c3':'inherit'}"><td class="left">福岡 (Fukuoka)</td><td class="left" style="font-size:10px">$6910 \\times N^{0.406} = 6910 \\times ${r.N_kh}^{0.406}$</td><td style="font-weight:700">${fmt(r.Kh2,1)}</td></tr>
   <tr style="background:${r.Kh_min===r.Kh3?'#fef9c3':'inherit'}"><td class="left">横山 (Yokoyama)</td><td class="left" style="font-size:10px">$2000N = 2000 \\times ${r.N_kh}$</td><td style="font-weight:700">${fmt(r.Kh3,1)}</td></tr>
-  <tr style="background:${r.Kh_min===r.Kh4?'#fef9c3':'inherit'}"><td class="left">지반공학회 (1996)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha \\times 1000N)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh4,1)}</td></tr>
+  <tr style="background:${r.Kh_min===r.Kh4?'#fef9c3':'inherit'}"><td class="left">지반공학회 (1996)</td><td class="left" style="font-size:10px">$1.208 \\times (\\alpha \\times 1000N)^{1.1} \\times D^{-0.31} \\times (EI)^{-0.1}$<br>$= 1.208 \\times (${STATE.alpha_kh} \\times ${r.Eo1000})^{1.1} \\times ${fmt(r.D,4)}^{-0.31} \\times ${fmt(r.EI_h,1)}^{-0.1}$</td><td style="font-weight:700">${fmt(r.Kh4,1)}</td></tr>
   </tbody></table>
   <div style="margin-top:8px;font-size:12px;font-weight:700;color:var(--status-pass)">$K_h = \\min(${fmt(r.Kh1,1)},\\; ${fmt(r.Kh2,1)},\\; ${fmt(r.Kh3,1)},\\; ${fmt(r.Kh4,1)}) = ${fmt(r.Kh_min,1)}$ kN/m³ ← 최솟값 채택</div>
   </div>`;
 
   // 3.2 Pile classification
   html += `<div class="report-step"><span class="step-num">2</span><strong>말뚝 분류 및 특성치</strong>
-  <div style="margin-top:8px;font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="margin-top:8px;font-size:11px">$$\\beta = \\left(\\frac{K_h \\cdot D}{4 \\cdot EI}\\right)^{0.25} = \\left(\\frac{${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)}}{4 \\times ${fmt(r.EI_h,1)}}\\right)^{0.25} = ${fmt(r.beta,6)} \\text{ m}^{-1}$$</div>
+  <div style="font-size:11px">$1/\\beta = ${fmt(r.invBeta,2)}$ m (수평저항 관여 깊이)</div>
   <div style="font-size:11px">$n_h = K_h \\cdot D \\div (1/\\beta) = ${fmt(r.Kh_min,1)} \\times ${fmt(r.D,4)} \\div ${fmt(1/r.beta,4)} = ${fmt(r.Kh_min*r.D*r.beta,2)}$ kN/m³</div>
   <div style="font-size:11px">$\\eta = (n_h / EI)^{0.2} = ${fmt(r.eta,6)}$ m⁻¹</div>
   <div style="font-size:11px;font-weight:700;margin-top:4px">$\\eta L = ${fmt(r.eta,6)} \\times ${fmt(r.pileLength)} = ${fmt(r.etaL,2)}$</div>
@@ -2987,7 +3046,7 @@ function renderReportTab() {
   <div style="font-size:11px">$\\gamma = ${r.gamma_top}$ kN/m³ (최상위 지층 단위중량)</div>
 
   <div style="margin-top:6px;font-size:11px">변위에 의한 수평하중:</div>
-  <div style="font-size:11px">$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
+  <div style="font-size:11px">$H = 4\\beta^3 \\cdot EI \\cdot \\delta = 4 \\times ${fmt(r.beta,6)}^3 \\times ${fmt(r.EI_h,1)} \\times ${fmt(STATE.delta_cm/100,4)} = ${fmt(r.H_disp)}$ kN</div>
   <div style="font-size:11px">$M_y = \\frac{H}{2\\beta} = \\frac{${fmt(r.H_disp)}}{2 \\times ${fmt(r.beta,6)}} = ${fmt(r.My_case1)}$ kN·m</div>
 
   <div style="margin-top:4px;font-size:11px">${r.pileClass === '긴말뚝' ?
@@ -3001,7 +3060,8 @@ function renderReportTab() {
   // 3.4 Brom Case-2
   html += `<div class="report-step"><span class="step-num">4</span><strong>Brom 방법 — Case-2 (항복 응력)</strong>
   <div style="margin-top:8px;font-size:11px">$\\sigma_{max} = ${STATE.sigmaMax}$ kN/m² ${isPHC?'(PHC 허용압축응력)':'(강관 항복응력)'}</div>
-  <div style="font-size:11px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
+  <div style="font-size:11px">$Z_p = I / (D/2) = ${fmtE(r.I_h)} / ${fmt(r.D/2,4)} = ${fmtE(r.Zp_h)}$ m³</div>
+  <div style="font-size:11px">$M_y = Z_p \\times \\sigma_{max} = ${fmtE(r.Zp_h)} \\times ${STATE.sigmaMax} = ${fmt(r.My_case2)}$ kN·m</div>
   <div style="font-size:11px">${r.pileClass === '긴말뚝' ?
     `긴말뚝: $H_u = 2.38 \\times \\left(\\frac{M_y}{K_p \\gamma D^4}\\right)^{2/3} \\times K_p \\gamma D^3 = ${fmt(r.Hu_brom2)}$ kN` :
     `$H_u = ${fmt(r.Hu_brom2)}$ kN (Case-1과 동일 적용)`}</div>
