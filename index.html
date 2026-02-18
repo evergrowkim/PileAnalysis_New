@@ -315,6 +315,78 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
   .verify-compare { grid-template-columns: 1fr; }
   .dash-stats { grid-template-columns: 1fr; }
 }
+/* ===== AI INTEGRATION STYLES ===== */
+.ai-btn { padding:5px 12px; border:none; border-radius:4px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:10px;
+  font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all .2s; }
+.ai-btn:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); box-shadow:0 2px 8px rgba(99,102,241,.4); }
+.ai-btn.btn-toolbar { margin-left:4px; }
+#aiContent { white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.85; color:var(--text-primary); }
+#aiContent h3 { font-size:14px; font-weight:700; color:var(--primary-navy); margin:16px 0 6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px; }
+#aiContent h4 { font-size:12.5px; font-weight:600; color:var(--primary-steel); margin:10px 0 4px; }
+#aiContent ul, #aiContent ol { margin:4px 0; padding-left:20px; }
+#aiContent li { margin:3px 0; }
+#aiContent strong { color:var(--primary-navy); }
+#aiContent code { background:#f1f5f9; padding:1px 5px; border-radius:3px; font-size:11px; font-family:var(--font-mono); }
+#aiContent blockquote { border-left:3px solid #6366f1; margin:8px 0; padding:4px 12px; background:#f8f9ff; }
+.ai-loading { display:flex; align-items:center; gap:10px; padding:20px; color:var(--text-muted); font-size:12px; }
+.ai-loading .ai-spinner { width:20px; height:20px; border:2px solid #e2e8f0; border-top-color:#6366f1;
+  border-radius:50%; animation:aiSpin .8s linear infinite; }
+@keyframes aiSpin { to { transform:rotate(360deg); } }
+.ai-nl-box { margin-bottom:14px; padding:12px 14px; background:linear-gradient(135deg,#f8f9ff,#f0f4ff);
+  border:1px solid #c7d2fe; border-radius:8px; }
+.ai-nl-box input { flex:1; padding:8px 12px; border:1px solid #a5b4fc; border-radius:6px;
+  font-size:12px; font-family:var(--font-body); outline:none; transition:border .2s; }
+.ai-nl-box input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+
+/* AI Chat Panel */
+.chat-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:10000; display:none; }
+.chat-overlay.open { display:flex; justify-content:flex-end; }
+.chat-panel { width:480px; height:100vh; background:#fff; display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform .3s ease; box-shadow:-4px 0 24px rgba(0,0,0,.15); }
+.chat-panel.open { transform:translateX(0); }
+.chat-header { padding:12px 16px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff;
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.chat-header .ch-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.chat-header .ch-sub { font-size:10px; opacity:.8; margin-top:2px; }
+.chat-header .ch-close { background:none; border:none; color:#fff; font-size:18px; cursor:pointer; padding:4px 8px; border-radius:4px; }
+.chat-header .ch-close:hover { background:rgba(255,255,255,.2); }
+.chat-header .ch-actions { display:flex; gap:4px; align-items:center; }
+.chat-header .ch-btn { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff;
+  font-size:10px; padding:3px 8px; border-radius:4px; cursor:pointer; }
+.chat-header .ch-btn:hover { background:rgba(255,255,255,.3); }
+.chat-messages { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+.chat-msg { max-width:92%; padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.75; word-break:break-word; }
+.chat-msg.user { align-self:flex-end; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border-bottom-right-radius:4px; }
+.chat-msg.assistant { align-self:flex-start; background:#f1f5f9; color:var(--text-primary); border-bottom-left-radius:4px; }
+.chat-msg.assistant h3 { font-size:13px; font-weight:700; color:var(--primary-navy); margin:10px 0 4px; }
+.chat-msg.assistant h4 { font-size:12px; font-weight:600; color:var(--primary-steel); margin:8px 0 3px; }
+.chat-msg.assistant strong { color:var(--primary-navy); }
+.chat-msg.assistant code { background:#e2e8f0; padding:1px 4px; border-radius:3px; font-size:10.5px; }
+.chat-msg.assistant ul, .chat-msg.assistant ol { margin:4px 0; padding-left:18px; }
+.chat-msg.assistant li { margin:2px 0; }
+.chat-msg.system { align-self:center; background:#eff6ff; color:#3b82f6; font-size:10px; padding:6px 12px;
+  border-radius:20px; max-width:100%; text-align:center; }
+.chat-msg .msg-time { font-size:9px; opacity:.5; margin-top:4px; text-align:right; }
+.chat-typing { display:flex; gap:4px; padding:8px 14px; align-self:flex-start; }
+.chat-typing span { width:6px; height:6px; background:#94a3b8; border-radius:50%;
+  animation:chatBounce .6s infinite alternate; }
+.chat-typing span:nth-child(2) { animation-delay:.2s; }
+.chat-typing span:nth-child(3) { animation-delay:.4s; }
+@keyframes chatBounce { to { transform:translateY(-6px); opacity:.4; } }
+.chat-input-area { padding:10px 12px; border-top:1px solid #e2e8f0; background:#fafbfc; flex-shrink:0; }
+.chat-input-row { display:flex; gap:8px; align-items:flex-end; }
+.chat-input-row textarea { flex:1; resize:none; border:1px solid #d1d5db; border-radius:10px; padding:10px 14px;
+  font-size:12px; font-family:var(--font-body); line-height:1.5; max-height:120px; min-height:40px;
+  outline:none; transition:border .2s; }
+.chat-input-row textarea:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+.chat-send-btn { width:38px; height:38px; border:none; border-radius:50%; cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:16px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; }
+.chat-send-btn:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); box-shadow:0 2px 8px rgba(99,102,241,.4); }
+.chat-send-btn:disabled { opacity:.4; cursor:not-allowed; }
+.chat-context-badge { font-size:10px; color:var(--text-muted); padding:4px 0; display:flex; align-items:center; gap:4px; }
+.chat-context-badge span { background:#e0e7ff; color:#4338ca; padding:1px 6px; border-radius:10px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -333,6 +405,8 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
   </div>
   <button class="btn-toolbar" onclick="openVerifyModal()">&#10003; 검증</button>
   <button class="btn-toolbar" onclick="exportExcel()">&#128196; 엑셀</button>
+  <button class="ai-btn btn-toolbar" onclick="runAIReview()">&#9889; AI 검토</button>
+  <button class="ai-btn btn-toolbar" onclick="openChatPanel()" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
 </div>
 
 <!-- Tab Navigation -->
@@ -388,6 +462,50 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
       <button class="ph-close" onclick="closeLogPanel()">&#10005;</button>
     </div>
     <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<!-- AI Assistant Panel -->
+<div class="panel-overlay" id="aiPanelOverlay" onclick="closeAIPanel()">
+  <div class="slide-panel" id="aiSlidePanel" onclick="event.stopPropagation()" style="width:580px">
+    <div class="panel-header">
+      <div>
+        <div class="ph-title" id="aiPanelTitle">AI 분석</div>
+        <div class="ph-meta" id="aiPanelMeta"></div>
+      </div>
+      <button class="ph-close" onclick="closeAIPanel()">&#10005;</button>
+    </div>
+    <div class="panel-body" id="aiPanelBody" style="padding:16px;">
+      <div id="aiContent"></div>
+      <div id="aiTokenInfo" style="display:none;margin-top:14px;padding:8px 10px;
+           background:#f8f9fa;border-radius:4px;font-size:10px;color:var(--text-muted);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Chat Panel -->
+<div class="chat-overlay" id="chatOverlay" onclick="closeChatPanel()">
+  <div class="chat-panel" id="chatPanel" onclick="event.stopPropagation()">
+    <div class="chat-header">
+      <div>
+        <div class="ch-title">&#9889; AI &#51648;&#48152;&#44277;&#54617; &#51204;&#47928;&#44032;</div>
+        <div class="ch-sub" id="chatContextInfo">&#52968;&#53581;&#49828;&#53944; &#50630;&#51020;</div>
+      </div>
+      <div class="ch-actions">
+        <button class="ch-btn" onclick="clearChatHistory()" title="&#45824;&#54868; &#52488;&#44592;&#54868;">&#128260; &#52488;&#44592;&#54868;</button>
+        <button class="ch-close" onclick="closeChatPanel()">&#10005;</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg system">AI &#51648;&#48152;&#44277;&#54617; &#51204;&#47928;&#44032;&#50752; &#45824;&#54868;&#47484; &#49884;&#51089;&#54616;&#49464;&#50836;. &#49884;&#52628;&#44277; &#45936;&#51060;&#53552;&#50752; &#44228;&#49328; &#44208;&#44284;&#44032; &#51088;&#46041;&#51004;&#47196; &#51228;&#44277;&#46121;&#45768;&#45796;.</div>
+    </div>
+    <div class="chat-input-area">
+      <div class="chat-context-badge" id="chatBadge"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" rows="1" placeholder="&#51656;&#47928;&#51012; &#51077;&#47141;&#54616;&#49464;&#50836;... (Shift+Enter: &#51460;&#48148;&#44984;)" onkeydown="handleChatKeydown(event)" oninput="autoResizeChatInput(this)"></textarea>
+        <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">&#9654;</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -529,8 +647,9 @@ function calcPile(p) {
     else mu2 = Math.min(jc, 2) * 20 + Math.max(jc - 2, 0) * 30;
   }
   const Qp_material = (1 - (mu1 + mu2) / 100) * Qap;
-  // Fill layer + Layers
+  // Fill layer + Cut handling + Layers
   const fillHeight = p.useFill && p.plannedEL ? Math.max(p.plannedEL - p.groundEL, 0) : 0;
+  const cutDepth = p.useFill && p.plannedEL ? Math.max(p.groundEL - p.plannedEL, 0) : 0;
   const processedLayers = [];
   if (fillHeight > 0) {
     const fillAs = U * fillHeight;
@@ -540,6 +659,7 @@ function calcPile(p) {
       skinFriction_sand: 2 * fillcN * fillAs, skinFriction_clay: 0, isFill: true });
   }
   // 주면마찰력: 선단(tipEL)까지만 산정 — 마지막 층 두께 보정
+  // 절토 시: cutDepth까지의 지층을 삭제/절단 (설계지반면이 계획고로 내려감)
   const bearingDepthFromGL = p.groundEL - tipEL;
   let cumDepth = 0;
   if (p.layers) p.layers.forEach(layer => {
@@ -548,21 +668,25 @@ function calcPile(p) {
     cumDepth = layerBot;
     // 지지층 깊이 초과 지층 건너뜀
     if (layerTop >= bearingDepthFromGL) return;
-    // 마지막 층 두께 보정: 지지층 깊이에서 절단
-    let effThickness = layer.thickness;
-    let truncated = false;
-    if (layerBot > bearingDepthFromGL) {
-      effThickness = bearingDepthFromGL - layerTop;
-      truncated = true;
+    // 절토 처리: cutDepth 이내의 지층은 삭제/절단
+    let effTop = layerTop;
+    let effBot = layerBot;
+    if (cutDepth > 0) {
+      if (layerBot <= cutDepth) return; // 전체가 절토 범위 내 → 삭제
+      if (layerTop < cutDepth) effTop = cutDepth; // 상부 일부 절토 → 절단
     }
+    // 마지막 층 두께 보정: 지지층 깊이에서 절단
+    if (effBot > bearingDepthFromGL) effBot = bearingDepthFromGL;
+    let effThickness = effBot - effTop;
     if (effThickness <= 0) return;
+    const truncated = (effBot < layerBot) || (effTop > layerTop);
     const sc = SOIL_CLS[layer.soilType] || "sand";
     const As_i = U * effThickness;
     const cN = Math.min(layer.avgN, 30);
     processedLayers.push({ ...layer, thickness: parseFloat(effThickness.toFixed(3)), origThickness: layer.thickness, soilClass: sc, As: As_i,
       skinFriction_sand: sc === "sand" ? 2 * cN * As_i : 0,
       skinFriction_clay: sc === "clay" ? 6.25 * cN * As_i : 0,
-      depthFrom: layerTop, depthTo: Math.min(layerBot, bearingDepthFromGL), truncated });
+      depthFrom: effTop, depthTo: parseFloat(effBot.toFixed(3)), truncated });
   });
   const sum_2NsAs = processedLayers.reduce((s, l) => s + l.skinFriction_sand, 0);
   const sum_625NcAc = processedLayers.reduce((s, l) => s + l.skinFriction_clay, 0);
@@ -605,9 +729,9 @@ function calcPile(p) {
   }
   // N_kh: 설계지반면~1/β 상부지반 대표N 반복계산 (가이드 §2.2)
   // 성토 적용 시: 설계지반면 = 계획고, SPT depth를 계획고 기준으로 환산
+  // 절토 적용 시: 절토 깊이 이내 SPT 제거, 나머지 depth에서 cutDepth 차감
   const a = p.alpha_kh || 1;
   const sptValid = p.sptData && p.sptData.length > 0;
-  // 성토 적용 시 SPT를 설계지반면(계획고) 기준으로 환산 + 성토층 N값 포함
   const sptForKh = [];
   if (fillHeight > 0) {
     // 성토층: 1m 간격으로 fillN 가상 SPT 추가
@@ -621,6 +745,13 @@ function calcPile(p) {
         sptForKh.push({ depth: s.depth + fillHeight, N: s.N });
       });
     }
+  } else if (cutDepth > 0 && sptValid) {
+    // 절토: cutDepth 이내 SPT 제거, 나머지는 depth - cutDepth로 환산 (설계지반면 기준)
+    p.sptData.forEach(s => {
+      if (s.depth > cutDepth) {
+        sptForKh.push({ depth: s.depth - cutDepth, N: s.N });
+      }
+    });
   } else if (sptValid) {
     p.sptData.forEach(s => sptForKh.push({ depth: s.depth, N: s.N }));
   }
@@ -696,7 +827,7 @@ function calcPile(p) {
   const Cs = (0.93 + 0.16 * Math.sqrt(pileLength / D)) * Cp;
   const Sps = (Qfs * Cs) / (pileLength * Math.max(qp, 1)) * 1000;
   const St = Ss + Sp + Sps;
-  return { D, t, pileLength, cutFillDepth, gwlEL, U, Ap_tip, Ap_net, I, Zp, E, EI, W_unit,
+  return { D, t, pileLength, cutFillDepth, fillHeight, cutDepth, gwlEL, U, Ap_tip, Ap_net, I, Zp, E, EI, W_unit,
     I_h, Zp_h, EI_h,
     L_over_d, mu1, mu2, Qap, Qp_material, n_slender,
     N_tip, Qu, Qu_tip, Qu_skin, Qa_ground, FS, sum_2NsAs, sum_625NcAc, processedLayers, Qa_applied, bearingDepthFromGL,
@@ -760,6 +891,7 @@ const VERIFY_DATA = {
 };
 
 function recalculate() {
+  invalidateAICache();
   try {
     STATE.result = calcPile({
       pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
@@ -929,6 +1061,7 @@ function saveCurrentToUploadedData() {
   const bh = STATE.uploadedData[STATE.currentBhIdx];
   bh.groundEL = STATE.groundEL;
   bh.gwlDepth = STATE.gwlDepth;
+  bh.bearingEL = STATE.bearingEL;
   bh.sptData = JSON.parse(JSON.stringify(STATE.sptData));
   bh.layers = JSON.parse(JSON.stringify(STATE.layers));
 }
@@ -939,6 +1072,7 @@ function applyBoreholeData(bh, idx) {
   if (idx != null) STATE.currentBhIdx = idx;
   if (bh.groundEL != null) STATE.groundEL = bh.groundEL;
   if (bh.gwlDepth != null) STATE.gwlDepth = bh.gwlDepth;
+  if (bh.bearingEL != null) STATE.bearingEL = bh.bearingEL;
   if (bh.sptData && bh.sptData.length > 0) STATE.sptData = JSON.parse(JSON.stringify(bh.sptData));
   if (bh.layers && bh.layers.length > 0) STATE.layers = JSON.parse(JSON.stringify(bh.layers));
   // Assign remark from layers to spt if missing — depthFrom/depthTo 우선 사용
@@ -1042,7 +1176,952 @@ function showGuide(key) {
 function closeGuide() { document.getElementById('guideOverlay').classList.remove('open'); }
 
 // ESC key handler
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); }});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); }});
+
+// ===== AI INTEGRATION =====
+let AI_API_KEY = localStorage.getItem('claude_api_key') || '';
+
+// AI 결과 캐싱 시스템
+const AI_CACHE = { review: null, borehole: null, report: null };
+function aiCacheKey(data) {
+  return JSON.stringify(data);
+}
+function invalidateAICache() {
+  AI_CACHE.review = null;
+  AI_CACHE.borehole = null;
+  AI_CACHE.report = null;
+}
+
+function setAIApiKey(key) { AI_API_KEY = key; localStorage.setItem('claude_api_key', key); }
+function ensureApiKey() {
+  if (AI_API_KEY) return true;
+  const key = prompt('Claude API Key를 입력하세요 (sk-ant-...):');
+  if (key && key.startsWith('sk-ant-')) { setAIApiKey(key); return true; }
+  showToast('유효한 API Key가 필요합니다', 'error'); return false;
+}
+
+async function callClaudeAPI({ systemPrompt, userMessage, onChunk, onComplete, onError, maxTokens=2048, temperature=0.3 }) {
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': AI_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxTokens,
+        temperature: temperature,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      const code = resp.status;
+      if (code === 401) { onError({ message: 'API Key가 유효하지 않습니다', details: '설정에서 키를 확인하세요' }); return; }
+      if (code === 429) { onError({ message: '요청 한도 초과 (Rate Limit)', details: '잠시 후 다시 시도하세요' }); return; }
+      onError({ message: `API 오류 (${code})`, details: errBody.substring(0, 200) }); return;
+    }
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', inputTokens = 0, outputTokens = 0, buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(data);
+          if (evt.type === 'message_start' && evt.message && evt.message.usage) {
+            inputTokens = evt.message.usage.input_tokens || 0;
+          }
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+            fullText += evt.delta.text;
+            if (onChunk) onChunk(evt.delta.text);
+          }
+          if (evt.type === 'message_delta' && evt.usage) {
+            outputTokens = evt.usage.output_tokens || 0;
+          }
+        } catch (pe) { /* skip parse error */ }
+      }
+    }
+    if (onComplete) onComplete(fullText, { input_tokens: inputTokens, output_tokens: outputTokens });
+  } catch (err) {
+    if (onError) onError({ message: '네트워크 연결 실패', details: err.message });
+  }
+}
+
+// AI Panel Management
+function openAIPanel(title, meta) {
+  document.getElementById('aiPanelTitle').textContent = title;
+  document.getElementById('aiPanelMeta').innerHTML = meta || '';
+  document.getElementById('aiContent').innerHTML = '';
+  document.getElementById('aiTokenInfo').style.display = 'none';
+  document.getElementById('aiPanelOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('aiSlidePanel').classList.add('open'), 10);
+}
+function closeAIPanel() {
+  const p = document.getElementById('aiSlidePanel');
+  if (p) p.classList.remove('open');
+  setTimeout(() => { const o = document.getElementById('aiPanelOverlay'); if (o) o.classList.remove('open'); }, 300);
+}
+function showAILoading(msg) {
+  document.getElementById('aiContent').innerHTML =
+    `<div class="ai-loading"><div class="ai-spinner"></div>${msg || 'AI 분석 중...'}</div>`;
+}
+function showAITokenInfo(usage) {
+  const el = document.getElementById('aiTokenInfo');
+  const cost = ((usage.input_tokens / 1e6 * 3) + (usage.output_tokens / 1e6 * 15)).toFixed(4);
+  el.innerHTML = `토큰: 입력 ${usage.input_tokens.toLocaleString()} · 출력 ${usage.output_tokens.toLocaleString()} · 비용 ~$${cost}`;
+  el.style.display = 'block';
+}
+function renderAIMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3 style="font-size:13px">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.+)$/gm, '<h3 style="font-size:15px;border-bottom:2px solid var(--primary-navy)">$1</h3>')
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0">')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^(\d+)\. (.+)$/gm, '<div style="margin:2px 0;padding-left:16px"><strong>$1.</strong> $2</div>')
+    .replace(/^- (.+)$/gm, '<div style="margin:2px 0;padding-left:16px">• $1</div>')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+// ===== Feature B: AI 설계 검토 =====
+function prepareReviewData() {
+  const r = STATE.result; if (!r) return null;
+  const isPHC = STATE.pileType === 'PHC';
+  return {
+    설계조건: {
+      말뚝종류: isPHC ? `PHC ${STATE.phcGrade}종` : '강관',
+      직경_mm: STATE.diameter_mm, 두께_mm: STATE.thickness_mm,
+      말뚝길이_m: +r.pileLength.toFixed(2),
+      지지방법: STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지(Meyerhof)',
+      시추공: STATE.boreholeNo,
+      지반고_EL: STATE.groundEL, 지지층_EL: STATE.bearingEL,
+      선단_EL: +r.tipEL.toFixed(2), 근입깊이_m: STATE.embedDepth,
+      지하수위_GL: STATE.gwlDepth,
+      성토적용: STATE.useFill, 계획고: STATE.plannedEL
+    },
+    계산결과: {
+      허용수직지지력_kN: +r.Qa_applied.toFixed(1),
+      재료지지력_kN: +r.Qp_material.toFixed(1),
+      지반지지력_kN: +r.Qa_ground.toFixed(1),
+      극한지지력_kN: +r.Qu.toFixed(1),
+      선단지지력_kN: +r.Qu_tip.toFixed(1),
+      주면마찰력_kN: +r.Qu_skin.toFixed(1),
+      안전율: r.FS,
+      허용수평지지력_kN: +r.Ha_applied.toFixed(1),
+      인발저항력_kN: +r.Qpull.toFixed(1),
+      침하량_mm: +r.St.toFixed(2),
+      침하판정: r.St < 25 ? 'OK' : 'NG',
+      세장비: +r.L_over_d.toFixed(1),
+      말뚝분류: r.pileClass
+    },
+    지층현황: STATE.layers.map(l => ({
+      지층: l.soilType, 두께_m: l.thickness, 평균N: l.avgN, 단위중량: l.unitWeight
+    })),
+    SPT요약: {
+      데이터수: STATE.sptData.length,
+      최소N: Math.min(...STATE.sptData.map(s => s.N)),
+      최대N: Math.max(...STATE.sptData.map(s => s.N)),
+      선단N: r.N_tip
+    }
+  };
+}
+
+async function runAIReview(forceRefresh) {
+  if (!ensureApiKey()) return;
+  if (!STATE.result) { showToast('계산 결과가 없습니다. 먼저 설계를 완료하세요.', 'warning'); return; }
+  const data = prepareReviewData();
+  const cacheKey = aiCacheKey(data);
+  const meta = `<span class="pm-label">시추공: </span><span class="pm-value">${STATE.boreholeNo}</span>` +
+    ` · <span class="pm-label">Qa=</span><span class="pm-value">${fmt(STATE.result.Qa_applied)}kN</span>`;
+  // 캐시 히트: 이전 결과 즉시 표시
+  if (!forceRefresh && AI_CACHE.review && AI_CACHE.review.key === cacheKey) {
+    openAIPanel('AI 설계 검토', meta);
+    document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.review.text) +
+      `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
+        <button class="btn btn-sm" onclick="runAIReview(true)" style="font-size:10px;padding:2px 8px">&#128260; 재분석</button>
+      </div>`;
+    showAITokenInfo(AI_CACHE.review.usage);
+    return;
+  }
+  openAIPanel('AI 설계 검토', meta);
+  showAILoading('설계 결과를 분석 중입니다...');
+  let fullText = '';
+  await callClaudeAPI({
+    systemPrompt: `당신은 대한민국 지반공학 전문가입니다. 말뚝 기초 설계 결과를 검토합니다.
+KDS 11 50 40 (2018), 도로교설계기준 (2008), 구조물기초설계기준해설을 적용합니다.
+한국어로 답변하며, 마크다운 형식(###, **, -)을 사용합니다.
+수치를 근거로 구체적이고 실무적인 검토 의견을 제시하세요.`,
+    userMessage: `다음 말뚝 기초 설계 결과를 전문적으로 검토해주세요.
+
+${JSON.stringify(data, null, 2)}
+
+다음 항목을 각각 검토해주세요:
+### 1. 안전율 적정성
+수직/수평 지지력의 안전율, 지반 극한지지력 대비 허용지지력 비율
+
+### 2. 말뚝 길이 적정성
+지층 조건(N값 분포) 대비 말뚝 길이, 세장비, 근입깊이 적합성
+
+### 3. 지지력 균형 분석
+재료 지지력 vs 지반 지지력 비율, 선단 vs 주면마찰 분담 비율, 비효율 여부
+
+### 4. 침하 검토
+침하량 적정성, 각 성분(탄성침하/선단침하/주면침하) 비율
+
+### 5. 설계 개선 제안
+경제성/안전성 향상 방안 (규격 변경, 길이 조정, 등급 변경 등)
+
+### 6. 위험 요소 및 주의사항
+시공 시 유의사항, 잠재 위험, 추가 검토 필요 항목`,
+    maxTokens: 2500,
+    temperature: 0.3,
+    onChunk: (text) => {
+      fullText += text;
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(fullText);
+    },
+    onComplete: (finalText, usage) => {
+      AI_CACHE.review = { key: cacheKey, text: finalText, usage };
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(finalText);
+      showAITokenInfo(usage);
+    },
+    onError: (err) => {
+      document.getElementById('aiContent').innerHTML =
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>
+         <div style="font-size:11px;color:var(--text-muted);padding:0 20px">${err.details || ''}</div>`;
+    }
+  });
+}
+
+// ===== Feature C: 자연어 입력 =====
+let _lastNLParsed = null;
+
+async function parseNLInput() {
+  if (!ensureApiKey()) return;
+  const inputEl = document.getElementById('nlInput');
+  if (!inputEl) return;
+  const input = inputEl.value.trim();
+  if (!input) { showToast('입력이 비어있습니다', 'warning'); return; }
+  const preview = document.getElementById('nlPreview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>파싱 중...</div>';
+  let fullText = '';
+  await callClaudeAPI({
+    systemPrompt: `당신은 말뚝 기초 설계 입력 파서입니다. 사용자의 자연어 설명을 분석하여 설계 파라미터를 JSON으로 반환합니다.
+
+반드시 다음 JSON 형식만 반환하세요 (설명 없이):
+{
+  "pileType": "PHC" 또는 "강관",
+  "diameter_mm": 숫자,
+  "thickness_mm": 숫자,
+  "phcGrade": "A"/"B"/"C" (PHC인 경우만),
+  "bearingMethod": "meyerhof" 또는 "rock",
+  "pileTopEL": 숫자,
+  "groundEL": 숫자,
+  "bearingEL": 숫자,
+  "gwlDepth": 숫자,
+  "embedDepth": 숫자,
+  "useFill": true/false,
+  "plannedEL": 숫자,
+  "fillN": 숫자,
+  "actions": ["autoDetectBearing", "autoDetectBearingAll"]
+}
+
+규칙:
+- 사용자가 언급하지 않은 필드는 포함하지 마세요
+- PHC 가용 직경: 350, 400, 450, 500, 600 mm (두께는 직경별 규격 참조)
+- 강관 가용 직경: 406.4, 508.0, 609.6 mm
+- "토사" = bearingMethod: "meyerhof", "암반/암지지" = bearingMethod: "rock"
+- "계획고" 언급 = useFill: true + plannedEL 값
+- "A종/B종/C종" → phcGrade에 반영
+- "지지층 자동", "지지층 EL 자동", "자동 탐지", "자동 적용" → actions에 "autoDetectBearing" 추가
+- "모든 시추공", "전체 시추공", "전부", "일괄" + 지지층 자동 → actions에 "autoDetectBearingAll" 추가
+- actions 배열은 실행할 명령이 있을 때만 포함
+- JSON만 반환. 다른 텍스트 없이.`,
+    userMessage: input,
+    maxTokens: 512,
+    temperature: 0,
+    onChunk: (text) => { fullText += text; },
+    onComplete: (finalText) => {
+      try {
+        let jsonStr = finalText.trim();
+        if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonStr);
+        _lastNLParsed = parsed;
+        showNLPreview(parsed, preview);
+      } catch (e) {
+        preview.innerHTML = '<div style="color:var(--status-fail);font-size:11px;padding:6px">파싱 실패: AI 응답을 해석할 수 없습니다. 더 구체적으로 입력해보세요.</div>';
+      }
+    },
+    onError: (err) => {
+      preview.innerHTML = `<div style="color:var(--status-fail);font-size:11px;padding:6px">오류: ${err.message}</div>`;
+    }
+  });
+}
+
+function showNLPreview(parsed, container) {
+  const names = {
+    pileType:'말뚝종류', diameter_mm:'직경(mm)', thickness_mm:'두께(mm)',
+    phcGrade:'PHC등급', bearingMethod:'지지방법', pileTopEL:'말뚝두부EL',
+    groundEL:'지반고EL', bearingEL:'지지층EL', gwlDepth:'지하수위(GL,m)',
+    embedDepth:'근입깊이(m)', useFill:'성토적용', plannedEL:'계획고EL', fillN:'성토N값'
+  };
+  const actionNames = {
+    autoDetectBearing: '지지층 EL 자동 탐지 (현재 시추공)',
+    autoDetectBearingAll: '지지층 EL 자동 탐지 (모든 시추공)'
+  };
+  let html = '';
+  // 설계 파라미터 표시
+  const paramEntries = Object.entries(parsed).filter(([k]) => k !== 'actions');
+  if (paramEntries.length > 0) {
+    html += '<div style="font-size:11px;font-weight:600;color:#15803d;margin-bottom:6px">&#10003; 인식된 설계 조건:</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px">';
+    for (const [key, val] of paramEntries) {
+      const label = names[key] || key;
+      const cur = STATE[key];
+      const changed = cur !== undefined && cur !== val;
+      html += `<span style="${changed ? 'color:#dc2626;font-weight:600' : ''}">${label}: <strong>${val}</strong>${changed ? ' (\u2190'+cur+')' : ''}</span>`;
+    }
+    html += '</div>';
+  }
+  // 액션 표시
+  if (parsed.actions && parsed.actions.length > 0) {
+    html += '<div style="font-size:11px;font-weight:600;color:#7c3aed;margin:6px 0 4px">&#9889; 실행할 명령:</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;font-size:11px">';
+    parsed.actions.forEach(a => {
+      html += `<span style="background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:10px;font-weight:600">${actionNames[a] || a}</span>`;
+    });
+    html += '</div>';
+  }
+  if (paramEntries.length === 0 && (!parsed.actions || parsed.actions.length === 0)) {
+    html += '<div style="font-size:11px;color:var(--text-muted)">인식된 변경사항이 없습니다.</div>';
+  }
+  html += `<div style="margin-top:8px;display:flex;gap:6px">
+    <button class="btn btn-sm" style="background:#4338ca;color:#fff" onclick="applyNLParsed()">적용</button>
+    <button class="btn btn-sm" style="background:#e2e8f0" onclick="document.getElementById('nlPreview').style.display='none'">취소</button>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function applyNLParsed() {
+  if (!_lastNLParsed) return;
+  const p = _lastNLParsed;
+  // 1. 설계 파라미터 적용
+  const map = ['pileType','diameter_mm','thickness_mm','phcGrade','bearingMethod',
+    'pileTopEL','groundEL','bearingEL','gwlDepth','embedDepth','useFill','plannedEL','fillN'];
+  map.forEach(k => { if (p[k] !== undefined) STATE[k] = p[k]; });
+  if (p.pileType === 'PHC' && p.phcGrade) {
+    STATE.sigmaMax = { A:20000, B:40000, C:50000 }[p.phcGrade] || 20000;
+  } else if (p.pileType === '\uAC15\uAD00') { STATE.sigmaMax = 235000; }
+  recalculate();
+  // 2. 액션 실행
+  if (p.actions && p.actions.length > 0) {
+    p.actions.forEach(action => {
+      if (action === 'autoDetectBearingAll') {
+        autoDetectBearingAllBoreholes();
+      } else if (action === 'autoDetectBearing') {
+        autoDetectBearingLayer();
+      }
+    });
+  }
+  showToast('AI \uC790\uC5F0\uC5B4 \uC785\uB825\uC774 \uC801\uC6A9\uB418\uC5C8\uC2B5\uB2C8\uB2E4', 'success');
+  document.getElementById('nlPreview').style.display = 'none';
+}
+
+function autoDetectBearingAllBoreholes() {
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
+    // 단일 시추공: 현재 시추공에만 적용
+    autoDetectBearingLayer();
+    return;
+  }
+  const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
+  let applied = 0, failed = 0;
+  const origIdx = STATE.currentBhIdx;
+  const origBhNo = STATE.boreholeNo;
+
+  STATE.uploadedData.forEach((bh, idx) => {
+    // 각 시추공의 데이터로 임시 전환
+    const sptData = bh.sptData || [];
+    const layers = bh.layers || [];
+    const groundEL = bh.groundEL || STATE.groundEL;
+    let detected = false;
+    let bearingEL = null;
+
+    if (method === 'rock') {
+      // SPT remark에서 암반 탐색
+      for (let i = 0; i < sptData.length; i++) {
+        let remark = sptData[i].remark || '';
+        // remark가 없으면 layers에서 매칭
+        if (!remark || remark === '') {
+          let cum = 0;
+          const layer = layers.find(l => {
+            const dFrom = l.depthFrom != null ? l.depthFrom : cum;
+            cum = dFrom + l.thickness;
+            return sptData[i].depth >= dFrom && sptData[i].depth <= cum;
+          });
+          if (layer) remark = layer.soilType || '';
+        }
+        if (remark.includes('\uD48D\uD654\uC554') || remark.includes('\uC5F0\uC554') || remark.includes('\uACBD\uC554') || remark.includes('WR') || remark.includes('SR') || remark.includes('HR')) {
+          bearingEL = parseFloat((groundEL - sptData[i].depth + 1).toFixed(2));
+          detected = true; break;
+        }
+      }
+      // 지층에서 암반 탐색
+      if (!detected && layers.length > 0) {
+        let cumDepth = 0;
+        for (let i = 0; i < layers.length; i++) {
+          const lt = layers[i].soilType || '';
+          const dFrom = layers[i].depthFrom != null ? layers[i].depthFrom : cumDepth;
+          cumDepth = dFrom + layers[i].thickness;
+          if (lt.includes('\uD48D\uD654\uC554') || lt.includes('\uC5F0\uC554') || lt.includes('\uACBD\uC554') || lt.includes('WR') || lt.includes('SR') || lt.includes('HR')) {
+            bearingEL = parseFloat((groundEL - dFrom).toFixed(2));
+            detected = true; break;
+          }
+        }
+      }
+    } else {
+      // 토사: N≥50 연속 2개
+      for (let i = 0; i < sptData.length - 1; i++) {
+        if (sptData[i].N >= 50 && sptData[i + 1].N >= 50) {
+          bearingEL = parseFloat((groundEL - sptData[i].depth + 1).toFixed(2));
+          detected = true; break;
+        }
+      }
+      // 지층 N≥50
+      if (!detected && layers.length > 0) {
+        let cumDepth = 0;
+        for (let i = 0; i < layers.length; i++) {
+          const dFrom = layers[i].depthFrom != null ? layers[i].depthFrom : cumDepth;
+          cumDepth = dFrom + layers[i].thickness;
+          if (layers[i].avgN >= 50) {
+            bearingEL = parseFloat((groundEL - dFrom).toFixed(2));
+            detected = true; break;
+          }
+        }
+      }
+    }
+
+    if (detected && bearingEL != null) {
+      // 유효성: bearingEL이 pileTopEL보다 낮아야 말뚝 길이가 양수
+      const tipEL = bearingEL - (STATE.embedDepth || 1);
+      if (tipEL < STATE.pileTopEL) {
+        bh.bearingEL = bearingEL;
+        applied++;
+      } else {
+        failed++; // 지지층이 말뚝두부보다 높음 → 무효
+      }
+    } else {
+      failed++;
+    }
+  });
+
+  // 현재 시추공의 bearingEL도 업데이트
+  const curBh = STATE.uploadedData[origIdx];
+  if (curBh && curBh.bearingEL != null) {
+    STATE.bearingEL = curBh.bearingEL;
+  }
+  recalculate();
+
+  if (applied > 0) {
+    showToast('\uC9C0\uC9C0\uCE35 EL \uC790\uB3D9 \uD0D0\uC9C0: ' + applied + '\uAC1C \uC131\uACF5' + (failed > 0 ? ', ' + failed + '\uAC1C \uC2E4\uD328' : '') + ' (' + method + ')', 'success');
+  } else {
+    showToast('\uC9C0\uC9C0\uCE35\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4', 'warning');
+  }
+}
+
+// ===== Feature A: 시추공 분석 =====
+function prepareBoreholeData() {
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) return null;
+  calcAllBoreholes();
+  return STATE.uploadedData.map(bh => {
+    const r = BH_RESULTS[bh.holeNo];
+    return {
+      시추공: bh.holeNo,
+      지반고: bh.groundEL, 지하수위_GL: bh.gwlDepth,
+      지층: (bh.layers || []).map(l => ({
+        지층: l.soilType, 두께: l.thickness, 심도: `${l.depthFrom}~${l.depthTo}m`, N: l.avgN
+      })),
+      SPT: (bh.sptData || []).slice(0, 12).map(s => ({ 심도: s.depth, N: s.N })),
+      결과: r ? {
+        Qa_kN: +r.Qa_applied.toFixed(0), Ha_kN: +r.Ha_applied.toFixed(0),
+        침하_mm: +r.St.toFixed(1), 말뚝길이_m: +r.pileLength.toFixed(1),
+        판정: r.St < 25 ? 'OK' : 'NG'
+      } : null
+    };
+  });
+}
+
+async function runBoreholeAnalysis(forceRefresh) {
+  if (!ensureApiKey()) return;
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
+    showToast('시추공 데이터를 먼저 업로드하세요 (JSON)', 'warning'); return;
+  }
+  const n = STATE.uploadedData.length;
+  const data = prepareBoreholeData();
+  const cacheKey = aiCacheKey({ boreholes: n, method: STATE.bearingMethod, pile: STATE.pileType, d: STATE.diameter_mm });
+  // 캐시 히트
+  if (!forceRefresh && AI_CACHE.borehole && AI_CACHE.borehole.key === cacheKey) {
+    openAIPanel('AI 시추공 분석', `<span class="pm-label">시추공 수: </span><span class="pm-value">${n}개</span>`);
+    document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.borehole.text) +
+      `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
+        <button class="btn btn-sm" onclick="runBoreholeAnalysis(true)" style="font-size:10px;padding:2px 8px">&#128260; 재분석</button>
+      </div>`;
+    showAITokenInfo(AI_CACHE.borehole.usage);
+    return;
+  }
+  openAIPanel('AI 시추공 분석', `<span class="pm-label">시추공 수: </span><span class="pm-value">${n}개</span>`);
+  showAILoading(`${n}개 시추공 데이터를 분석 중...`);
+  let fullText = '';
+  await callClaudeAPI({
+    systemPrompt: `당신은 대한민국 지반조사 분석 전문가입니다.
+다수의 시추공 SPT 데이터를 비교 분석하여 지반 특성을 평가합니다.
+마크다운 형식(###, **, -)으로 한국어 기술 분석 결과를 작성합니다.
+수치 데이터를 근거로 구체적인 분석을 제공하세요.`,
+    userMessage: `다음 ${data.length}개 시추공 데이터를 종합 분석해주세요.
+
+${JSON.stringify(data, null, 2)}
+
+현재 설계 조건: ${STATE.pileType} ${STATE.diameter_mm}mm, ${STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지'}
+
+다음 항목을 분석해주세요:
+### 1. SPT N값 경향 분석
+각 시추공별 깊이에 따른 N값 변화 패턴, 전체적 경향
+
+### 2. 취약 구간 식별
+N값이 낮은 연약 지반 구간 (N<10), 급격한 N값 변화 구간
+
+### 3. 지지층 분석
+시추공별 지지층(N≥50) 심도 비교, 적정 지지층 EL 제안
+
+### 4. 지하수위 영향
+지하수위가 설계에 미치는 영향, 부력/유효응력 고려사항
+
+### 5. 시추공 간 비교
+지반 조건의 공간적 변동성, 최약/최강 시추공 식별, 허용지지력 분포
+
+### 6. 최적 설계 제안
+시추공별 최적 말뚝 길이/규격, 경제성 고려한 추천
+
+### 7. 위험 요소 및 시공 주의사항`,
+    maxTokens: 3000,
+    temperature: 0.3,
+    onChunk: (text) => {
+      fullText += text;
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(fullText);
+      document.getElementById('aiPanelBody').scrollTop = document.getElementById('aiPanelBody').scrollHeight;
+    },
+    onComplete: (finalText, usage) => {
+      AI_CACHE.borehole = { key: cacheKey, text: finalText, usage };
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(finalText);
+      showAITokenInfo(usage);
+    },
+    onError: (err) => {
+      document.getElementById('aiContent').innerHTML =
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>`;
+    }
+  });
+}
+
+// ===== Feature D: 보고서 생성 =====
+let _lastAIReport = '';
+
+function prepareReportData() {
+  const r = STATE.result; if (!r) return null;
+  const base = prepareReviewData();
+  base.주면마찰상세 = r.processedLayers.map(pl => ({
+    지층: pl.soilType, 두께: +pl.thickness.toFixed(2), 분류: pl.soilClass,
+    마찰력_kN: +((pl.skinFriction_sand||0)+(pl.skinFriction_clay||0)).toFixed(1)
+  }));
+  base.수평지지력 = {
+    N_kh: r.N_kh, Kh_min: +r.Kh_min.toFixed(1),
+    beta: +r.beta.toFixed(6), 말뚝분류: r.pileClass,
+    Ha_brom: +r.Ha_brom.toFixed(1), Ha_chang: +r.Ha_chang.toFixed(1),
+    Ha_적용: +r.Ha_applied.toFixed(1)
+  };
+  base.침하상세 = {
+    탄성침하_mm: +r.Ss.toFixed(3), 선단침하_mm: +r.Sp.toFixed(3),
+    주면침하_mm: +r.Sps.toFixed(3), 총침하_mm: +r.St.toFixed(2)
+  };
+  if (r.rockCalcDetails) {
+    base.암반상세 = {
+      일축압축강도_kPa: r.rockCalcDetails.qu_lab,
+      선단극한_kN: +r.rockCalcDetails.Pu_tip.toFixed(1),
+      Goodman_kN: +r.rockCalcDetails.Pu_goodman.toFixed(1),
+      Canadian_kN: +r.rockCalcDetails.Pu_canadian.toFixed(1)
+    };
+  }
+  return base;
+}
+
+async function generateAIReport(forceRefresh) {
+  if (!ensureApiKey()) return;
+  if (!STATE.result) { showToast('계산 결과가 없습니다', 'warning'); return; }
+  const data = prepareReportData();
+  const cacheKey = aiCacheKey(data);
+  // 캐시 히트
+  if (!forceRefresh && AI_CACHE.report && AI_CACHE.report.key === cacheKey) {
+    openAIPanel('AI 보고서 생성', `<span class="pm-label">시추공: </span><span class="pm-value">${STATE.boreholeNo}</span>`);
+    _lastAIReport = AI_CACHE.report.text;
+    document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.report.text) +
+      `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">&#128203; 클립보드 복사</button>
+        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
+        <button class="btn btn-sm" onclick="generateAIReport(true)" style="font-size:10px;padding:2px 8px">&#128260; 재생성</button>
+      </div>`;
+    showAITokenInfo(AI_CACHE.report.usage);
+    return;
+  }
+  openAIPanel('AI 보고서 생성', `<span class="pm-label">시추공: </span><span class="pm-value">${STATE.boreholeNo}</span>`);
+  showAILoading('기술 보고서를 생성 중...');
+  let fullText = '';
+  await callClaudeAPI({
+    systemPrompt: `당신은 대한민국 지반공학 기술보고서 작성 전문가입니다.
+말뚝 기초 설계 결과를 바탕으로 전문적인 기술 보고서를 작성합니다.
+KDS 11 50 40, 구조물기초설계기준해설, 도로교설계기준 등 한국 기준을 인용합니다.
+마크다운 형식(###, **, -)으로 격식있는 기술 문서를 작성합니다.
+계산 수치를 근거로 구체적인 내용을 작성하세요.`,
+    userMessage: `다음 설계 데이터를 바탕으로 말뚝 기초 설계 기술 보고서를 작성해주세요.
+
+${JSON.stringify(data, null, 2)}
+
+보고서 구성:
+### 1. 개요
+프로젝트 개요, 적용 기준 및 참고 문헌
+
+### 2. 지반 조건
+시추조사 결과 요약, 지층 구성 및 특성, 지하수위
+
+### 3. 설계 조건
+말뚝 제원 및 재료 특성, 안전율 기준
+
+### 4. 수직 지지력 검토
+재료 허용지지력, 지반 허용지지력(선단+주면), 최종 허용지지력 결정
+
+### 5. 수평 지지력 검토
+지반반력계수, Brom/Chang 방법 비교, 허용수평지지력
+
+### 6. 인발 저항력 및 침하량 검토
+
+### 7. 종합 평가 및 결론
+설계 적정성 종합 판단, 시공 시 유의사항, 추가 검토 권고사항
+
+전문적이고 격식있는 한국어 기술보고서 스타일로 작성하세요.`,
+    maxTokens: 4096,
+    temperature: 0.4,
+    onChunk: (text) => {
+      fullText += text;
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(fullText);
+      document.getElementById('aiPanelBody').scrollTop = document.getElementById('aiPanelBody').scrollHeight;
+    },
+    onComplete: (finalText, usage) => {
+      AI_CACHE.report = { key: cacheKey, text: finalText, usage };
+      _lastAIReport = finalText;
+      document.getElementById('aiContent').innerHTML = renderAIMarkdown(finalText) +
+        `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">&#128203; 클립보드 복사</button>
+        </div>`;
+      showAITokenInfo(usage);
+    },
+    onError: (err) => {
+      document.getElementById('aiContent').innerHTML =
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>`;
+    }
+  });
+}
+function copyAIReport() {
+  if (_lastAIReport) navigator.clipboard.writeText(_lastAIReport).then(() => showToast('보고서가 클립보드에 복사되었습니다', 'success'));
+}
+
+// ===== AI CHAT =====
+let CHAT_HISTORY = []; // {role:'user'|'assistant', content:string}
+let CHAT_STREAMING = false;
+let CHAT_ABORT = null; // AbortController
+
+const CHAT_SYSTEM_PROMPT = `당신은 전세계 최고 수준의 지반공학 및 기초공학 전문가(Geotechnical & Foundation Engineering Expert)입니다.
+
+## 전문 분야
+- 말뚝 기초 설계 (PHC, 강관, 현장타설말뚝)
+- 지반조사 해석 (SPT, CPT, 시추조사)
+- 지지력 산정 (Meyerhof, Terzaghi, 암반 지지)
+- 수평지지력 (Chang, Broms)
+- 침하 해석 (탄성침하, 압밀침하)
+- 인발 저항력 및 부마찰력
+- 한국 설계기준: KDS 11 50 40, 도로교설계기준(한계상태설계법), 구조물기초설계기준
+- 국제 기준: AASHTO, Eurocode 7, API RP 2GEO, FHWA
+
+## 답변 원칙
+1. **구체적 근거**: 모든 판단에 설계기준 조항, 이론적 배경, 경험적 공식을 명시합니다.
+2. **사례 기반**: 유사 현장 사례, 실무 경험, 문헌 자료를 활용하여 설명합니다.
+3. **정량적 분석**: 가능한 한 수치적 검토와 계산식을 포함합니다.
+4. **위험 요소 경고**: 설계/시공상 주의사항과 잠재적 문제를 사전에 경고합니다.
+5. **실무 관점**: 이론뿐 아니라 시공성, 경제성, 품질관리 측면도 함께 고려합니다.
+6. **한국어로 답변**: 전문 용어는 한국어(영어 병기) 형태로 작성합니다.
+
+## 주어진 데이터
+사용자의 시추공 데이터와 말뚝 기초 설계 계산 결과가 컨텍스트로 제공됩니다.
+이 데이터를 기반으로 구체적이고 전문적인 답변을 제공하세요.
+추가 데이터나 가정이 필요한 경우 명확히 언급하세요.`;
+
+function prepareChatContext() {
+  let ctx = '';
+  // 시추공 데이터
+  if (STATE.layers && STATE.layers.length > 0) {
+    ctx += '## 현재 시추공: ' + STATE.boreholeNo + '\\n';
+    ctx += '지반고 EL: ' + STATE.groundEL + 'm, 지하수위: GL-' + STATE.gwlDepth + 'm\\n';
+    ctx += '### 지층 현황\\n';
+    STATE.layers.forEach((l, i) => {
+      ctx += (i+1) + '. ' + l.soilType + ' (두께 ' + l.thickness + 'm, 평균N=' + l.avgN + ', γ=' + l.unitWeight + 'kN/m³)\\n';
+    });
+    if (STATE.sptData && STATE.sptData.length > 0) {
+      ctx += '### SPT 프로파일\\n';
+      STATE.sptData.forEach(s => {
+        ctx += '  GL-' + s.depth + 'm: N=' + s.N + '\\n';
+      });
+    }
+  }
+  // 설계 조건
+  ctx += '\\n## 설계 조건\\n';
+  ctx += '말뚝종류: ' + (STATE.pileType === 'PHC' ? 'PHC ' + STATE.phcGrade + '종' : '강관') + '\\n';
+  ctx += '직경: ' + STATE.diameter_mm + 'mm, 두께: ' + STATE.thickness_mm + 'mm\\n';
+  ctx += '지지방법: ' + (STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지(Meyerhof)') + '\\n';
+  ctx += '지지층 EL: ' + STATE.bearingEL + 'm, 근입깊이: ' + STATE.embedDepth + 'm\\n';
+  if (STATE.useFill && STATE.plannedEL) {
+    const diff = STATE.plannedEL - STATE.groundEL;
+    ctx += '계획고 EL: ' + STATE.plannedEL + 'm (' + (diff > 0 ? '성토 ' + diff.toFixed(2) + 'm' : '절토 ' + Math.abs(diff).toFixed(2) + 'm') + ')\\n';
+  }
+  // 계산 결과
+  if (STATE.result) {
+    const r = STATE.result;
+    ctx += '\\n## 계산 결과\\n';
+    ctx += '말뚝길이: ' + r.pileLength.toFixed(2) + 'm\\n';
+    ctx += '허용 수직지지력 Qa: ' + r.Qa_applied.toFixed(1) + ' kN\\n';
+    ctx += '  - 극한지지력 Qu: ' + r.Qu.toFixed(1) + ' kN (선단 ' + r.Qu_tip.toFixed(1) + ' + 주면 ' + r.Qu_skin.toFixed(1) + ')\\n';
+    ctx += '  - 재료지지력: ' + r.Qp_material.toFixed(1) + ' kN\\n';
+    ctx += '  - 안전율 FS: ' + r.FS + '\\n';
+    ctx += '허용 수평지지력 Ha: ' + r.Ha_applied.toFixed(1) + ' kN\\n';
+    ctx += '인발저항력: ' + r.Qpull.toFixed(1) + ' kN\\n';
+    ctx += '침하량: ' + r.St.toFixed(2) + ' mm (' + (r.St < 25 ? 'OK' : 'NG') + ')\\n';
+    ctx += '세장비 L/D: ' + r.L_over_d.toFixed(1) + ' (' + r.pileClass + ')\\n';
+    if (r.cutDepth > 0) ctx += '절토 깊이: ' + r.cutDepth.toFixed(2) + 'm\\n';
+    if (r.fillHeight > 0) ctx += '성토고: ' + r.fillHeight.toFixed(2) + 'm\\n';
+  }
+  // 다수 시추공 요약
+  if (STATE.uploadedData && STATE.uploadedData.length > 1 && typeof BH_RESULTS !== 'undefined') {
+    ctx += '\\n## 전체 시추공 요약 (' + STATE.uploadedData.length + '공)\\n';
+    STATE.uploadedData.forEach(bh => {
+      const br = BH_RESULTS[bh.holeNo];
+      if (br) {
+        ctx += bh.holeNo + ': Qa=' + br.Qa_applied.toFixed(0) + 'kN, 침하=' + br.St.toFixed(1) + 'mm, 길이=' + br.pileLength.toFixed(1) + 'm\\n';
+      }
+    });
+  }
+  return ctx;
+}
+
+function openChatPanel() {
+  const overlay = document.getElementById('chatOverlay');
+  const panel = document.getElementById('chatPanel');
+  overlay.classList.add('open');
+  setTimeout(() => panel.classList.add('open'), 10);
+  // 컨텍스트 뱃지 업데이트
+  updateChatContextBadge();
+  // 첫 대화인 경우 초기 메시지
+  if (CHAT_HISTORY.length === 0) {
+    renderChatMessages();
+  }
+  setTimeout(() => document.getElementById('chatInput').focus(), 300);
+}
+function closeChatPanel() {
+  const panel = document.getElementById('chatPanel');
+  if (panel) panel.classList.remove('open');
+  setTimeout(() => {
+    const overlay = document.getElementById('chatOverlay');
+    if (overlay) overlay.classList.remove('open');
+  }, 300);
+}
+function updateChatContextBadge() {
+  const badge = document.getElementById('chatBadge');
+  const info = document.getElementById('chatContextInfo');
+  const hasLayers = STATE.layers && STATE.layers.length > 0;
+  const hasResult = !!STATE.result;
+  const bhCount = STATE.uploadedData ? STATE.uploadedData.length : (hasLayers ? 1 : 0);
+  if (hasLayers || hasResult) {
+    const parts = [];
+    if (bhCount > 0) parts.push('<span>' + STATE.boreholeNo + '</span>');
+    if (hasResult) parts.push('<span>Qa=' + STATE.result.Qa_applied.toFixed(0) + 'kN</span>');
+    if (bhCount > 1) parts.push('<span>' + bhCount + '공</span>');
+    badge.innerHTML = '컨텍스트: ' + parts.join(' ');
+    info.textContent = STATE.boreholeNo + ' · ' + (hasResult ? '계산완료' : '데이터로드');
+  } else {
+    badge.innerHTML = '컨텍스트: <span style="background:#fee2e2;color:#dc2626">데이터 없음</span>';
+    info.textContent = '컨텍스트 없음';
+  }
+}
+
+function renderChatMessages() {
+  const container = document.getElementById('chatMessages');
+  let html = '<div class="chat-msg system">AI 지반공학 전문가와 대화를 시작하세요. 시추공 데이터와 계산 결과가 자동으로 제공됩니다.</div>';
+  CHAT_HISTORY.forEach(msg => {
+    if (msg.role === 'user') {
+      html += '<div class="chat-msg user">' + escapeHtml(msg.content) + '</div>';
+    } else {
+      html += '<div class="chat-msg assistant">' + renderAIMarkdown(msg.content) + '</div>';
+    }
+  });
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function clearChatHistory() {
+  if (CHAT_STREAMING) { showToast('응답 생성 중에는 초기화할 수 없습니다', 'warning'); return; }
+  CHAT_HISTORY = [];
+  renderChatMessages();
+  showToast('대화가 초기화되었습니다', 'info');
+}
+
+function handleChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+}
+function autoResizeChatInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+async function sendChatMessage() {
+  if (CHAT_STREAMING) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!ensureApiKey()) return;
+
+  // 사용자 메시지 추가
+  CHAT_HISTORY.push({ role: 'user', content: text });
+  input.value = '';
+  input.style.height = 'auto';
+  renderChatMessages();
+
+  // 타이핑 인디케이터
+  const container = document.getElementById('chatMessages');
+  const typing = document.createElement('div');
+  typing.className = 'chat-typing';
+  typing.id = 'chatTyping';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+
+  // 전송 버튼 비활성화
+  CHAT_STREAMING = true;
+  document.getElementById('chatSendBtn').disabled = true;
+
+  // 컨텍스트 포함 시스템 프롬프트 구성
+  const context = prepareChatContext();
+  const fullSystem = CHAT_SYSTEM_PROMPT + (context ? '\\n\\n---\\n# 현재 프로젝트 데이터\\n' + context : '');
+
+  // API 메시지 배열 구성 (전체 대화 히스토리)
+  const apiMessages = CHAT_HISTORY.map(m => ({ role: m.role, content: m.content }));
+
+  let fullText = '';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': AI_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        temperature: 0.4,
+        stream: true,
+        system: fullSystem,
+        messages: apiMessages
+      })
+    });
+    if (!resp.ok) {
+      const code = resp.status;
+      const errBody = await resp.text();
+      let errMsg = 'API 오류 (' + code + ')';
+      if (code === 401) errMsg = 'API Key가 유효하지 않습니다';
+      if (code === 429) errMsg = '요청 한도 초과. 잠시 후 다시 시도하세요';
+      throw new Error(errMsg);
+    }
+    // 타이핑 제거, 어시스턴트 메시지 박스 추가
+    const typingEl = document.getElementById('chatTyping');
+    if (typingEl) typingEl.remove();
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'chat-msg assistant';
+    container.appendChild(assistantDiv);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(data);
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+            fullText += evt.delta.text;
+            assistantDiv.innerHTML = renderAIMarkdown(fullText);
+            container.scrollTop = container.scrollHeight;
+          }
+        } catch (pe) {}
+      }
+    }
+    // 히스토리에 추가
+    CHAT_HISTORY.push({ role: 'assistant', content: fullText });
+  } catch (err) {
+    const typingEl = document.getElementById('chatTyping');
+    if (typingEl) typingEl.remove();
+    // 에러 메시지 표시
+    const errDiv = document.createElement('div');
+    errDiv.className = 'chat-msg system';
+    errDiv.style.background = '#fef2f2';
+    errDiv.style.color = '#dc2626';
+    errDiv.textContent = err.message;
+    container.appendChild(errDiv);
+    // 실패한 사용자 메시지 제거
+    CHAT_HISTORY.pop();
+  } finally {
+    CHAT_STREAMING = false;
+    document.getElementById('chatSendBtn').disabled = false;
+    container.scrollTop = container.scrollHeight;
+  }
+}
 
 // ===== SIDEBAR =====
 function toggleSidebar() {
@@ -1130,6 +2209,21 @@ function renderInputTab() {
   const spec = getSpecInfo();
   let html = '';
 
+  // AI Natural Language Input
+  html += `<div class="ai-nl-box">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:14px">&#9889;</span>
+      <span style="font-size:11px;font-weight:700;color:#4338ca">AI 자연어 입력</span>
+      <span style="font-size:10px;color:var(--text-muted)">— 설계 조건을 자연어로 입력하면 자동 적용됩니다</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="nlInput" placeholder="예: PHC 500mm B종, 토사 지지, 계획고 135m, 근입깊이 2m"
+        onkeydown="if(event.key==='Enter')parseNLInput()">
+      <button class="ai-btn" onclick="parseNLInput()">AI 적용</button>
+    </div>
+    <div id="nlPreview" style="display:none;margin-top:8px;padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0"></div>
+  </div>`;
+
   // Upload Zone
   html += `
   <div class="upload-zone ${STATE.uploadedData ? 'success' : ''}" id="uploadZone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
@@ -1194,18 +2288,31 @@ function renderInputTab() {
     <div class="field"><label>선단 지지층 EL (m)</label><input type="number" value="${fmt(STATE.bearingEL - STATE.embedDepth, 2)}" disabled style="background:#f0f0f0;font-weight:600;color:#1565c0"></div>
     <div class="field"></div>
   </div>`;
-  // Fill scenario
-  const fillHeight = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.plannedEL - STATE.groundEL, 0) : 0;
-  html += `<div style="margin-top:8px;padding:8px 12px;background:${STATE.useFill?'#fffbeb':'#f8fafc'};border:1px solid ${STATE.useFill?'#fde68a':'#e2e8f0'};border-radius:6px">
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:600;color:${STATE.useFill?'#92400e':'var(--text-secondary)'}">
-      <input type="checkbox" ${STATE.useFill?'checked':''} onchange="toggleFill(this.checked)"> 성토 적용 (계획고 입력)
+  // Fill/Cut scenario
+  const fillHeight_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.plannedEL - STATE.groundEL, 0) : 0;
+  const cutDepth_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.groundEL - STATE.plannedEL, 0) : 0;
+  const isCut = cutDepth_ui > 0;
+  const isFill = fillHeight_ui > 0;
+  const scenarioColor = isCut ? '#1e40af' : (isFill ? '#92400e' : 'var(--text-secondary)');
+  const scenarioBg = isCut ? '#eff6ff' : (isFill ? '#fffbeb' : '#f8fafc');
+  const scenarioBorder = isCut ? '#bfdbfe' : (isFill ? '#fde68a' : '#e2e8f0');
+  html += `<div style="margin-top:8px;padding:8px 12px;background:${STATE.useFill?scenarioBg:'#f8fafc'};border:1px solid ${STATE.useFill?scenarioBorder:'#e2e8f0'};border-radius:6px">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:600;color:${STATE.useFill?scenarioColor:'var(--text-secondary)'}">
+      <input type="checkbox" ${STATE.useFill?'checked':''} onchange="toggleFill(this.checked)"> 계획고 적용 (성토/절토)
     </label>`;
   if (STATE.useFill) {
     html += `<div class="form-grid cols-4" style="margin-top:8px">
-      <div class="field"><label>계획고 EL (m)</label><input type="number" value="${STATE.plannedEL!=null?STATE.plannedEL:''}" step="0.1" onchange="STATE.plannedEL=parseFloat(this.value); applyFillScenario()"></div>
-      <div class="field"><label>성토재 N값 <button class="info-btn" onclick="event.stopPropagation();showGuide('fillN')">?</button></label><input type="number" value="${STATE.fillN}" min="1" max="30" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></div>
-      <div class="field"><label>성토고 (m)</label><input type="number" value="${fmt(fillHeight)}" disabled style="background:#f0f0f0"></div>
-      <div class="field"><label>말뚝두부 EL (자동)</label><input type="number" value="${STATE.plannedEL!=null?fmt(STATE.plannedEL):''}" disabled style="background:#f0f0f0"></div>
+      <div class="field"><label>계획고 EL (m)</label><input type="number" value="${STATE.plannedEL!=null?STATE.plannedEL:''}" step="0.1" onchange="STATE.plannedEL=parseFloat(this.value); applyFillScenario()"></div>`;
+    if (isFill) {
+      html += `<div class="field"><label>성토재 N값 <button class="info-btn" onclick="event.stopPropagation();showGuide('fillN')">?</button></label><input type="number" value="${STATE.fillN}" min="1" max="30" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></div>
+      <div class="field"><label>성토고 (m)</label><input type="number" value="${fmt(fillHeight_ui)}" disabled style="background:#fef3c7;color:#92400e;font-weight:600"></div>`;
+    } else if (isCut) {
+      html += `<div class="field"><label style="color:#1e40af">절토 깊이 (m)</label><input type="number" value="${fmt(cutDepth_ui)}" disabled style="background:#dbeafe;color:#1e40af;font-weight:600"></div>
+      <div class="field"><label style="color:#1e40af">설계지반면 EL</label><input type="number" value="${fmt(STATE.plannedEL)}" disabled style="background:#dbeafe;color:#1e40af;font-weight:600"></div>`;
+    } else {
+      html += `<div class="field"></div><div class="field"><label>성토/절토 없음</label><input type="text" value="계획고 = 지반고" disabled style="background:#f0f0f0;font-size:10px"></div>`;
+    }
+    html += `<div class="field"><label>말뚝두부 EL (자동)</label><input type="number" value="${STATE.plannedEL!=null?fmt(STATE.plannedEL):''}" disabled style="background:#f0f0f0"></div>
     </div>`;
   }
   html += `</div>
@@ -1283,22 +2390,21 @@ function renderInputTab() {
   <table>
     <thead><tr><th>지층</th><th>깊이</th><th>두께(m)</th><th>평균N</th><th>단위중량</th><th>분류</th><th></th></tr></thead>
     <tbody>`;
-  // Fill layer row (if active)
-  if (STATE.useFill && STATE.plannedEL != null) {
-    const fH = Math.max(STATE.plannedEL - STATE.groundEL, 0);
-    if (fH > 0) {
-      const fElFrom = fmt(STATE.plannedEL);
-      const fElTo = fmt(STATE.groundEL);
-      html += `<tr style="background:#fffbeb">
-        <td style="font-weight:600;color:#92400e">성토층(계획)</td>
-        <td style="font-size:10.5px;color:#92400e;white-space:nowrap">EL.${fElFrom} ~ ${fElTo}</td>
-        <td><input type="number" value="${fmt(fH)}" disabled style="background:#fef3c7"></td>
-        <td><input type="number" value="${STATE.fillN}" style="background:#fef3c7" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></td>
-        <td><input type="number" value="18" disabled style="background:#fef3c7"></td>
-        <td><span class="soil-badge sand">sand</span></td>
-        <td></td>
-      </tr>`;
-    }
+  // Fill layer row (if active) or Cut indicator
+  const cutD_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.groundEL - STATE.plannedEL, 0) : 0;
+  const fillH_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.plannedEL - STATE.groundEL, 0) : 0;
+  if (fillH_ui > 0) {
+    const fElFrom = fmt(STATE.plannedEL);
+    const fElTo = fmt(STATE.groundEL);
+    html += `<tr style="background:#fffbeb">
+      <td style="font-weight:600;color:#92400e">성토층(계획)</td>
+      <td style="font-size:10.5px;color:#92400e;white-space:nowrap">EL.${fElFrom} ~ ${fElTo}</td>
+      <td><input type="number" value="${fmt(fillH_ui)}" disabled style="background:#fef3c7"></td>
+      <td><input type="number" value="${STATE.fillN}" style="background:#fef3c7" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></td>
+      <td><input type="number" value="18" disabled style="background:#fef3c7"></td>
+      <td><span class="soil-badge sand">sand</span></td>
+      <td></td>
+    </tr>`;
   }
   html += `${STATE.layers.map((l, i) => {
       const detail = l._sptDetail || '';
@@ -1310,8 +2416,17 @@ function renderInputTab() {
         const elTo = fmt(STATE.groundEL - l.depthTo);
         depthRange = 'EL.' + elFrom + ' ~ ' + elTo;
       }
-      return `<tr>
-      <td><select onchange="STATE.layers[${i}].soilType=this.value; STATE.layers[${i}].unitWeight=UW_DEF[this.value]||18; recalculate()">${soilOptions(l.soilType)}</select></td>
+      // 절토 처리: 지층별 절토 상태 판정
+      const layerTop = l.depthFrom || 0;
+      const layerBot = layerTop + l.thickness;
+      const isFullyCut = cutD_ui > 0 && layerBot <= cutD_ui;
+      const isPartiallyCut = cutD_ui > 0 && layerTop < cutD_ui && layerBot > cutD_ui;
+      const cutThickness = isPartiallyCut ? (cutD_ui - layerTop) : 0;
+      const remainThickness = isPartiallyCut ? (layerBot - cutD_ui) : l.thickness;
+      const rowStyle = isFullyCut ? 'background:#fee2e2;opacity:0.5;text-decoration:line-through' : (isPartiallyCut ? 'background:#fef3c7' : '');
+      const cutNote = isFullyCut ? '<div style="font-size:9px;color:#dc2626;font-weight:600">절토 삭제</div>' : (isPartiallyCut ? '<div style="font-size:9px;color:#1e40af;font-weight:600">절토: ' + fmt(cutThickness) + 'm 삭제 → 잔여 ' + fmt(remainThickness) + 'm</div>' : '');
+      return `<tr style="${rowStyle}">
+      <td><select onchange="STATE.layers[${i}].soilType=this.value; STATE.layers[${i}].unitWeight=UW_DEF[this.value]||18; recalculate()">${soilOptions(l.soilType)}</select>${cutNote}</td>
       <td style="font-size:10.5px;color:var(--text-secondary);white-space:nowrap">${depthRange}</td>
       <td><input type="number" value="${l.thickness}" step="0.1" onchange="STATE.layers[${i}].thickness=parseFloat(this.value)||0; recalculate()"></td>
       <td><span class="calc-tip" style="display:inline-block;width:100%"><input type="number" value="${l.avgN}" step="0.1" style="width:100%" onchange="STATE.layers[${i}].avgN=parseFloat(this.value)||0; recalculate()"><span class="tip-content">${tipText}</span></span></td>
@@ -1421,7 +2536,9 @@ function toggleFill(checked) {
   applyFillScenario();
 }
 function applyFillScenario() {
-  if (STATE.useFill && STATE.plannedEL != null) STATE.pileTopEL = STATE.plannedEL;
+  if (STATE.useFill && STATE.plannedEL != null) {
+    STATE.pileTopEL = STATE.plannedEL;
+  }
   recalculate();
 }
 
@@ -1593,7 +2710,7 @@ function renderVerticalTab() {
   html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면마찰력 상세</div>
   <div style="font-size:11px;margin-bottom:4px">둘레: $U = \\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</div>
-  <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">주면마찰력 산정 범위: 지표면 (EL.${fmt(r.groundEL,2)}) ~ 선단 (EL.${fmt(r.tipEL,2)}), GL-${fmt(r.bearingDepthFromGL,2)}m</div>
+  <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">주면마찰력 산정 범위: ${r.cutDepth > 0 ? '설계지반면 (EL.'+fmt(STATE.plannedEL,2)+', 절토 GL-'+fmt(r.cutDepth,2)+'m)' : '지표면 (EL.'+fmt(r.groundEL,2)+')'} ~ 선단 (EL.${fmt(r.tipEL,2)}), GL-${fmt(r.bearingDepthFromGL,2)}m</div>
   <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께 L(m)</th><th>평균 N</th><th>$A_s = U \\times L$</th><th>사질토: $2N_sA_s$</th><th>점성토: $6.25N_cA_c$</th></tr></thead><tbody>`;
   r.processedLayers.forEach(function(l) {
     const cN = Math.min(l.avgN, 30);
@@ -1918,6 +3035,11 @@ function renderSummaryTab() {
   <div id="svgArea" style="margin-top:16px"></div>
   <div style="margin-top:16px;padding:8px 12px;background:#f1f5f9;border-radius:5px;font-size:10px;color:#64748b;line-height:1.4">
     <strong>Ref:</strong> KDS 11 50 40 (2018) | Road Bridge (2008) | Geotechnical Society (1996)${!isPHC?' | Goodman (1980) | Canadian FEM':''}
+  </div>
+  <div style="margin-top:14px;display:flex;gap:8px">
+    <button class="ai-btn" onclick="runAIReview()" style="padding:8px 18px;font-size:11px">&#9889; AI 설계 검토</button>
+    <button class="ai-btn" onclick="generateAIReport()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#059669,#10b981)">&#128203; AI 보고서 생성</button>
+    <button class="ai-btn" onclick="openChatPanel()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
   </div>`;
   document.getElementById('tab-summary').innerHTML = html;
   drawSVGDesign();
@@ -2615,7 +3737,7 @@ function calcAllBoreholes() {
     const p = {
       pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
       phcGrade: STATE.phcGrade, pileTopEL: STATE.pileTopEL, groundEL: bh.groundEL || STATE.groundEL,
-      bearingEL: STATE.bearingEL, gwlDepth: bh.gwlDepth || STATE.gwlDepth,
+      bearingEL: bh.bearingEL || STATE.bearingEL, gwlDepth: bh.gwlDepth || STATE.gwlDepth,
       sptData: bh.sptData, layers: bh.layers,
       alpha_kh: STATE.alpha_kh, delta_cm: STATE.delta_cm, sigmaMax_kN: STATE.sigmaMax,
       corrosionThickness_mm: STATE.corrosionThk, qu_kPa: STATE.qu_kPa,
@@ -2659,8 +3781,14 @@ function exportExcel() {
     }
   }
   if (STATE.useFill) {
-    condData.push([], ['[성토 조건]'], ['계획고 EL(m)', STATE.plannedEL], ['성토재 N값', STATE.fillN],
-      ['성토고 (m)', fmt2(STATE.plannedEL - STATE.groundEL)]);
+    const cfDiff = STATE.plannedEL - STATE.groundEL;
+    if (cfDiff > 0) {
+      condData.push([], ['[성토 조건]'], ['계획고 EL(m)', STATE.plannedEL], ['성토재 N값', STATE.fillN],
+        ['성토고 (m)', fmt2(cfDiff)]);
+    } else if (cfDiff < 0) {
+      condData.push([], ['[절토 조건]'], ['계획고 EL(m)', STATE.plannedEL],
+        ['절토 깊이 (m)', fmt2(Math.abs(cfDiff))], ['설계지반면 EL(m)', STATE.plannedEL]);
+    }
   }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(condData), '설계조건');
 
@@ -2734,11 +3862,141 @@ function exportExcel() {
 }
 
 // ===== OVERALL RESULTS TAB (merged with Dashboard) =====
+// ===== QUANTITY ESTIMATION =====
+function calcQuantities() {
+  const isPHC = STATE.pileType === 'PHC';
+  const pileSpec = isPHC ? 'PHC ' + STATE.diameter_mm + 'mm ' + STATE.phcGrade + '\uC885' : '\uAC15\uAD00 ' + STATE.diameter_mm + 'mm';
+  const items = [];
+
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    STATE.uploadedData.forEach(bh => {
+      const r = BH_RESULTS[bh.holeNo];
+      if (!r) return;
+      items.push({
+        holeNo: bh.holeNo,
+        pileLength: r.pileLength,
+        weight_ton: (r.W_unit * r.pileLength) / 9.80665,
+        volume_m3: r.Ap_net * r.pileLength,
+        surface_m2: r.U * r.pileLength,
+        W_unit: r.W_unit, Ap_net: r.Ap_net, U: r.U
+      });
+    });
+  } else if (STATE.result) {
+    const r = STATE.result;
+    items.push({
+      holeNo: STATE.boreholeNo,
+      pileLength: r.pileLength,
+      weight_ton: (r.W_unit * r.pileLength) / 9.80665,
+      volume_m3: r.Ap_net * r.pileLength,
+      surface_m2: r.U * r.pileLength,
+      W_unit: r.W_unit, Ap_net: r.Ap_net, U: r.U
+    });
+  }
+
+  const lengths = items.map(i => i.pileLength);
+  return {
+    items,
+    pileSpec,
+    totalPiles: items.length,
+    totalLength: lengths.reduce((s, v) => s + v, 0),
+    totalWeight_ton: items.reduce((s, i) => s + i.weight_ton, 0),
+    totalVolume_m3: items.reduce((s, i) => s + i.volume_m3, 0),
+    totalSurface_m2: items.reduce((s, i) => s + i.surface_m2, 0),
+    avgLength: lengths.length > 0 ? lengths.reduce((s, v) => s + v, 0) / lengths.length : 0,
+    minLength: lengths.length > 0 ? Math.min(...lengths) : 0,
+    maxLength: lengths.length > 0 ? Math.max(...lengths) : 0
+  };
+}
+
+function renderQuantitySection(q, isMulti) {
+  const f2 = v => v.toFixed(2);
+  const f1 = v => v.toFixed(1);
+  const f3 = v => v.toFixed(3);
+  let html = `<div style="margin:16px 0 12px;padding:12px 16px;background:linear-gradient(135deg,#faf5ff,#f0f4ff);
+    border:1px solid #c7d2fe;border-radius:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:#4338ca;display:flex;align-items:center;gap:6px">
+        &#128230; \uBB3C\uB7C9 \uC0B0\uC815</div>
+      <span style="font-size:10px;color:var(--text-muted);background:#e0e7ff;padding:2px 8px;border-radius:10px;font-weight:600">
+        ${q.pileSpec} | ${q.totalPiles}\uAC1C\uC18C</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div style="background:#fff;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:800;color:var(--primary-navy);font-family:var(--font-mono)">${q.totalPiles}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:2px">\uCD1D \uB9D0\uB69D \uBCF8\uC218</div>
+      </div>
+      <div style="background:#fff;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:800;color:var(--primary-navy);font-family:var(--font-mono)">${f1(q.totalLength)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:2px">\uCD1D \uB9D0\uB69D \uAE38\uC774 (m)</div>
+      </div>
+      <div style="background:#fff;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:800;color:#7c3aed;font-family:var(--font-mono)">${f2(q.totalWeight_ton)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:2px">\uCD1D \uC911\uB7C9 (ton)</div>
+      </div>
+      <div style="background:#fff;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:800;color:#059669;font-family:var(--font-mono)">${f3(q.totalVolume_m3)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:2px">\uCD1D \uC7AC\uB8CC \uCCB4\uC801 (m\u00B3)</div>
+      </div>
+    </div>`;
+
+  if (isMulti) {
+    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">
+      <div style="background:#fff;padding:8px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">${f2(q.avgLength)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:1px">\uD3C9\uADE0 \uAE38\uC774 (m)</div>
+      </div>
+      <div style="background:#fff;padding:8px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:14px;font-weight:700;color:#dc2626;font-family:var(--font-mono)">${f2(q.maxLength)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:1px">\uCD5C\uC7A5 \uAE38\uC774 (m)</div>
+      </div>
+      <div style="background:#fff;padding:8px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:14px;font-weight:700;color:#2563eb;font-family:var(--font-mono)">${f2(q.minLength)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:1px">\uCD5C\uB2E8 \uAE38\uC774 (m)</div>
+      </div>
+      <div style="background:#fff;padding:8px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">${f1(q.totalSurface_m2)}</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-top:1px">\uCD1D \uD45C\uBA74\uC801 (m\u00B2)</div>
+      </div>
+    </div>`;
+    // 시추공별 물량 상세 테이블 (접기/펼치기)
+    html += `<details style="margin-top:10px">
+      <summary style="cursor:pointer;font-size:11px;font-weight:600;color:#4338ca;padding:4px 0">
+        \uC2DC\uCD94\uACF5\uBCC4 \uBB3C\uB7C9 \uC0C1\uC138 \u25BC</summary>
+      <table style="width:100%;margin-top:6px;font-size:11px;border-collapse:collapse">
+        <thead><tr style="background:#f1f5f9">
+          <th style="padding:5px 8px;text-align:left;font-weight:600;border-bottom:1px solid #e2e8f0">\uC2DC\uCD94\uACF5</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uB9D0\uB69D\uAE38\uC774(m)</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uC911\uB7C9(ton)</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uCCB4\uC801(m\u00B3)</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uD45C\uBA74\uC801(m\u00B2)</th>
+        </tr></thead><tbody>`;
+    q.items.forEach(it => {
+      html += `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:4px 8px;font-weight:600;color:var(--primary-navy)">${it.holeNo}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f2(it.pileLength)}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f3(it.weight_ton)}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f3(it.volume_m3)}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f1(it.surface_m2)}</td>
+      </tr>`;
+    });
+    html += `<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #cbd5e1">
+      <td style="padding:5px 8px">\uD569\uACC4</td>
+      <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono)">${f1(q.totalLength)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono);color:#7c3aed">${f2(q.totalWeight_ton)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono);color:#059669">${f3(q.totalVolume_m3)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono)">${f1(q.totalSurface_m2)}</td>
+    </tr></tbody></table></details>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
 function renderOverallTab() {
   const el = document.getElementById('tab-overall');
   if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
     const r = STATE.result;
     if (!r) { el.innerHTML = '<p style="color:var(--text-muted);padding:20px">계산 결과가 없습니다.</p>'; return; }
+    const q = calcQuantities();
     el.innerHTML = `<h3 class="sec-title">종합 계산 결과</h3>
     <table><thead><tr><th>시추공</th><th>수직 Qa(kN)</th><th>수평 Ha(kN)</th><th>인발(kN)</th><th>침하(mm)</th><th>판정</th></tr></thead>
     <tbody><tr><td style="font-weight:700">${STATE.boreholeNo}</td>
@@ -2747,7 +4005,7 @@ function renderOverallTab() {
     <td style="font-weight:700;color:var(--accent-green)">${fmt(r.Qpull)}</td>
     <td>${fmt(r.St)}</td>
     <td style="font-weight:700;color:${r.St<25?'var(--status-pass)':'var(--status-fail)'}">${r.St<25?'OK':'NG'}</td>
-    </tr></tbody></table>`;
+    </tr></tbody></table>` + renderQuantitySection(q, false);
     return;
   }
   calcAllBoreholes();
@@ -2757,8 +4015,15 @@ function renderOverallTab() {
   const avgQa = results.length > 0 ? (results.reduce((s,r) => s + r.Qa_applied, 0) / results.length).toFixed(1) : '-';
   const avgHa = results.length > 0 ? (results.reduce((s,r) => s + r.Ha_applied, 0) / results.length).toFixed(1) : '-';
   const okCount = results.filter(r => r.St < 25).length;
+  const q = calcQuantities();
 
-  let html = `<h3 class="sec-title">종합 계산 결과 (전체 시추공)</h3>`;
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center">
+    <h3 class="sec-title" style="margin:0">종합 계산 결과 (전체 시추공)</h3>
+    <div style="display:flex;gap:6px">
+      <button class="ai-btn" onclick="runBoreholeAnalysis()" style="padding:7px 16px;font-size:11px">&#9889; AI 시추공 분석</button>
+      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+    </div>
+  </div>`;
   // Stats cards
   html += `<div class="dash-stats">
     <div class="dash-stat"><div class="ds-val">${count}</div><div class="ds-label">시추공 수</div></div>
@@ -2766,6 +4031,8 @@ function renderOverallTab() {
     <div class="dash-stat"><div class="ds-val">${avgHa}</div><div class="ds-label">평균 Ha (kN)</div></div>
     <div class="dash-stat"><div class="ds-val">${okCount}/${results.length}</div><div class="ds-label">침하 OK</div></div>
   </div>`;
+  // Quantity estimation
+  html += renderQuantitySection(q, true);
   // Toolbar
   html += `<div class="dash-toolbar">
     <input type="text" id="overallSearch" placeholder="시추공 검색..." oninput="filterOverallTable(this.value)">
@@ -2844,7 +4111,13 @@ function renderReportTab() {
   if (!r) { el.innerHTML = '<p style="color:var(--text-muted);padding:20px">계산 결과가 없습니다.</p>'; return; }
   const isPHC = STATE.pileType === "PHC";
   const spec = getSpecInfo();
-  let html = `<h3 class="sec-title">상세 계산서 — ${STATE.boreholeNo}</h3>`;
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center">
+    <h3 class="sec-title" style="margin:0">상세 계산서 — ${STATE.boreholeNo}</h3>
+    <div style="display:flex;gap:6px">
+      <button class="ai-btn" onclick="generateAIReport()" style="padding:7px 16px;font-size:11px">&#9889; AI 보고서 생성</button>
+      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+    </div>
+  </div>`;
 
   // ============ Section 1: 설계 조건 ============
   html += `<div class="report-section"><div class="report-title">1. 설계 조건</div>
@@ -2854,7 +4127,7 @@ function renderReportTab() {
   <tr><td class="left">지반고 (GL)</td><td>EL.${fmt(STATE.groundEL,2)} m</td><td class="left">지하수위 (GWL)</td><td>GL-${fmt(STATE.gwlDepth,2)} m (EL.${fmt(r.gwlEL,2)} m)</td></tr>
   <tr><td class="left">말뚝두부 EL</td><td>EL.${fmt(STATE.pileTopEL,2)} m</td><td class="left">지지층 EL (상단)</td><td>EL.${fmt(STATE.bearingEL,2)} m</td></tr>
   <tr><td class="left">근입 깊이</td><td>${fmt(r.embedDepth)} m</td><td class="left">선단 지지층 EL</td><td>EL.${fmt(r.tipEL,2)} m</td></tr>
-  <tr><td class="left">절성토 깊이</td><td>${fmt(r.cutFillDepth)} m</td><td class="left">둘레 (U)</td><td>$\\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</td></tr>
+  <tr><td class="left">절성토</td><td>${r.cutFillDepth > 0 ? '성토 '+fmt(r.fillHeight)+'m' : r.cutFillDepth < 0 ? '<span style="color:#1e40af;font-weight:600">절토 '+fmt(r.cutDepth)+'m</span>' : '없음'} (${fmt(r.cutFillDepth)} m)</td><td class="left">둘레 (U)</td><td>$\\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</td></tr>
   <tr><td class="left">탄성계수 (E)</td><td>${(r.E/1e6).toFixed(1)} GPa = ${(r.E/1e3).toFixed(0)} kN/m²</td><td class="left">단면2차모멘트 (I)</td><td>${fmtE(r.I)} m⁴</td></tr>
   <tr><td class="left">선단면적 (Ap)</td><td>${fmt(r.Ap_tip,4)} m²</td><td class="left">순단면적 (An)</td><td>${fmt(r.Ap_net,4)} m²</td></tr>
   <tr><td class="left">단면계수 (Zp)</td><td>${fmtE(r.Zp)} m³</td><td class="left">휨강성 (EI)</td><td>${fmt(r.EI,1)} kN·m²</td></tr>
