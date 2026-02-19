@@ -1427,6 +1427,16 @@ async function parseNLInput() {
   await callClaudeAPI({
     systemPrompt: `당신은 말뚝 기초 설계 입력 파서입니다. 사용자의 자연어 설명을 분석하여 설계 파라미터를 JSON으로 반환합니다.
 
+현재 설계 상태:
+- 말뚝: ${STATE.pileType} ${STATE.diameter_mm}mm ${STATE.pileType==='PHC'?STATE.phcGrade+'종':'t'+STATE.thickness_mm}
+- 지지방법: ${STATE.bearingMethod==='rock'?'암반근입':'Meyerhof(토사)'}
+- 말뚝두부 EL: ${STATE.pileTopEL} m
+- 지반고 EL: ${STATE.groundEL} m
+- 지지층 EL: ${STATE.bearingEL} m
+- 근입깊이: ${STATE.embedDepth} m
+- 지하수위: GL-${STATE.gwlDepth} m
+- 성토/절토: ${STATE.useFill ? '적용 (계획고 EL '+STATE.plannedEL+' m)' : '미적용'}
+
 반드시 다음 JSON 형식만 반환하세요 (설명 없이):
 {
   "pileType": "PHC" 또는 "강관",
@@ -1447,6 +1457,7 @@ async function parseNLInput() {
 
 규칙:
 - 사용자가 언급하지 않은 필드는 포함하지 마세요
+- 상대적 표현은 현재 상태 기반으로 계산하세요 (예: "지반고보다 5m 높게" → plannedEL = 현재 groundEL + 5)
 - PHC 가용 직경: 350, 400, 450, 500, 600 mm (두께는 직경별 규격 참조)
 - 강관 가용 직경: 406.4, 508.0, 609.6 mm
 - "토사" = bearingMethod: "meyerhof", "암반/암지지" = bearingMethod: "rock"
