@@ -990,14 +990,16 @@ function parseDepthRange(dr) {
 function parseElevation(el) {
   if (typeof el === 'number') return el;
   if (!el) return null;
-  const m = String(el).match(/([\d.]+)/);
+  // \d[\d.]* — 반드시 숫자로 시작해야 매칭 (E.L의 '.'만 매칭 방지)
+  const m = String(el).match(/(\d[\d.]*)/);
   return m ? parseFloat(m[1]) : null;
 }
 
 function parseWaterLevel(wl) {
   if (typeof wl === 'number') return wl;
   if (!wl) return null;
-  const m = String(wl).match(/([\d.]+)/);
+  // \d[\d.]* — 반드시 숫자로 시작해야 매칭
+  const m = String(wl).match(/(\d[\d.]*)/);
   return m ? parseFloat(m[1]) : null;
 }
 
