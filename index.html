@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>말뚝 기초 설계 계산기 v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 <script>window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]}};</script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 <style>
@@ -3867,115 +3867,275 @@ function calcAllBoreholes() {
   });
 }
 
-// ===== EXCEL EXPORT (전체 시추공 종합) =====
-function exportExcel() {
-  if (typeof XLSX === 'undefined') { showToast('SheetJS 라이브러리 로딩 중...', 'warning'); return; }
-  const wb = XLSX.utils.book_new();
+// ===== EXCEL EXPORT (ExcelJS — 10개 시트, 서식+차트) =====
+const XL = {
+  hdrFill: { type:'pattern', pattern:'solid', fgColor:{argb:'FF1E3A5F'} },
+  subFill: { type:'pattern', pattern:'solid', fgColor:{argb:'FFE8F0FE'} },
+  passFill:{ type:'pattern', pattern:'solid', fgColor:{argb:'FFE8F5E9'} },
+  failFill:{ type:'pattern', pattern:'solid', fgColor:{argb:'FFFFEBEE'} },
+  hdrFont: { bold:true, color:{argb:'FFFFFFFF'}, size:10, name:'Noto Sans KR' },
+  subFont: { bold:true, color:{argb:'FF1E3A5F'}, size:10, name:'Noto Sans KR' },
+  titleFont:{ bold:true, size:14, color:{argb:'FF1E3A5F'}, name:'Noto Sans KR' },
+  dataFont: { size:9.5, name:'Noto Sans KR' },
+  border: { top:{style:'thin',color:{argb:'FFD1D5DB'}}, left:{style:'thin',color:{argb:'FFD1D5DB'}}, bottom:{style:'thin',color:{argb:'FFD1D5DB'}}, right:{style:'thin',color:{argb:'FFD1D5DB'}} },
+};
+function xlHdr(ws, r, n) { const row=ws.getRow(r); for(let c=1;c<=n;c++){const cell=row.getCell(c);cell.fill=XL.hdrFill;cell.font=XL.hdrFont;cell.border=XL.border;cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};} row.height=22; }
+function xlData(ws, r1, r2, n) { for(let r=r1;r<=r2;r++){const row=ws.getRow(r);for(let c=1;c<=n;c++){const cell=row.getCell(c);cell.border=XL.border;cell.alignment={vertical:'middle'};if(!cell.font)cell.font=XL.dataFont;}} }
+function xlWidths(ws, w) { w.forEach((v,i)=>{ ws.getColumn(i+1).width=v; }); }
+function xlTitle(ws, t, n) { ws.mergeCells(1,1,1,n); const c=ws.getCell(1,1); c.value=t; c.font=XL.titleFont; c.alignment={horizontal:'center',vertical:'middle'}; ws.getRow(1).height=28; }
+function xlSub(ws, r, n, t) { ws.mergeCells(r,1,r,n); const c=ws.getCell(r,1); c.value=t; c.fill=XL.subFill; c.font=XL.subFont; c.alignment={vertical:'middle'}; c.border=XL.border; }
+const f2 = v => v!=null&&!isNaN(v) ? Math.round(v*100)/100 : null;
+
+// ── 차트 생성 ──
+function generateBarChart(labels, values, opts={}) {
+  const {title='',width=720,height=400,barColor='#1e3a5f',yLabel='',refLine=null,refLabel=''}=opts;
+  const cv=document.createElement('canvas'); cv.width=width; cv.height=height;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,width,height);
+  const m={top:50,right:30,bottom:70,left:65}, cW=width-m.left-m.right, cH=height-m.top-m.bottom;
+  const maxV=Math.max(...values,1)*1.15, barW=Math.min(cW/labels.length*0.65,45), gap=cW/labels.length;
+  ctx.fillStyle='#1e3a5f'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center'; ctx.fillText(title,width/2,28);
+  // Y gridlines
+  for(let i=0;i<=5;i++){const y=m.top+cH-cH*i/5; ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(m.left,y); ctx.lineTo(width-m.right,y); ctx.stroke(); ctx.fillStyle='#888'; ctx.font='9px sans-serif'; ctx.textAlign='right'; ctx.fillText((maxV*i/5).toFixed(0),m.left-5,y+3);}
+  // Bars
+  labels.forEach((lb,i)=>{const bH=(values[i]/maxV)*cH; const x=m.left+i*gap+(gap-barW)/2; const y=m.top+cH-bH;
+    const grad=ctx.createLinearGradient(x,y,x,m.top+cH); grad.addColorStop(0,Array.isArray(barColor)?barColor[i%barColor.length]:barColor); grad.addColorStop(1,'#a0b4cc');
+    ctx.fillStyle=grad; ctx.fillRect(x,y,barW,bH);
+    ctx.fillStyle='#333'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.fillText(values[i]!=null?values[i].toFixed(1):'',x+barW/2,y-5);
+    ctx.save(); ctx.translate(x+barW/2,m.top+cH+8); ctx.rotate(-Math.PI/5); ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='8px sans-serif'; ctx.fillText(lb,0,0); ctx.restore();
+  });
+  // Reference line
+  if(refLine!=null&&refLine>0){const ry=m.top+cH-(refLine/maxV)*cH; ctx.strokeStyle='#e53e3e'; ctx.lineWidth=2; ctx.setLineDash([6,3]); ctx.beginPath(); ctx.moveTo(m.left,ry); ctx.lineTo(width-m.right,ry); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle='#e53e3e'; ctx.font='bold 9px sans-serif'; ctx.textAlign='left'; ctx.fillText(refLabel+' '+refLine,width-m.right+2,ry+3);}
+  if(yLabel){ctx.save(); ctx.translate(14,m.top+cH/2); ctx.rotate(-Math.PI/2); ctx.fillStyle='#888'; ctx.font='10px sans-serif'; ctx.textAlign='center'; ctx.fillText(yLabel,0,0); ctx.restore();}
+  return cv.toDataURL('image/png').split(',')[1];
+}
+function generateStackedChart(labels, tipV, skinV, opts={}) {
+  const {title='',width=720,height=400}=opts;
+  const cv=document.createElement('canvas'); cv.width=width; cv.height=height;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,width,height);
+  const m={top:50,right:30,bottom:70,left:65}, cW=width-m.left-m.right, cH=height-m.top-m.bottom;
+  const totals=tipV.map((t,i)=>t+(skinV[i]||0)), maxV=Math.max(...totals,1)*1.15;
+  const barW=Math.min(cW/labels.length*0.65,45), gap=cW/labels.length;
+  ctx.fillStyle='#1e3a5f'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center'; ctx.fillText(title,width/2,28);
+  for(let i=0;i<=5;i++){const y=m.top+cH-cH*i/5; ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(m.left,y); ctx.lineTo(width-m.right,y); ctx.stroke(); ctx.fillStyle='#888'; ctx.font='9px sans-serif'; ctx.textAlign='right'; ctx.fillText((maxV*i/5).toFixed(0),m.left-5,y+3);}
+  labels.forEach((lb,i)=>{const x=m.left+i*gap+(gap-barW)/2;
+    const sH=(skinV[i]/maxV)*cH, tH=(tipV[i]/maxV)*cH;
+    ctx.fillStyle='#e94560'; ctx.fillRect(x,m.top+cH-sH-tH,barW,sH);
+    ctx.fillStyle='#2c4e7e'; ctx.fillRect(x,m.top+cH-tH,barW,tH);
+    ctx.fillStyle='#333'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center'; ctx.fillText(totals[i].toFixed(0),x+barW/2,m.top+cH-sH-tH-5);
+    ctx.save(); ctx.translate(x+barW/2,m.top+cH+8); ctx.rotate(-Math.PI/5); ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='8px sans-serif'; ctx.fillText(lb,0,0); ctx.restore();
+  });
+  // Legend
+  const lx=width-m.right-140, ly=m.top+5;
+  ctx.fillStyle='#2c4e7e'; ctx.fillRect(lx,ly,12,12); ctx.fillStyle='#333'; ctx.font='10px sans-serif'; ctx.textAlign='left'; ctx.fillText('선단지지력 (Qu_tip)',lx+16,ly+10);
+  ctx.fillStyle='#e94560'; ctx.fillRect(lx,ly+18,12,12); ctx.fillText('주면마찰력 (Qu_skin)',lx+16,ly+28);
+  return cv.toDataURL('image/png').split(',')[1];
+}
+
+// ── 메인 엑셀 내보내기 ──
+async function exportExcel() {
+  if (typeof ExcelJS === 'undefined') { showToast('ExcelJS 라이브러리 로딩 중...', 'warning'); return; }
+  showToast('엑셀 파일 생성 중...', 'info');
+  try {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'GeoAI 말뚝기초설계 계산기'; wb.created = new Date();
   const isPHC = STATE.pileType === 'PHC';
   const pileDesc = isPHC ? `PHC ${STATE.phcGrade}종 D${STATE.diameter_mm}×${STATE.thickness_mm}t` : `강관 D${STATE.diameter_mm}×${STATE.thickness_mm}t`;
   const bhs = STATE.uploadedData && STATE.uploadedData.length > 0 ? STATE.uploadedData : null;
-  const fmt2 = v => v != null ? Number(Number(v).toFixed(2)) : '-';
+  const isMulti = !!bhs;
+  if (isMulti) calcAllBoreholes();
+  const entries = isMulti ? bhs.map(bh=>({h:bh.holeNo,r:BH_RESULTS[bh.holeNo],bh})) : [{h:STATE.boreholeNo,r:STATE.result,bh:null}];
 
   // ── Sheet 1: 설계조건 ──
-  const condData = [
-    ['말뚝 기초 설계 종합 보고서'],
-    ['작성일', (new Date()).toISOString().slice(0,10)],
-    [],
-    ['[설계 조건]'],
-    ['말뚝 종류', pileDesc],
-    ['지지방법', STATE.bearingMethod === 'rock' ? '암반근입' : '토사층'],
-    ['말뚝두부 EL(m)', STATE.pileTopEL],
-    ['근입 깊이(m)', STATE.embedDepth],
-    ['alpha (Kh)', STATE.alpha_kh],
-    ['허용변위 (cm)', STATE.delta_cm],
-    [isPHC ? '허용압축응력 (kN/m²)' : '항복응력 (kN/m²)', STATE.sigmaMax],
-    ['이음 방법', STATE.jointType + ' × ' + STATE.jointCount + '개소'],
-  ];
-  if (!isPHC) {
-    condData.push(['부식두께 (mm)', STATE.corrosionThk]);
-    if (STATE.bearingMethod === 'rock') {
-      condData.push(['qu (kPa)', STATE.qu_kPa], ['Sd (m)', STATE.Sd_m], ['td (m)', STATE.td_m], ['Rock Phi (deg)', STATE.rockPhi]);
-    }
-  }
-  if (STATE.useFill) {
-    const cfDiff = STATE.plannedEL - STATE.groundEL;
-    if (cfDiff > 0) {
-      condData.push([], ['[성토 조건]'], ['계획고 EL(m)', STATE.plannedEL], ['성토재 N값', STATE.fillN],
-        ['성토고 (m)', fmt2(cfDiff)]);
-    } else if (cfDiff < 0) {
-      condData.push([], ['[절토 조건]'], ['계획고 EL(m)', STATE.plannedEL],
-        ['절토 깊이 (m)', fmt2(Math.abs(cfDiff))], ['설계지반면 EL(m)', STATE.plannedEL]);
-    }
-  }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(condData), '설계조건');
+  (function(){
+    const ws=wb.addWorksheet('설계조건'); xlWidths(ws,[28,20]);
+    xlTitle(ws,'말뚝 기초 설계 종합 보고서',2);
+    const rows=[['작성일',new Date().toISOString().slice(0,10)],[],
+      ['말뚝 종류',pileDesc],['지지방법',STATE.bearingMethod==='rock'?'암반근입':'토사층'],
+      ['말뚝두부 EL (m)',STATE.pileTopEL],['근입 깊이 (m)',STATE.embedDepth],
+      ['Alpha (Kh)',STATE.alpha_kh],['허용변위 (cm)',STATE.delta_cm],
+      [isPHC?'허용압축응력 (kN/m²)':'항복응력 (kN/m²)',STATE.sigmaMax],
+      ['이음 방법',STATE.jointType+' × '+STATE.jointCount+'개소'],
+      ['선단 계수 (α)',STATE.coeff_tip],['사질토 주면 계수 (β)',STATE.coeff_sand],['점성토 주면 계수 (γ)',STATE.coeff_clay]
+    ];
+    if(!isPHC){rows.push(['부식두께 (mm)',STATE.corrosionThk]); if(STATE.bearingMethod==='rock'){rows.push(['qu (kPa)',STATE.qu_kPa],['Sd (m)',STATE.Sd_m],['td (m)',STATE.td_m],['Rock Phi (°)',STATE.rockPhi]);}}
+    if(STATE.useFill){const d=STATE.plannedEL-STATE.groundEL; if(d>0)rows.push([],['[성토 조건]',''],['계획고 EL (m)',STATE.plannedEL],['성토재 N값',STATE.fillN],['성토고 (m)',f2(d)]); else if(d<0)rows.push([],['[절토 조건]',''],['계획고 EL (m)',STATE.plannedEL],['절토 깊이 (m)',f2(Math.abs(d))]);}
+    rows.forEach((r,i)=>{const row=ws.addRow(r); if(i===0)return; row.eachCell(c=>{c.border=XL.border; c.font=XL.dataFont; c.alignment={vertical:'middle'};}); if(r[0]&&r[0].startsWith&&r[0].startsWith('[')){row.getCell(1).font=XL.subFont; row.getCell(1).fill=XL.subFill; row.getCell(2).fill=XL.subFill;}});
+    // Label column bold
+    for(let i=2;i<=ws.rowCount;i++){const c=ws.getCell(i,1); if(c.value&&typeof c.value==='string'&&!c.value.startsWith('[')) c.font={...XL.dataFont,bold:true};}
+  })();
 
-  // ── Sheet 2: 종합 결과 ──
-  const sumHdr = ['No','시추공','지반고(EL)','선단EL','지하수위(GL,m)','말뚝길이(m)',
-    'Qa_수직(kN)','Qp_재료(kN)','Qa_지반(kN)','Qu_주면(kN)',
-    'Ha_수평(kN)','Kh(kN/m³)','인발(kN)','침하(mm)','판정'];
-  const sumData = [sumHdr];
-  const getResults = (holeNo, r, bh) => {
-    if (!r) return [holeNo,'-','-','-','-','-','-','-','-','-','-','-','-'];
-    return [holeNo, fmt2(bh ? bh.groundEL : STATE.groundEL), fmt2(r.tipEL), fmt2(bh ? bh.gwlDepth : STATE.gwlDepth), fmt2(r.pileLength),
-      fmt2(r.Qa_applied), fmt2(r.Qp_material), fmt2(r.Qa_ground), fmt2(r.Qu_skin),
-      fmt2(r.Ha_applied), fmt2(r.Kh_min), fmt2(r.Qpull), fmt2(r.St), r.St < 25 ? 'OK' : 'NG'];
-  };
-  if (bhs) {
-    bhs.forEach((bh, i) => {
-      const r = BH_RESULTS[bh.holeNo];
-      sumData.push([i+1, ...getResults(bh.holeNo, r, bh)]);
+  // ── Sheet 2: 종합결과 ──
+  (function(){
+    const ws=wb.addWorksheet('종합결과');
+    const hdr=['No','시추공','지반고(EL)','선단EL','지하수위(GL,m)','말뚝길이(m)','Qa 수직(kN)','Qp 재료(kN)','Qa 지반(kN)','Qu 주면(kN)','Ha 수평(kN)','Kh(kN/m³)','인발(kN)','침하(mm)','판정'];
+    xlWidths(ws,[5,11,10,9,11,10,11,11,11,11,11,11,10,9,7]);
+    ws.addRow(hdr); xlHdr(ws,1,hdr.length);
+    entries.forEach((e,i)=>{const r=e.r; if(!r){ws.addRow([i+1,e.h,'-','-','-','-','-','-','-','-','-','-','-','-','-']);return;}
+      const bh=e.bh;
+      ws.addRow([i+1,e.h,f2(bh?bh.groundEL:STATE.groundEL),f2(r.tipEL),f2(bh?bh.gwlDepth:STATE.gwlDepth),f2(r.pileLength),f2(r.Qa_applied),f2(r.Qp_material),f2(r.Qa_ground),f2(r.Qu_skin),f2(r.Ha_applied),f2(r.Kh_min),f2(r.Qpull),f2(r.St),r.St<25?'OK':'NG']);
     });
-  } else {
-    sumData.push([1, ...getResults(STATE.boreholeNo, STATE.result, null)]);
-  }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumData), '종합결과');
+    xlData(ws,2,ws.rowCount,hdr.length);
+    // Conditional: pass/fail
+    for(let i=2;i<=ws.rowCount;i++){const c=ws.getCell(i,15); if(c.value==='OK'){c.fill=XL.passFill;c.font={...XL.dataFont,bold:true,color:{argb:'FF2E7D32'}};} else if(c.value==='NG'){c.fill=XL.failFill;c.font={...XL.dataFont,bold:true,color:{argb:'FFC62828'}};}}
+  })();
 
-  // ── Sheet 3: SPT 데이터 ──
-  const sptSheet = [['시추공','깊이(m)','EL.+','N값','지층']];
-  if (bhs) {
-    bhs.forEach(bh => {
-      (bh.sptData||[]).forEach(s => sptSheet.push([bh.holeNo, s.depth, fmt2((bh.groundEL||0) - s.depth + 1), s.N, s.remark||'']));
-      sptSheet.push([]); // blank row between boreholes
+  // ── Sheet 3: SPT데이터 ──
+  (function(){
+    const ws=wb.addWorksheet('SPT데이터');
+    const hdr=['시추공','깊이(m)','EL.+','N값','지층']; xlWidths(ws,[12,9,10,8,18]);
+    ws.addRow(hdr); xlHdr(ws,1,hdr.length);
+    const addSPT=(holeNo,sptData,gEL)=>{(sptData||[]).forEach(s=>{const row=ws.addRow([holeNo,s.depth,f2((gEL||0)-s.depth+1),s.N,s.remark||'']); if(s.N>=50){row.getCell(4).font={...XL.dataFont,bold:true,color:{argb:'FF2E7D32'}};}});ws.addRow([]);};
+    if(bhs) bhs.forEach(bh=>addSPT(bh.holeNo,bh.sptData,bh.groundEL));
+    else addSPT(STATE.boreholeNo,STATE.sptData,STATE.groundEL);
+    xlData(ws,2,ws.rowCount,hdr.length);
+  })();
+
+  // ── Sheet 4: 지층정보 ──
+  (function(){
+    const ws=wb.addWorksheet('지층정보');
+    const hdr=['시추공','지층','깊이 상단(m)','깊이 하단(m)','두께(m)','평균N','단위중량(kN/m³)','분류']; xlWidths(ws,[12,16,11,11,9,9,13,8]);
+    ws.addRow(hdr); xlHdr(ws,1,hdr.length);
+    const addLay=(holeNo,layers)=>{(layers||[]).forEach(l=>{ws.addRow([holeNo,l.soilType,l.depthFrom,l.depthTo,l.thickness,l.avgN,l.unitWeight,SOIL_CLS[l.soilType]||'sand']);});ws.addRow([]);};
+    if(bhs) bhs.forEach(bh=>addLay(bh.holeNo,bh.layers));
+    else addLay(STATE.boreholeNo,STATE.layers);
+    xlData(ws,2,ws.rowCount,hdr.length);
+    // Soil class color
+    for(let i=2;i<=ws.rowCount;i++){const cls=ws.getCell(i,8).value; if(cls==='clay') ws.getCell(i,8).font={...XL.dataFont,color:{argb:'FFC62828'},bold:true}; else if(cls==='sand') ws.getCell(i,8).font={...XL.dataFont,color:{argb:'FF1565C0'},bold:true};}
+  })();
+
+  // ── Sheet 5: 수직지지력 상세 ──
+  (function(){
+    const ws=wb.addWorksheet('수직지지력상세');
+    const cols=8; xlWidths(ws,[12,14,10,9,8,10,12,12]);
+    let row=1;
+    entries.forEach(e=>{
+      const r=e.r; if(!r) return;
+      // Sub header
+      xlSub(ws,row,cols,'▶ '+e.h); row++;
+      // Material capacity
+      ws.addRow(['구분','값','','','','','','']); xlHdr(ws,row,2); row++;
+      ws.addRow(['Qap (재료규격)',f2(r.Qap)]); ws.addRow(['μ1 (세장비감소)',f2(r.mu1)+'%']); ws.addRow(['μ2 (이음감소)',f2(r.mu2)+'%']); ws.addRow(['Qp (재료허용)',f2(r.Qp_material)]); row+=4;
+      // Tip
+      ws.addRow(['N_tip',f2(r.N_tip)]); ws.addRow(['Ap_tip (m²)',f2(r.Ap_tip)]); ws.addRow(['Pu_tip (선단, kN)',f2(r.Qu_tip)]); row+=3;
+      // Rock details
+      if(r.rockCalcDetails){const rd=r.rockCalcDetails; ws.addRow(['--- 암반근입 3공식 ---','']); ws.addRow(['구조물기초 (kN)',f2(rd.Pu_tip)]); ws.addRow(['Goodman (kN)',f2(rd.Pu_goodman)]); ws.addRow(['Canadian (kN)',f2(rd.Pu_canadian)]); ws.addRow(['채택 (최소, kN)',f2(rd.Pu_selected)]); row+=5;}
+      // Skin friction table
+      ws.addRow([]); row++;
+      ws.addRow(['지층','두께(m)','N값','분류','As(m²)','사질토(kN)','점성토(kN)','누적(kN)']); xlHdr(ws,row,cols); row++;
+      let cumSkin=0;
+      (r.processedLayers||[]).forEach(pl=>{
+        const sf=(pl.skinFriction_sand||0)+(pl.skinFriction_clay||0); cumSkin+=sf;
+        ws.addRow([pl.soilType,f2(pl.thickness),f2(pl.avgN),pl.soilClass||'sand',f2(pl.As),f2(pl.skinFriction_sand||0),f2(pl.skinFriction_clay||0),f2(cumSkin)]); row++;
+      });
+      // Summary
+      ws.addRow([]); row++;
+      ws.addRow(['Qu (극한)',f2(r.Qu)]); ws.addRow(['FS',r.FS]); ws.addRow(['Qa_지반 (kN)',f2(r.Qa_ground)]); ws.addRow(['Qa_적용 (kN)',f2(r.Qa_applied)]); row+=4;
+      ws.addRow([]); row++;
     });
-  } else {
-    STATE.sptData.forEach(s => sptSheet.push([STATE.boreholeNo, s.depth, fmt2(STATE.groundEL - s.depth + 1), s.N, s.remark||'']));
-  }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sptSheet), 'SPT데이터');
+    xlData(ws,1,ws.rowCount,cols);
+  })();
 
-  // ── Sheet 4: 지층 정보 ──
-  const laySheet = [['시추공','지층','깊이 상단(m)','깊이 하단(m)','두께(m)','평균N','단위중량(kN/m³)','분류']];
-  if (bhs) {
-    bhs.forEach(bh => {
-      (bh.layers||[]).forEach(l => laySheet.push([bh.holeNo, l.soilType, l.depthFrom, l.depthTo, l.thickness, l.avgN, l.unitWeight, SOIL_CLS[l.soilType]||'sand']));
-      laySheet.push([]);
+  // ── Sheet 6: 수평지지력 상세 ──
+  (function(){
+    const ws=wb.addWorksheet('수평지지력상세');
+    const cols=6; xlWidths(ws,[12,18,14,14,14,14]);
+    let row=1;
+    entries.forEach(e=>{
+      const r=e.r; if(!r) return;
+      xlSub(ws,row,cols,'▶ '+e.h); row++;
+      // Kh methods
+      ws.addRow(['산정방법','Kh (kN/m³)','비고','','','']); xlHdr(ws,row,3); row++;
+      const khData=[['도로교기준 2008',f2(r.Kh1),''],['福岡 (Fukuoka)',f2(r.Kh2),''],['횡山 (Yokoyama)',f2(r.Kh3),''],['지반공학회 1996',f2(r.Kh4),'']];
+      khData.forEach(d=>{const rr=ws.addRow(d); if(f2(r.Kh_min)===d[1]){rr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF9C4'}}; rr.getCell(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF9C4'}}; rr.getCell(2).font={...XL.dataFont,bold:true};} row++;});
+      ws.addRow(['Kh_min (채택)',f2(r.Kh_min),'최소값']); row++;
+      ws.addRow([]); row++;
+      // Pile classification
+      ws.addRow(['β (m⁻¹)',f2(r.beta)]); ws.addRow(['1/β (m)',f2(r.invBeta)]); ws.addRow(['βL',f2(r.betaL)]); ws.addRow(['말뚝분류',r.pileClass||'-']); row+=4;
+      ws.addRow([]); row++;
+      // Brom + Chang
+      ws.addRow(['방법','Ha (kN)','비고','','','']); xlHdr(ws,row,3); row++;
+      ws.addRow(['변위제한 H_disp',f2(r.H_disp),'δ='+STATE.delta_cm+'cm']); ws.addRow(['Brom Case-1',f2(r.Ha_brom1),'']); ws.addRow(['Brom Case-2',f2(r.Ha_brom2),'']); ws.addRow(['Brom (min)',f2(r.Ha_brom),'']); ws.addRow(['Chang',f2(r.Ha_chang),'']); row+=5;
+      ws.addRow(['Ha_적용 (kN)',f2(r.Ha_applied),'min(Brom,Chang)']); row++;
+      ws.addRow([]); ws.addRow([]); row+=2;
     });
-  } else {
-    STATE.layers.forEach(l => laySheet.push([STATE.boreholeNo, l.soilType, l.depthFrom, l.depthTo, l.thickness, l.avgN, l.unitWeight, SOIL_CLS[l.soilType]||'sand']));
-  }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(laySheet), '지층정보');
+    xlData(ws,1,ws.rowCount,cols);
+  })();
 
-  // ── Sheet 5: 계산 상세 (각 시추공별 주면마찰력) ──
-  const detHdr = ['시추공','지층','두께(m)','N값','분류','As(m²)','주면마찰(kN)','누적주면(kN)'];
-  const detData = [detHdr];
-  const addDetail = (holeNo, r) => {
-    if (!r || !r.processedLayers) return;
-    let cumSkin = 0;
-    r.processedLayers.forEach(pl => {
-      const skinF = (pl.skinFriction_sand || 0) + (pl.skinFriction_clay || 0);
-      cumSkin += skinF;
-      detData.push([holeNo, pl.soilType, fmt2(pl.thickness), fmt2(pl.avgN), pl.soilClass||'sand', fmt2(pl.As), fmt2(skinF), fmt2(cumSkin)]);
+  // ── Sheet 7: 인발 상세 ──
+  (function(){
+    const ws=wb.addWorksheet('인발상세');
+    const hdr=['시추공','l1 수위상부(m)','l2 수위하부(m)','자중 Wp(kN)','Qu_skin(kN)','FS','인발저항 Qpull(kN)']; xlWidths(ws,[12,14,14,12,12,6,16]);
+    ws.addRow(hdr); xlHdr(ws,1,hdr.length);
+    entries.forEach(e=>{const r=e.r; if(!r)return; ws.addRow([e.h,f2(r.l1),f2(r.l2),f2(r.Wp),f2(r.Qu_skin),r.FS,f2(r.Qpull)]);});
+    xlData(ws,2,ws.rowCount,hdr.length);
+  })();
+
+  // ── Sheet 8: 침하 상세 ──
+  (function(){
+    const ws=wb.addWorksheet('침하상세');
+    const hdr=['시추공','Qps(kN)','Qfs(kN)','Cp','Cs','qp(kN/m²)','Ss(mm)','Sp(mm)','Sps(mm)','St(mm)','판정']; xlWidths(ws,[12,11,11,7,9,12,9,9,9,9,7]);
+    ws.addRow(hdr); xlHdr(ws,1,hdr.length);
+    entries.forEach(e=>{const r=e.r; if(!r)return; ws.addRow([e.h,f2(r.Qps),f2(r.Qfs),f2(r.Cp),f2(r.Cs),f2(r.qp),f2(r.Ss),f2(r.Sp),f2(r.Sps),f2(r.St),r.St<25?'OK':'NG']);});
+    xlData(ws,2,ws.rowCount,hdr.length);
+    for(let i=2;i<=ws.rowCount;i++){const c=ws.getCell(i,11); if(c.value==='OK'){c.fill=XL.passFill;c.font={...XL.dataFont,bold:true,color:{argb:'FF2E7D32'}};} else if(c.value==='NG'){c.fill=XL.failFill;c.font={...XL.dataFont,bold:true,color:{argb:'FFC62828'}};}}
+  })();
+
+  // ── Sheet 9: 물량산정 ──
+  (function(){
+    const ws=wb.addWorksheet('물량산정');
+    const q = calcQuantities(); if(!q) return;
+    xlWidths(ws,[12,14,12,12,12]);
+    xlTitle(ws,'물량 산정 종합',5);
+    ws.addRow([]); // row 2
+    ws.addRow(['말뚝 규격',q.pileSpec||pileDesc,'','','']); ws.getCell(3,1).font={...XL.dataFont,bold:true};
+    ws.addRow(['총 본수',q.totalPiles,'본','','']); ws.addRow(['총 길이',f2(q.totalLength),'m','','']);
+    ws.addRow(['총 중량',f2(q.totalWeight_ton),'ton','','']); ws.addRow(['총 체적',f2(q.totalVolume_m3),'m³','','']);
+    ws.addRow(['총 표면적',f2(q.totalSurface_m2),'m²','','']);
+    ws.addRow(['평균 길이',f2(q.avgLength),'m','','']); ws.addRow(['최장',f2(q.maxLength),'m','','']); ws.addRow(['최단',f2(q.minLength),'m','','']);
+    for(let i=3;i<=ws.rowCount;i++){ws.getCell(i,1).font={...XL.dataFont,bold:true}; for(let c=1;c<=3;c++) ws.getCell(i,c).border=XL.border;}
+    // Detail
+    ws.addRow([]); const detRow=ws.rowCount+1;
+    ws.addRow(['시추공','말뚝길이(m)','중량(ton)','체적(m³)','표면적(m²)']); xlHdr(ws,detRow,5);
+    (q.items||[]).forEach(it=>{ws.addRow([it.holeNo,f2(it.pileLength),f2(it.weight_ton),f2(it.volume_m3),f2(it.surface_m2)]);});
+    // Totals row
+    const totRow=ws.addRow(['합계',f2(q.totalLength),f2(q.totalWeight_ton),f2(q.totalVolume_m3),f2(q.totalSurface_m2)]);
+    totRow.eachCell(c=>{c.font={...XL.dataFont,bold:true}; c.fill=XL.subFill; c.border=XL.border;});
+    xlData(ws,detRow+1,ws.rowCount-1,5);
+  })();
+
+  // ── Sheet 10: 차트 (다수 시추공만) ──
+  if(isMulti && Object.keys(BH_RESULTS).length>1){
+    const ws=wb.addWorksheet('차트');
+    const labels=bhs.map(b=>b.holeNo);
+    const qaV=bhs.map(b=>{const r=BH_RESULTS[b.holeNo]; return r?r.Qa_applied:0;});
+    const haV=bhs.map(b=>{const r=BH_RESULTS[b.holeNo]; return r?r.Ha_applied:0;});
+    const stV=bhs.map(b=>{const r=BH_RESULTS[b.holeNo]; return r?r.St:0;});
+    const tipV=bhs.map(b=>{const r=BH_RESULTS[b.holeNo]; return r?r.Qu_tip:0;});
+    const skinV=bhs.map(b=>{const r=BH_RESULTS[b.holeNo]; return r?r.Qu_skin:0;});
+    const charts=[
+      {img:generateBarChart(labels,qaV,{title:'수직 허용지지력 비교 (Qa, kN)',barColor:'#1e3a5f',yLabel:'kN'}), row:0},
+      {img:generateBarChart(labels,haV,{title:'수평 허용지지력 비교 (Ha, kN)',barColor:'#e94560',yLabel:'kN'}), row:22},
+      {img:generateBarChart(labels,stV,{title:'침하량 비교 (St, mm)',barColor:'#f57c00',yLabel:'mm',refLine:25,refLabel:'허용'}), row:44},
+      {img:generateStackedChart(labels,tipV,skinV,{title:'극한지지력 구성 (Qu = 선단 + 주면, kN)'}), row:66},
+    ];
+    charts.forEach(ch=>{
+      const id=wb.addImage({base64:ch.img,extension:'png'});
+      ws.addImage(id,{tl:{col:0,row:ch.row},ext:{width:720,height:400}});
     });
-    detData.push([]);
-  };
-  if (bhs) {
-    bhs.forEach(bh => addDetail(bh.holeNo, BH_RESULTS[bh.holeNo]));
-  } else {
-    addDetail(STATE.boreholeNo, STATE.result);
   }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detData), '주면마찰상세');
 
-  XLSX.writeFile(wb, '말뚝기초설계_' + pileDesc.replace(/[×\s]/g,'') + '_' + (new Date()).toISOString().slice(0,10) + '.xlsx');
-  showToast('엑셀 파일 다운로드 완료 (5개 시트)', 'success');
+  // ── 다운로드 ──
+  const sheetCount = wb.worksheets.length;
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download = '말뚝기초설계_'+pileDesc.replace(/[×\s]/g,'')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('엑셀 파일 다운로드 완료 ('+sheetCount+'개 시트)', 'success');
+  } catch(err) { console.error('Excel export error:', err); showToast('엑셀 생성 오류: '+err.message, 'error'); }
 }
 
 // ===== OVERALL RESULTS TAB (merged with Dashboard) =====
