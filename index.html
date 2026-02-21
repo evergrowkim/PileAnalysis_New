@@ -662,7 +662,7 @@ function calcPile(p) {
     const fillcN = Math.min(p.fillN || 5, 30);
     processedLayers.push({ soilType: '성토층(계획)', thickness: fillHeight, avgN: p.fillN || 5,
       unitWeight: 18, depthFrom: -fillHeight, depthTo: 0, soilClass: 'sand', As: fillAs,
-      skinFriction_sand: 2 * fillcN * fillAs, skinFriction_clay: 0, isFill: true });
+      skinFriction_sand: (p.coeff_sand || 2) * fillcN * fillAs, skinFriction_clay: 0, isFill: true });
   }
   // 주면마찰력: 선단(tipEL)까지만 산정 — 마지막 층 두께 보정
   // 절토 시: cutDepth까지의 지층을 삭제/절단 (설계지반면이 계획고로 내려감)
@@ -690,8 +690,8 @@ function calcPile(p) {
     const As_i = U * effThickness;
     const cN = Math.min(layer.avgN, 30);
     processedLayers.push({ ...layer, thickness: parseFloat(effThickness.toFixed(3)), origThickness: layer.thickness, soilClass: sc, As: As_i,
-      skinFriction_sand: sc === "sand" ? 2 * cN * As_i : 0,
-      skinFriction_clay: sc === "clay" ? 6.25 * cN * As_i : 0,
+      skinFriction_sand: sc === "sand" ? (p.coeff_sand || 2) * cN * As_i : 0,
+      skinFriction_clay: sc === "clay" ? (p.coeff_clay || 6.25) * cN * As_i : 0,
       depthFrom: effTop, depthTo: parseFloat(effBot.toFixed(3)), truncated });
   });
   const sum_2NsAs = processedLayers.reduce((s, l) => s + l.skinFriction_sand, 0);
@@ -714,7 +714,7 @@ function calcPile(p) {
     Pu_selected = Math.min(Pu_tip, Pu_goodman, Pu_canadian);
     rockCalcDetails = { qu_eff, qu_lab, At_m2: At_steel, Ai_m2: Ai_steel, Pu_tip, phi_rock, N_phi, Ap_full, Pu_goodman, Sd, td: td2, Ksp, Pu_canadian, Pu_selected };
   } else {
-    Pu_selected = 250 * N_tip * Ap_tip; Pu_tip = Pu_selected;
+    Pu_selected = (p.coeff_tip || 250) * N_tip * Ap_tip; Pu_tip = Pu_selected;
   }
   const Qu = Pu_selected + sum_2NsAs + sum_625NcAc;
   const Qu_tip = Pu_selected, Qu_skin = sum_2NsAs + sum_625NcAc;
@@ -856,6 +856,7 @@ const STATE = {
   pileTopEL: 130, groundEL: 127.38, bearingEL: 119.98, embedDepth: 1, gwlDepth: 3.75,
   boreholeNo: "NBH-03", alpha_kh: 1, delta_cm: 1.5, sigmaMax: 20000,
   useFill: false, plannedEL: null, fillN: 5,
+  coeff_tip: 250, coeff_sand: 2, coeff_clay: 6.25,
   bearingMethod: "meyerhof", corrosionThk: 2, qu_kPa: 32460,
   Sd_m: 0.15, td_m: 0.002, rockPhi: 35, jointCount: 1, jointType: "welding",
   sptData: [
@@ -912,7 +913,8 @@ function recalculate() {
       qu_kPa: STATE.qu_kPa, Sd_m: STATE.Sd_m, td_m: STATE.td_m, rockPhi_deg: STATE.rockPhi,
       bearingMethod: STATE.bearingMethod, jointCount: STATE.jointCount, jointType: STATE.jointType,
       useFill: STATE.useFill, plannedEL: STATE.plannedEL, fillN: STATE.fillN,
-      embedDepth: STATE.embedDepth
+      embedDepth: STATE.embedDepth,
+      coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand, coeff_clay: STATE.coeff_clay
     });
   } catch (e) { console.error('Calc error:', e); STATE.result = null; }
   // Auto-save edits back to uploadedData
@@ -1969,8 +1971,8 @@ function prepareChatContext() {
       const r = STATE.result;
       ctx += '\\n## 계산 결과\\n';
       ctx += '### 적용 공식\\n';
-      ctx += '선단지지력: ' + (STATE.bearingMethod === 'rock' && STATE.pileType !== 'PHC' ? '암반 3공식 (구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값' : 'Meyerhof 공식 (250·N·Ap)') + '\\n';
-      ctx += '주면마찰력: 사질토 2·Ns·As, 점성토 6.25·Nc·Ac (KDS 11 50 40)\\n';
+      ctx += '선단지지력: ' + (STATE.bearingMethod === 'rock' && STATE.pileType !== 'PHC' ? '암반 3공식 (구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값' : '토사 공식 (' + STATE.coeff_tip + '·N·Ap)') + '\\n';
+      ctx += '주면마찰력: 사질토 ' + STATE.coeff_sand + '·Ns·As, 점성토 ' + STATE.coeff_clay + '·Nc·Ac (KDS 11 50 40)\\n';
       ctx += '안전율 FS: ' + r.FS + ', Qa = min(Qu/FS, 재료지지력)\\n';
       ctx += '\\n### 산출값\\n';
       ctx += '말뚝길이: ' + r.pileLength.toFixed(2) + 'm\\n';
@@ -2455,6 +2457,20 @@ function renderInputTab() {
     </div>`;
   }
 
+  // 지지력 계수 편집
+  html += `<div style="margin-top:12px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:11px;font-weight:700;color:var(--text-secondary)">지지력 계수 (KDS 11 50 40)</span>
+      <span style="font-size:10px;color:#94a3b8">$Q_u = \\alpha \\cdot N_{tip} \\cdot A_p + \\sum \\beta \\cdot N_s \\cdot A_s + \\sum \\gamma \\cdot N_c \\cdot A_c$</span>
+    </div>
+    <div class="form-grid cols-4" style="margin:0">
+      <div class="field"><label>선단 계수 ($\\alpha$)</label><input type="number" value="${STATE.coeff_tip}" step="10" style="font-weight:600" onchange="STATE.coeff_tip=parseFloat(this.value)||250; recalculate()"></div>
+      <div class="field"><label>사질토 주면 ($\\beta$)</label><input type="number" value="${STATE.coeff_sand}" step="0.5" style="font-weight:600" onchange="STATE.coeff_sand=parseFloat(this.value)||2; recalculate()"></div>
+      <div class="field"><label>점성토 주면 ($\\gamma$)</label><input type="number" value="${STATE.coeff_clay}" step="0.25" style="font-weight:600" onchange="STATE.coeff_clay=parseFloat(this.value)||6.25; recalculate()"></div>
+      <div class="field"><label>&nbsp;</label><button class="btn btn-sm btn-outline" style="width:100%" onclick="STATE.coeff_tip=250;STATE.coeff_sand=2;STATE.coeff_clay=6.25;recalculate()">기본값 복원</button></div>
+    </div>
+  </div>`;
+
   // SPT Data
   html += `<h3 class="sec-title">2. SPT N값</h3>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
@@ -2534,6 +2550,8 @@ function renderInputTab() {
   </table>`;
 
   document.getElementById('tab-input').innerHTML = html;
+  var inputEl = document.getElementById('tab-input');
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([inputEl]).catch(function(e){});
 }
 
 function addSPT() {
@@ -2785,7 +2803,7 @@ function renderVerticalTab() {
   const stepNo = (!isPHC && r.rockCalcDetails) ? 3 : 2;
   html += `<div class="report-section"><div class="report-title">Step ${stepNo}. 지반 허용연직지지력</div>
   <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">기준: Meyerhof 공식 (사질토), KDS 11 50 40</div>
-  <div style="margin:8px 0">$$Q_u = ${r.rockCalcDetails?'P_u':'250 N_{tip} A_p'} + \\sum 2 N_s A_s + \\sum 6.25 N_c A_c$$</div>`;
+  <div style="margin:8px 0">$$Q_u = ${r.rockCalcDetails?'P_u':STATE.coeff_tip+' N_{tip} A_p'} + \\sum ${STATE.coeff_sand} N_s A_s + \\sum ${STATE.coeff_clay} N_c A_c$$</div>`;
 
   // Tip resistance
   if (!r.rockCalcDetails) {
@@ -2795,7 +2813,7 @@ function renderVerticalTab() {
     <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 선단지지력 (Meyerhof)</div>
     <div style="font-size:11px">선단부 N값: $N_{tip} = \\min(N_{최하단},\\;50) = \\min(${lastSPT},\\;50) = ${tipN}$</div>
     <div style="font-size:11px">선단면적: $A_p = \\frac{\\pi}{4}D^2 = \\frac{\\pi}{4}\\times${fmt(r.D,4)}^2 = ${fmt(r.Ap_tip,4)}$ m²</div>
-    <div style="font-size:12px;font-weight:700;margin-top:6px">$P_u = 250 \\times N_{tip} \\times A_p = 250 \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
+    <div style="font-size:12px;font-weight:700;margin-top:6px">$P_u = ${STATE.coeff_tip} \\times N_{tip} \\times A_p = ${STATE.coeff_tip} \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
     </div>`;
   } else {
     html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
@@ -2809,7 +2827,7 @@ function renderVerticalTab() {
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면마찰력 상세</div>
   <div style="font-size:11px;margin-bottom:4px">둘레: $U = \\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</div>
   <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">주면마찰력 산정 범위: ${r.cutDepth > 0 ? '설계지반면 (EL.'+fmt(STATE.plannedEL,2)+', 절토 GL-'+fmt(r.cutDepth,2)+'m)' : '지표면 (EL.'+fmt(r.groundEL,2)+')'} ~ 선단 (EL.${fmt(r.tipEL,2)}), GL-${fmt(r.bearingDepthFromGL,2)}m</div>
-  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께 L(m)</th><th>평균 N</th><th>$A_s = U \\times L$</th><th>사질토: $2N_sA_s$</th><th>점성토: $6.25N_cA_c$</th></tr></thead><tbody>`;
+  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께 L(m)</th><th>평균 N</th><th>$A_s = U \\times L$</th><th>사질토: $${STATE.coeff_sand}N_sA_s$</th><th>점성토: $${STATE.coeff_clay}N_cA_c$</th></tr></thead><tbody>`;
   r.processedLayers.forEach(function(l) {
     const cN = Math.min(l.avgN, 30);
     const elTop = r.groundEL != null ? fmt(r.groundEL - l.depthFrom, 2) : '-';
@@ -2822,8 +2840,8 @@ function renderVerticalTab() {
     <td style="white-space:nowrap">${thkCalc}</td>
     <td>${fmt(l.avgN,1)} ${l.avgN>30?'→ cap 30':''}</td>
     <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
-    <td>${l.soilClass==='sand' ? `$2 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$` : '-'}</td>
-    <td>${l.soilClass==='clay' ? `$6.25 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$` : '-'}</td>
+    <td>${l.soilClass==='sand' ? `$${STATE.coeff_sand} \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$` : '-'}</td>
+    <td>${l.soilClass==='clay' ? `$${STATE.coeff_clay} \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$` : '-'}</td>
     </tr>`;
   });
   html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="4">합계</td><td></td><td>${fmt(r.sum_2NsAs)} kN</td><td>${fmt(r.sum_625NcAc)} kN</td></tr>`;
@@ -2832,7 +2850,7 @@ function renderVerticalTab() {
   // Qu, Qa
   html += `<div style="padding:12px;background:#e8f5e9;border-radius:6px;border:1px solid #a5d6a7;margin-bottom:8px">
   <div style="font-size:11px;font-weight:700">극한 지지력:</div>
-  <div style="font-size:11px">$Q_u = P_u + \\Sigma 2N_sA_s + \\Sigma 6.25N_cA_c$</div>
+  <div style="font-size:11px">$Q_u = P_u + \\Sigma ${STATE.coeff_sand}N_sA_s + \\Sigma ${STATE.coeff_clay}N_cA_c$</div>
   <div style="font-size:11px;margin-top:2px">$= ${fmt(r.Qu_tip)} + ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu)}$ kN</div>
   <div style="font-size:11px;font-weight:700;margin-top:6px">허용 지지력 (FS=${r.FS}):</div>
   <div style="font-size:12px;font-weight:800;color:var(--status-pass)">$$Q_a = \\frac{Q_u}{FS} = \\frac{${fmt(r.Qu)}}{${r.FS}} = ${fmt(r.Qa_ground)} \\text{ kN}$$</div>
@@ -2992,7 +3010,7 @@ function renderPulloutTab() {
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
   <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">▸ 주면마찰력 (Qu,skin)</div>
   <div style="font-size:11px">수직지지력 산정에서 구한 주면마찰력 합계를 사용합니다.</div>
-  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께(m)</th><th>N</th><th>As(m²)</th><th>사질토: 2NAs</th><th>점성토: 6.25NAc</th></tr></thead><tbody>`;
+  <table style="margin-top:6px"><thead><tr><th>지층</th><th>분류</th><th>두께(m)</th><th>N</th><th>As(m²)</th><th>사질토: ${STATE.coeff_sand}NAs</th><th>점성토: ${STATE.coeff_clay}NAc</th></tr></thead><tbody>`;
   r.processedLayers.forEach(function(l) {
     const cN = Math.min(l.avgN, 30);
     const elT = r.groundEL != null ? fmt(r.groundEL - l.depthFrom, 2) : '-';
@@ -3002,13 +3020,13 @@ function renderPulloutTab() {
     <td><span class="soil-badge ${l.soilClass}">${l.soilClass}</span></td>
     <td style="white-space:nowrap"><span style="font-size:10px;color:#495057">EL.${elT}~${elB}</span><br><strong>${fmt(l.thickness)}</strong>${l.truncated?'<span style="color:#c62828;font-size:9px">(절단)</span>':''}</td><td>${fmt(l.avgN,1)}</td>
     <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
-    <td>${l.soilClass==='sand'?`$2 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
-    <td>${l.soilClass==='clay'?`$6.25 \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
+    <td>${l.soilClass==='sand'?`$${STATE.coeff_sand} \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
+    <td>${l.soilClass==='clay'?`$${STATE.coeff_clay} \\times ${fmt(cN,1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
     </tr>`;
   });
   html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="4">합계</td><td></td><td>${fmt(r.sum_2NsAs)} kN</td><td>${fmt(r.sum_625NcAc)} kN</td></tr>`;
   html += `</tbody></table>
-  <div style="font-size:12px;font-weight:700;margin-top:8px">$Q_{u,skin} = \\Sigma 2N_sA_s + \\Sigma 6.25N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
+  <div style="font-size:12px;font-weight:700;margin-top:8px">$Q_{u,skin} = \\Sigma ${STATE.coeff_sand}N_sA_s + \\Sigma ${STATE.coeff_clay}N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
   </div>
 
   <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:10px">
@@ -3842,7 +3860,8 @@ function calcAllBoreholes() {
       Sd_m: STATE.Sd_m, td_m: STATE.td_m, rockPhi_deg: STATE.rockPhi,
       bearingMethod: STATE.bearingMethod, jointCount: STATE.jointCount, jointType: STATE.jointType,
       useFill: STATE.useFill, plannedEL: STATE.plannedEL, fillN: STATE.fillN,
-      embedDepth: STATE.embedDepth
+      embedDepth: STATE.embedDepth,
+      coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand, coeff_clay: STATE.coeff_clay
     };
     try { BH_RESULTS[bh.holeNo] = calcPile(p); } catch(e) { BH_RESULTS[bh.holeNo] = null; }
   });
@@ -4326,7 +4345,7 @@ function renderReportTab() {
   const tipStepNo = (!isPHC && r.rockCalcDetails) ? 6 : 2;
   html += `<div class="report-step"><span class="step-num">${tipStepNo}</span><strong>지반 허용연직지지력</strong>
   <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">기준: Meyerhof 공식 (사질토), KDS 11 50 40</div>
-  <div style="margin-top:6px">$$Q_u = ${r.rockCalcDetails?'P_u':'250 \\cdot N_{tip} \\cdot A_p'} + \\sum 2 N_s A_s + \\sum 6.25 N_c A_c$$</div>`;
+  <div style="margin-top:6px">$$Q_u = ${r.rockCalcDetails?'P_u':STATE.coeff_tip+' \\cdot N_{tip} \\cdot A_p'} + \\sum ${STATE.coeff_sand} N_s A_s + \\sum ${STATE.coeff_clay} N_c A_c$$</div>`;
 
   // Tip
   if (!r.rockCalcDetails) {
@@ -4335,7 +4354,7 @@ function renderReportTab() {
     <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 선단지지력</div>
     <div style="font-size:11px">$N_{tip} = \\min(N_{최하단},\\; 50) = \\min(${STATE.sptData.length>0?STATE.sptData[STATE.sptData.length-1].N:50},\\; 50) = ${tipN}$</div>
     <div style="font-size:11px">$A_p = \\frac{\\pi}{4} D^2 = \\frac{\\pi}{4} \\times ${fmt(r.D,4)}^2 = ${fmt(r.Ap_tip,4)}$ m²</div>
-    <div style="font-size:11px;font-weight:700">$P_u = 250 \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
+    <div style="font-size:11px;font-weight:700">$P_u = ${STATE.coeff_tip} \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
     </div>`;
   } else {
     html += `<div style="margin-top:6px;font-size:11px;font-weight:700">선단지지력: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN (암반근입, 위에서 산정)</div>`;
@@ -4345,7 +4364,7 @@ function renderReportTab() {
   html += `<div style="margin-top:10px;padding:8px;background:#f8f9fa;border-radius:4px">
   <div style="font-size:11px;font-weight:600;color:var(--primary-navy);margin-bottom:4px">▸ 주면마찰력 상세</div>
   <div style="font-size:11px;margin-bottom:4px">둘레 $U = ${fmt(r.U,4)}$ m</div>
-  <table style="margin-top:4px"><thead><tr><th>지층</th><th>분류</th><th>L(m)</th><th>N</th><th>As=U×L</th><th>사질토: 2NAs</th><th>점성토: 6.25NAc</th></tr></thead><tbody>`;
+  <table style="margin-top:4px"><thead><tr><th>지층</th><th>분류</th><th>L(m)</th><th>N</th><th>As=U×L</th><th>사질토: ${STATE.coeff_sand}NAs</th><th>점성토: ${STATE.coeff_clay}NAc</th></tr></thead><tbody>`;
   r.processedLayers.forEach(l => {
     const elT = r.groundEL != null ? fmt(r.groundEL - l.depthFrom, 2) : '-';
     const elB = r.groundEL != null ? fmt(r.groundEL - l.depthTo, 2) : '-';
@@ -4354,8 +4373,8 @@ function renderReportTab() {
     <td><span class="soil-badge ${l.soilClass}">${l.soilClass}</span></td>
     <td style="white-space:nowrap"><span style="font-size:10px;color:#495057">EL.${elT}~${elB}</span><br><strong>${fmt(l.thickness)}</strong>${l.truncated?'<span style="color:#c62828;font-size:9px">(절단)</span>':''}</td><td>${fmt(l.avgN,1)}</td>
     <td>$${fmt(r.U,4)} \\times ${fmt(l.thickness)} = ${fmt(l.As,3)}$</td>
-    <td>${l.soilClass==='sand'?`$2 \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
-    <td>${l.soilClass==='clay'?`$6.25 \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
+    <td>${l.soilClass==='sand'?`$${STATE.coeff_sand} \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_sand)}$`:'-'}</td>
+    <td>${l.soilClass==='clay'?`$${STATE.coeff_clay} \\times ${fmt(Math.min(l.avgN,30),1)} \\times ${fmt(l.As,3)} = ${fmt(l.skinFriction_clay)}$`:'-'}</td>
     </tr>`;
   });
   html += `<tr style="background:#e8eaf6;font-weight:700"><td class="left" colspan="5">합계</td><td>${fmt(r.sum_2NsAs)}</td><td>${fmt(r.sum_625NcAc)}</td></tr>`;
@@ -4465,7 +4484,7 @@ function renderReportTab() {
 
   <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
   <div style="font-size:11px;font-weight:600;color:var(--primary-navy)">▸ 주면마찰력</div>
-  <div style="font-size:11px">$Q_{u,skin} = \\sum 2N_sA_s + \\sum 6.25N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
+  <div style="font-size:11px">$Q_{u,skin} = \\sum ${STATE.coeff_sand}N_sA_s + \\sum ${STATE.coeff_clay}N_cA_c = ${fmt(r.sum_2NsAs)} + ${fmt(r.sum_625NcAc)} = ${fmt(r.Qu_skin)}$ kN</div>
   </div>
 
   <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px">
