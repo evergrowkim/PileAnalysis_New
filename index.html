@@ -321,7 +321,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
   font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all .2s; }
 .ai-btn:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); box-shadow:0 2px 8px rgba(99,102,241,.4); }
 .ai-btn.btn-toolbar { margin-left:4px; }
-#aiContent { white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.85; color:var(--text-primary); }
+#aiContent { white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.5; color:var(--text-primary); }
 #aiContent h3 { font-size:14px; font-weight:700; color:var(--primary-navy); margin:16px 0 6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px; }
 #aiContent h4 { font-size:12.5px; font-weight:600; color:var(--primary-steel); margin:10px 0 4px; }
 #aiContent ul, #aiContent ol { margin:4px 0; padding-left:20px; }
@@ -429,8 +429,8 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <span>시추공 목록</span>
-    <div style="display:flex;gap:2px;align-items:center">
-      <button onclick="toggleBhSort()" id="bhSortBtn" title="시추공 정렬" style="font-size:10px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:3px;background:#f1f5f9;cursor:pointer">↑↓</button>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button onclick="toggleBhSort()" id="bhSortBtn" title="시추공 정렬 (오름차순/내림차순)" style="font-size:9px;padding:2px 6px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(255,255,255,0.15);cursor:pointer;color:#fff;letter-spacing:-0.5px">A↓</button>
       <button onclick="toggleSidebar()" title="접기">&#9664;</button>
     </div>
   </div>
@@ -503,7 +503,10 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
       <div class="chat-msg system">AI &#51648;&#48152;&#44277;&#54617; &#51204;&#47928;&#44032;&#50752; &#45824;&#54868;&#47484; &#49884;&#51089;&#54616;&#49464;&#50836;. &#49884;&#52628;&#44277; &#45936;&#51060;&#53552;&#50752; &#44228;&#49328; &#44208;&#44284;&#44032; &#51088;&#46041;&#51004;&#47196; &#51228;&#44277;&#46121;&#45768;&#45796;.</div>
     </div>
     <div class="chat-input-area">
-      <div class="chat-context-badge" id="chatBadge"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div class="chat-context-badge" id="chatBadge" style="flex:1"></div>
+        <button id="chatScopeBtn" onclick="toggleChatScope()" style="font-size:9px;padding:3px 8px;border:1px solid #c7d2fe;border-radius:4px;background:#eef2ff;color:#4338ca;cursor:pointer;white-space:nowrap;font-weight:600">현재 시추공</button>
+      </div>
       <div class="chat-input-row">
         <textarea id="chatInput" rows="1" placeholder="&#51656;&#47928;&#51012; &#51077;&#47141;&#54616;&#49464;&#50836;... (Shift+Enter: &#51460;&#48148;&#44984;)" onkeydown="handleChatKeydown(event)" oninput="autoResizeChatInput(this)"></textarea>
         <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">&#9654;</button>
@@ -1300,7 +1303,7 @@ function renderAIMarkdown(text) {
     .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
     .replace(/^(\d+)\. (.+)$/gm, '<div style="margin:2px 0;padding-left:16px"><strong>$1.</strong> $2</div>')
     .replace(/^- (.+)$/gm, '<div style="margin:2px 0;padding-left:16px">• $1</div>')
-    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n{2,}/g, '<br>')
     .replace(/\n/g, '<br>');
 }
 
@@ -1895,58 +1898,83 @@ const CHAT_SYSTEM_PROMPT = `당신은 전세계 최고 수준의 지반공학 �
 이 데이터를 기반으로 구체적이고 전문적인 답변을 제공하세요.
 추가 데이터나 가정이 필요한 경우 명확히 언급하세요.`;
 
+let CHAT_SCOPE = 'current'; // 'current' | 'all'
+
+function toggleChatScope() {
+  CHAT_SCOPE = CHAT_SCOPE === 'current' ? 'all' : 'current';
+  const btn = document.getElementById('chatScopeBtn');
+  if (btn) {
+    btn.textContent = CHAT_SCOPE === 'current' ? '현재 시추공' : '전체 시추공';
+    btn.style.background = CHAT_SCOPE === 'all' ? '#dbeafe' : '#eef2ff';
+    btn.style.borderColor = CHAT_SCOPE === 'all' ? '#93c5fd' : '#c7d2fe';
+  }
+  updateChatContextBadge();
+}
+
 function prepareChatContext() {
   let ctx = '';
-  // 시추공 데이터
-  if (STATE.layers && STATE.layers.length > 0) {
-    ctx += '## 현재 시추공: ' + STATE.boreholeNo + '\\n';
-    ctx += '지반고 EL: ' + STATE.groundEL + 'm, 지하수위: GL-' + STATE.gwlDepth + 'm\\n';
-    ctx += '### 지층 현황\\n';
-    STATE.layers.forEach((l, i) => {
-      ctx += (i+1) + '. ' + l.soilType + ' (두께 ' + l.thickness + 'm, 평균N=' + l.avgN + ', γ=' + l.unitWeight + 'kN/m³)\\n';
-    });
-    if (STATE.sptData && STATE.sptData.length > 0) {
-      ctx += '### SPT 프로파일\\n';
-      STATE.sptData.forEach(s => {
-        ctx += '  GL-' + s.depth + 'm: N=' + s.N + '\\n';
-      });
-    }
-  }
-  // 설계 조건
-  ctx += '\\n## 설계 조건\\n';
+  const isAll = CHAT_SCOPE === 'all' && STATE.uploadedData && STATE.uploadedData.length > 1;
+
+  // 설계 조건 (공통)
+  ctx += '## 설계 조건\\n';
   ctx += '말뚝종류: ' + (STATE.pileType === 'PHC' ? 'PHC ' + STATE.phcGrade + '종' : '강관') + '\\n';
   ctx += '직경: ' + STATE.diameter_mm + 'mm, 두께: ' + STATE.thickness_mm + 'mm\\n';
   ctx += '지지방법: ' + (STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지(Meyerhof)') + '\\n';
-  ctx += '지지층 EL: ' + STATE.bearingEL + 'm, 근입깊이: ' + STATE.embedDepth + 'm\\n';
+  ctx += '근입깊이: ' + STATE.embedDepth + 'm\\n';
   if (STATE.useFill && STATE.plannedEL) {
     const diff = STATE.plannedEL - STATE.groundEL;
     ctx += '계획고 EL: ' + STATE.plannedEL + 'm (' + (diff > 0 ? '성토 ' + diff.toFixed(2) + 'm' : '절토 ' + Math.abs(diff).toFixed(2) + 'm') + ')\\n';
   }
-  // 계산 결과
-  if (STATE.result) {
-    const r = STATE.result;
-    ctx += '\\n## 계산 결과\\n';
-    ctx += '말뚝길이: ' + r.pileLength.toFixed(2) + 'm\\n';
-    ctx += '허용 수직지지력 Qa: ' + r.Qa_applied.toFixed(1) + ' kN\\n';
-    ctx += '  - 극한지지력 Qu: ' + r.Qu.toFixed(1) + ' kN (선단 ' + r.Qu_tip.toFixed(1) + ' + 주면 ' + r.Qu_skin.toFixed(1) + ')\\n';
-    ctx += '  - 재료지지력: ' + r.Qp_material.toFixed(1) + ' kN\\n';
-    ctx += '  - 안전율 FS: ' + r.FS + '\\n';
-    ctx += '허용 수평지지력 Ha: ' + r.Ha_applied.toFixed(1) + ' kN\\n';
-    ctx += '인발저항력: ' + r.Qpull.toFixed(1) + ' kN\\n';
-    ctx += '침하량: ' + r.St.toFixed(2) + ' mm (' + (r.St < 25 ? 'OK' : 'NG') + ')\\n';
-    ctx += '세장비 L/D: ' + r.L_over_d.toFixed(1) + ' (' + r.pileClass + ')\\n';
-    if (r.cutDepth > 0) ctx += '절토 깊이: ' + r.cutDepth.toFixed(2) + 'm\\n';
-    if (r.fillHeight > 0) ctx += '성토고: ' + r.fillHeight.toFixed(2) + 'm\\n';
-  }
-  // 다수 시추공 요약
-  if (STATE.uploadedData && STATE.uploadedData.length > 1 && typeof BH_RESULTS !== 'undefined') {
-    ctx += '\\n## 전체 시추공 요약 (' + STATE.uploadedData.length + '공)\\n';
+
+  if (isAll) {
+    // 전체 시추공 모드
+    calcAllBoreholes();
+    ctx += '\\n## 전체 시추공 데이터 (' + STATE.uploadedData.length + '공)\\n';
     STATE.uploadedData.forEach(bh => {
       const br = BH_RESULTS[bh.holeNo];
+      ctx += '### ' + bh.holeNo + ' (지반고 EL ' + (bh.groundEL||'-') + 'm)\\n';
+      if (bh.layers && bh.layers.length > 0) {
+        bh.layers.forEach(l => { ctx += '  ' + l.soilType + ' ' + l.thickness + 'm (N=' + l.avgN + ')\\n'; });
+      }
       if (br) {
-        ctx += bh.holeNo + ': Qa=' + br.Qa_applied.toFixed(0) + 'kN, 침하=' + br.St.toFixed(1) + 'mm, 길이=' + br.pileLength.toFixed(1) + 'm\\n';
+        ctx += '  → Qa=' + br.Qa_applied.toFixed(0) + 'kN, Ha=' + br.Ha_applied.toFixed(0) + 'kN, 침하=' + br.St.toFixed(1) + 'mm, 길이=' + br.pileLength.toFixed(1) + 'm\\n';
       }
     });
+  } else {
+    // 현재 시추공 모드
+    if (STATE.layers && STATE.layers.length > 0) {
+      ctx += '\\n## 현재 시추공: ' + STATE.boreholeNo + '\\n';
+      ctx += '지반고 EL: ' + STATE.groundEL + 'm, 지하수위: GL-' + STATE.gwlDepth + 'm, 지지층 EL: ' + STATE.bearingEL + 'm\\n';
+      ctx += '### 지층 현황\\n';
+      STATE.layers.forEach((l, i) => {
+        ctx += (i+1) + '. ' + l.soilType + ' (두께 ' + l.thickness + 'm, 평균N=' + l.avgN + ', γ=' + l.unitWeight + 'kN/m³)\\n';
+      });
+      if (STATE.sptData && STATE.sptData.length > 0) {
+        ctx += '### SPT 프로파일\\n';
+        STATE.sptData.forEach(s => { ctx += '  GL-' + s.depth + 'm: N=' + s.N + '\\n'; });
+      }
+    }
+    if (STATE.result) {
+      const r = STATE.result;
+      ctx += '\\n## 계산 결과\\n';
+      ctx += '말뚝길이: ' + r.pileLength.toFixed(2) + 'm\\n';
+      ctx += '허용 수직지지력 Qa: ' + r.Qa_applied.toFixed(1) + ' kN\\n';
+      ctx += '  - 극한지지력 Qu: ' + r.Qu.toFixed(1) + ' kN (선단 ' + r.Qu_tip.toFixed(1) + ' + 주면 ' + r.Qu_skin.toFixed(1) + ')\\n';
+      ctx += '  - 재료지지력: ' + r.Qp_material.toFixed(1) + ' kN\\n';
+      ctx += '  - 안전율 FS: ' + r.FS + '\\n';
+      ctx += '허용 수평지지력 Ha: ' + r.Ha_applied.toFixed(1) + ' kN\\n';
+      ctx += '인발저항력: ' + r.Qpull.toFixed(1) + ' kN\\n';
+      ctx += '침하량: ' + r.St.toFixed(2) + ' mm (' + (r.St < 25 ? 'OK' : 'NG') + ')\\n';
+      ctx += '세장비 L/D: ' + r.L_over_d.toFixed(1) + ' (' + r.pileClass + ')\\n';
+    }
+    // 다수 시추공 요약 (현재 모드에서도 간단 요약)
+    if (STATE.uploadedData && STATE.uploadedData.length > 1 && typeof BH_RESULTS !== 'undefined') {
+      ctx += '\\n## 전체 시추공 요약 (' + STATE.uploadedData.length + '공)\\n';
+      STATE.uploadedData.forEach(bh => {
+        const br = BH_RESULTS[bh.holeNo];
+        if (br) ctx += bh.holeNo + ': Qa=' + br.Qa_applied.toFixed(0) + 'kN, 침하=' + br.St.toFixed(1) + 'mm, 길이=' + br.pileLength.toFixed(1) + 'm\\n';
+      });
+    }
   }
   return ctx;
 }
@@ -1978,13 +2006,17 @@ function updateChatContextBadge() {
   const hasLayers = STATE.layers && STATE.layers.length > 0;
   const hasResult = !!STATE.result;
   const bhCount = STATE.uploadedData ? STATE.uploadedData.length : (hasLayers ? 1 : 0);
+  const isAll = CHAT_SCOPE === 'all' && bhCount > 1;
   if (hasLayers || hasResult) {
     const parts = [];
-    if (bhCount > 0) parts.push('<span>' + STATE.boreholeNo + '</span>');
-    if (hasResult) parts.push('<span>Qa=' + STATE.result.Qa_applied.toFixed(0) + 'kN</span>');
-    if (bhCount > 1) parts.push('<span>' + bhCount + '공</span>');
+    if (isAll) {
+      parts.push('<span style="background:#dbeafe;color:#1d4ed8">전체 ' + bhCount + '공</span>');
+    } else {
+      parts.push('<span>' + STATE.boreholeNo + '</span>');
+      if (hasResult) parts.push('<span>Qa=' + STATE.result.Qa_applied.toFixed(0) + 'kN</span>');
+    }
     badge.innerHTML = '컨텍스트: ' + parts.join(' ');
-    info.textContent = STATE.boreholeNo + ' · ' + (hasResult ? '계산완료' : '데이터로드');
+    info.textContent = isAll ? '전체 ' + bhCount + '개 시추공' : STATE.boreholeNo + ' · ' + (hasResult ? '계산완료' : '데이터로드');
   } else {
     badge.innerHTML = '컨텍스트: <span style="background:#fee2e2;color:#dc2626">데이터 없음</span>';
     info.textContent = '컨텍스트 없음';
@@ -2174,6 +2206,8 @@ function sortBoreholes(order) {
 function toggleBhSort() {
   const next = STATE.bhSortOrder === 'asc' ? 'desc' : 'asc';
   sortBoreholes(next);
+  const btn = document.getElementById('bhSortBtn');
+  if (btn) btn.textContent = next === 'asc' ? 'A↓' : 'Z↓';
   showToast('시추공 정렬: ' + (next === 'asc' ? '오름차순 ↑' : '내림차순 ↓'), 'success');
 }
 
@@ -2262,22 +2296,14 @@ function renderInputTab() {
       <span style="font-size:11px;font-weight:700;color:#4338ca">AI 자연어 입력</span>
       <span style="font-size:10px;color:var(--text-muted)">— 설계 조건을 자연어로 입력하면 자동 적용됩니다</span>
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileUpload(event)">
+      <button onclick="document.getElementById('fileInput').click()" title="JSON 시추공 데이터 업로드" style="flex-shrink:0;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;background:${STATE.uploadedData ? '#dcfce7' : '#f8fafc'};cursor:pointer;font-size:11px;color:${STATE.uploadedData ? '#16a34a' : '#64748b'};white-space:nowrap">${STATE.uploadedData ? '&#10003; ' + STATE.uploadedData.length + '공' : '&#128194; JSON'}</button>
       <input type="text" id="nlInput" placeholder="예: PHC 500mm B종, 토사 지지, 계획고 135m, 근입깊이 2m"
         onkeydown="if(event.key==='Enter')parseNLInput()">
       <button class="ai-btn" onclick="parseNLInput()">AI 적용</button>
     </div>
     <div id="nlPreview" style="display:none;margin-top:8px;padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0"></div>
-  </div>`;
-
-  // Upload Zone
-  html += `
-  <div class="upload-zone ${STATE.uploadedData ? 'success' : ''}" id="uploadZone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileUpload(event)">
-    <div class="uz-icon">&#128194;</div>
-    <div class="uz-text">${STATE.uploadedData ? '&#10003; JSON 파일 로드 완료' : 'drill_log JSON 파일을 드래그하거나 클릭하여 업로드'}</div>
-    <div class="uz-sub">Format A/B (extracted_data) 및 Format C (spt_data) 자동 감지</div>
-    ${STATE.uploadedData ? `<div class="upload-result success">${STATE.uploadedData.length}개 시추공 감지됨</div>` : ''}
   </div>`;
 
   // Borehole selector (if uploaded)
