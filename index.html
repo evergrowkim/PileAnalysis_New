@@ -898,6 +898,10 @@ const VERIFY_DATA = {
 
 function recalculate() {
   invalidateAICache();
+  // 계획고 적용 시 말뚝두부 EL = 계획고 EL 동기화
+  if (STATE.useFill && STATE.plannedEL != null) {
+    STATE.pileTopEL = STATE.plannedEL;
+  }
   try {
     STATE.result = calcPile({
       pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
