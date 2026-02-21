@@ -153,7 +153,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 
 /* Derived Info */
 .derived-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding: 9px; background: var(--calc-bg); border-radius: 5px; }
-.derived-grid .dg-item { font-size: 11px; }
+.derived-grid .dg-item { font-size: 11px; line-height: 1.6; padding: 2px 0; }
 .derived-grid .dg-item strong { color: var(--primary-navy); }
 
 /* Soil Badge */
@@ -850,6 +850,26 @@ function calcPile(p) {
 const fmt = (v, d = 2) => v != null && !isNaN(v) ? Number(v).toFixed(d) : "-";
 const fmtE = v => v != null ? v.toExponential(3) : "-";
 
+// ===== PER-BOREHOLE DESIGN PARAMS =====
+const DESIGN_PARAM_KEYS = [
+  'pileType','diameter_mm','thickness_mm','phcGrade',
+  'bearingMethod','embedDepth',
+  'pileTopEL','useFill','plannedEL','fillN',
+  'alpha_kh','delta_cm','sigmaMax',
+  'corrosionThk','qu_kPa','Sd_m','td_m','rockPhi',
+  'jointCount','jointType',
+  'coeff_tip','coeff_sand','coeff_clay'
+];
+function getDesignParamsFromState() {
+  const p = {};
+  DESIGN_PARAM_KEYS.forEach(k => { p[k] = STATE[k]; });
+  return JSON.parse(JSON.stringify(p));
+}
+function applyDesignParamsToState(dp) {
+  if (!dp) return;
+  DESIGN_PARAM_KEYS.forEach(k => { if (dp[k] !== undefined) STATE[k] = dp[k]; });
+}
+
 // ===== STATE MANAGEMENT =====
 const STATE = {
   pileType: "PHC", diameter_mm: 500, thickness_mm: 80, phcGrade: "A",
@@ -1076,6 +1096,7 @@ function saveCurrentToUploadedData() {
   bh.bearingEL = STATE.bearingEL;
   bh.sptData = JSON.parse(JSON.stringify(STATE.sptData));
   bh.layers = JSON.parse(JSON.stringify(STATE.layers));
+  bh.designParams = getDesignParamsFromState();
 }
 
 function applyBoreholeData(bh, idx) {
@@ -1087,6 +1108,8 @@ function applyBoreholeData(bh, idx) {
   if (bh.bearingEL != null) STATE.bearingEL = bh.bearingEL;
   if (bh.sptData && bh.sptData.length > 0) STATE.sptData = JSON.parse(JSON.stringify(bh.sptData));
   if (bh.layers && bh.layers.length > 0) STATE.layers = JSON.parse(JSON.stringify(bh.layers));
+  // Restore per-borehole design params
+  if (bh.designParams) applyDesignParamsToState(bh.designParams);
   // Assign remark from layers to spt if missing — depthFrom/depthTo 우선 사용
   STATE.sptData.forEach(s => {
     if (!s.remark || s.remark === "퇴적층(SM)") {
@@ -2344,7 +2367,7 @@ function renderInputTab() {
   }
 
   // Section 1: Design Specs
-  html += `<h3 class="sec-title">1. 설계제원</h3>
+  html += `<h3 class="sec-title" style="display:flex;align-items:center;justify-content:space-between">1. 설계제원${STATE.uploadedData && STATE.uploadedData.length > 1 ? '<button class="btn-sm" style="font-size:11px;padding:2px 10px;background:#1E3A5F;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="if(confirm(\'현재 설계조건을 전체 시추공에 일괄 적용하시겠습니까?\')) applyDesignToAllBoreholes()">전체 시추공에 적용</button>' : ''}</h3>
   <div class="form-grid cols-4">
     <div class="field"><label>시추공 번호</label><input type="text" value="${STATE.boreholeNo}" onchange="STATE.boreholeNo=this.value; updateHeader()"></div>
     <div class="field"><label>말뚝 종류</label><select onchange="handlePileTypeChange(this.value)"><option value="PHC" ${isPHC?'selected':''}>PHC</option><option value="강관" ${!isPHC?'selected':''}>강관</option></select></div>
@@ -2685,6 +2708,9 @@ function processJSON(text, filename) {
     const json = JSON.parse(text);
     const boreholes = importDrillLogJSON(json);
     if (boreholes.length === 0) { showToast('시추공 데이터를 찾을 수 없습니다', 'error'); return; }
+    // Stamp each borehole with current design params as defaults
+    const defaultDP = getDesignParamsFromState();
+    boreholes.forEach(bh => { bh.designParams = JSON.parse(JSON.stringify(defaultDP)); });
     STATE.uploadedData = boreholes;
     STATE.bhSortOrder = 'asc';
     boreholes.sort((a, b) => naturalCompare(a.holeNo, b.holeNo));
@@ -3850,21 +3876,36 @@ const BH_RESULTS = {};
 function calcAllBoreholes() {
   if (!STATE.uploadedData) return;
   STATE.uploadedData.forEach(bh => {
+    const dp = bh.designParams || {};
+    const v = (k, fallback) => dp[k] != null ? dp[k] : fallback;
     const p = {
-      pileType: STATE.pileType, diameter_mm: STATE.diameter_mm, thickness_mm: STATE.thickness_mm,
-      phcGrade: STATE.phcGrade, pileTopEL: STATE.pileTopEL, groundEL: bh.groundEL || STATE.groundEL,
+      pileType: v('pileType', STATE.pileType), diameter_mm: v('diameter_mm', STATE.diameter_mm),
+      thickness_mm: v('thickness_mm', STATE.thickness_mm), phcGrade: v('phcGrade', STATE.phcGrade),
+      pileTopEL: v('pileTopEL', STATE.pileTopEL), groundEL: bh.groundEL || STATE.groundEL,
       bearingEL: bh.bearingEL || STATE.bearingEL, gwlDepth: bh.gwlDepth || STATE.gwlDepth,
       sptData: bh.sptData, layers: bh.layers,
-      alpha_kh: STATE.alpha_kh, delta_cm: STATE.delta_cm, sigmaMax_kN: STATE.sigmaMax,
-      corrosionThickness_mm: STATE.corrosionThk, qu_kPa: STATE.qu_kPa,
-      Sd_m: STATE.Sd_m, td_m: STATE.td_m, rockPhi_deg: STATE.rockPhi,
-      bearingMethod: STATE.bearingMethod, jointCount: STATE.jointCount, jointType: STATE.jointType,
-      useFill: STATE.useFill, plannedEL: STATE.plannedEL, fillN: STATE.fillN,
-      embedDepth: STATE.embedDepth,
-      coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand, coeff_clay: STATE.coeff_clay
+      alpha_kh: v('alpha_kh', STATE.alpha_kh), delta_cm: v('delta_cm', STATE.delta_cm),
+      sigmaMax_kN: v('sigmaMax', STATE.sigmaMax),
+      corrosionThickness_mm: v('corrosionThk', STATE.corrosionThk), qu_kPa: v('qu_kPa', STATE.qu_kPa),
+      Sd_m: v('Sd_m', STATE.Sd_m), td_m: v('td_m', STATE.td_m), rockPhi_deg: v('rockPhi', STATE.rockPhi),
+      bearingMethod: v('bearingMethod', STATE.bearingMethod),
+      jointCount: v('jointCount', STATE.jointCount), jointType: v('jointType', STATE.jointType),
+      useFill: v('useFill', STATE.useFill), plannedEL: v('plannedEL', STATE.plannedEL),
+      fillN: v('fillN', STATE.fillN), embedDepth: v('embedDepth', STATE.embedDepth),
+      coeff_tip: v('coeff_tip', STATE.coeff_tip), coeff_sand: v('coeff_sand', STATE.coeff_sand),
+      coeff_clay: v('coeff_clay', STATE.coeff_clay)
     };
     try { BH_RESULTS[bh.holeNo] = calcPile(p); } catch(e) { BH_RESULTS[bh.holeNo] = null; }
   });
+}
+
+function applyDesignToAllBoreholes() {
+  if (!STATE.uploadedData) return;
+  const dp = getDesignParamsFromState();
+  STATE.uploadedData.forEach(bh => { bh.designParams = JSON.parse(JSON.stringify(dp)); });
+  calcAllBoreholes();
+  renderAllTabs();
+  showToast('현재 설계조건을 전체 시추공에 적용했습니다', 'success');
 }
 
 // ===== EXCEL EXPORT (ExcelJS — 10개 시트, 서식+차트) =====
