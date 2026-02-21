@@ -853,7 +853,7 @@ const fmtE = v => v != null ? v.toExponential(3) : "-";
 // ===== PER-BOREHOLE DESIGN PARAMS =====
 const DESIGN_PARAM_KEYS = [
   'pileType','diameter_mm','thickness_mm','phcGrade',
-  'bearingMethod','embedDepth',
+  'bearingMethod','embedDepth','bearingEL',
   'pileTopEL','useFill','plannedEL','fillN',
   'alpha_kh','delta_cm','sigmaMax',
   'corrosionThk','qu_kPa','Sd_m','td_m','rockPhi',
@@ -871,6 +871,7 @@ function applyDesignParamsToState(dp) {
 }
 
 // ===== STATE MANAGEMENT =====
+let _restoring = false; // 복원 중 saveCurrentToUploadedData 방지 플래그
 const STATE = {
   pileType: "PHC", diameter_mm: 500, thickness_mm: 80, phcGrade: "A",
   pileTopEL: 130, groundEL: 127.38, bearingEL: 119.98, embedDepth: 1, gwlDepth: 3.75,
@@ -1089,6 +1090,7 @@ function importDrillLogJSON(json) {
 }
 
 function saveCurrentToUploadedData() {
+  if (_restoring) return; // 복원 중에는 중간 상태를 저장하지 않음
   if (!STATE.uploadedData || STATE.currentBhIdx < 0 || STATE.currentBhIdx >= STATE.uploadedData.length) return;
   const bh = STATE.uploadedData[STATE.currentBhIdx];
   bh.groundEL = STATE.groundEL;
@@ -1105,11 +1107,16 @@ function applyBoreholeData(bh, idx) {
   if (idx != null) STATE.currentBhIdx = idx;
   if (bh.groundEL != null) STATE.groundEL = bh.groundEL;
   if (bh.gwlDepth != null) STATE.gwlDepth = bh.gwlDepth;
-  if (bh.bearingEL != null) STATE.bearingEL = bh.bearingEL;
   if (bh.sptData && bh.sptData.length > 0) STATE.sptData = JSON.parse(JSON.stringify(bh.sptData));
   if (bh.layers && bh.layers.length > 0) STATE.layers = JSON.parse(JSON.stringify(bh.layers));
   // Restore per-borehole design params
   if (bh.designParams) applyDesignParamsToState(bh.designParams);
+  // bearingEL: 저장된 값이 있으면 사용, 없으면 자동감지
+  if (bh.bearingEL != null) {
+    STATE.bearingEL = bh.bearingEL;
+  } else {
+    autoDetectBearingLayer(true);
+  }
   // Assign remark from layers to spt if missing — depthFrom/depthTo 우선 사용
   STATE.sptData.forEach(s => {
     if (!s.remark || s.remark === "퇴적층(SM)") {
@@ -1598,16 +1605,17 @@ function autoDetectBearingAllBoreholes() {
     autoDetectBearingLayer();
     return;
   }
-  const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
+  const globalMethod = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
   let applied = 0, failed = 0;
   const origIdx = STATE.currentBhIdx;
   const origBhNo = STATE.boreholeNo;
 
   STATE.uploadedData.forEach((bh, idx) => {
-    // 각 시추공의 데이터로 임시 전환
+    // 시추공별 designParams가 있으면 해당 bearingMethod 사용
+    const method = (bh.designParams && bh.designParams.bearingMethod) ? bh.designParams.bearingMethod : globalMethod;
     const sptData = bh.sptData || [];
     const layers = bh.layers || [];
-    const groundEL = bh.groundEL || STATE.groundEL;
+    const groundEL = bh.groundEL != null ? bh.groundEL : STATE.groundEL;
     let detected = false;
     let bearingEL = null;
 
@@ -1687,7 +1695,7 @@ function autoDetectBearingAllBoreholes() {
   recalculate();
 
   if (applied > 0) {
-    showToast('\uC9C0\uC9C0\uCE35 EL \uC790\uB3D9 \uD0D0\uC9C0: ' + applied + '\uAC1C \uC131\uACF5' + (failed > 0 ? ', ' + failed + '\uAC1C \uC2E4\uD328' : '') + ' (' + method + ')', 'success');
+    showToast('\uC9C0\uC9C0\uCE35 EL \uC790\uB3D9 \uD0D0\uC9C0: ' + applied + '\uAC1C \uC131\uACF5' + (failed > 0 ? ', ' + failed + '\uAC1C \uC2E4\uD328' : ''), 'success');
   } else {
     showToast('\uC9C0\uC9C0\uCE35\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4', 'warning');
   }
@@ -2376,13 +2384,13 @@ function renderInputTab() {
   </div>`;
 
   if (isPHC) {
-    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
+    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; autoDetectBearingLayer(true); recalculate()"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
   } else {
     html += `<div class="form-grid cols-4" style="margin-top:8px">
       <div class="field"><label>부식두께 (mm) <button class="info-btn" onclick="event.stopPropagation();showGuide('corrosion')">?</button></label><input type="number" value="${STATE.corrosionThk}" onchange="STATE.corrosionThk=parseFloat(this.value)||2; recalculate()"></div>
       <div class="field"><label>이음부 수</label><input type="number" value="${STATE.jointCount}" onchange="STATE.jointCount=parseInt(this.value)||0; recalculate()"></div>
       <div class="field"><label>이음 방법</label><select onchange="STATE.jointType=this.value; recalculate()"><option value="welding" ${STATE.jointType==='welding'?'selected':''}>용접</option><option value="bolt" ${STATE.jointType==='bolt'?'selected':''}>볼트</option><option value="fill" ${STATE.jointType==='fill'?'selected':''}>충전</option></select></div>
-      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
+      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; autoDetectBearingLayer(true); recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
     </div>
     <div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
     if (STATE.bearingMethod === "rock") {
@@ -2396,13 +2404,13 @@ function renderInputTab() {
   }
 
   html += `<div class="form-grid cols-4" style="margin-top:8px">
-    <div class="field"><label>말뚝두부 EL (m)</label><input type="number" value="${STATE.pileTopEL}" step="0.1" ${STATE.useFill?'disabled style="background:#f0f0f0"':''} onchange="STATE.pileTopEL=parseFloat(this.value)||130; recalculate()"></div>
-    <div class="field"><label>지반고 EL (m)</label><input type="number" value="${STATE.groundEL}" step="0.01" onchange="STATE.groundEL=parseFloat(this.value)||127; recalculate()"></div>
+    <div class="field"><label>말뚝두부 EL (m)</label><input type="number" value="${STATE.pileTopEL}" step="0.1" ${STATE.useFill?'disabled style="background:#f0f0f0"':''} onchange="var v=parseFloat(this.value); STATE.pileTopEL=isNaN(v)?130:v; recalculate()"></div>
+    <div class="field"><label>지반고 EL (m)</label><input type="number" value="${STATE.groundEL}" step="0.01" onchange="var v=parseFloat(this.value); STATE.groundEL=isNaN(v)?127:v; recalculate()"></div>
     <div class="field"><label>지지층 EL (m)</label>
-      <div style="display:flex;gap:4px"><input type="number" value="${STATE.bearingEL}" step="0.01" style="flex:1" onchange="STATE.bearingEL=parseFloat(this.value)||120; recalculate()">
+      <div style="display:flex;gap:4px"><input type="number" value="${STATE.bearingEL}" step="0.01" style="flex:1" onchange="var v=parseFloat(this.value); STATE.bearingEL=isNaN(v)?120:v; recalculate()">
       <button class="btn btn-sm" onclick="autoDetectBearingLayer()" title="SPT 데이터 기반 자동 탐지" style="font-size:9px;padding:3px 6px">자동</button></div>
     </div>
-    <div class="field"><label>지하수위 (GL,m) <button class="info-btn" onclick="event.stopPropagation();showGuide('gwlDepth')">?</button></label><input type="number" value="${STATE.gwlDepth}" step="0.1" onchange="STATE.gwlDepth=parseFloat(this.value)||3; recalculate()"></div>
+    <div class="field"><label>지하수위 (GL,m) <button class="info-btn" onclick="event.stopPropagation();showGuide('gwlDepth')">?</button></label><input type="number" value="${STATE.gwlDepth}" step="0.1" onchange="var v=parseFloat(this.value); STATE.gwlDepth=isNaN(v)?3:v; recalculate()"></div>
   </div>
   <div class="form-grid cols-4" style="margin-top:4px">
     <div class="field"></div><div class="field"></div>
@@ -2591,6 +2599,7 @@ function handlePileTypeChange(v) {
   STATE.pileType = v;
   if (v === "PHC") { STATE.diameter_mm = 500; STATE.thickness_mm = 80; STATE.bearingMethod = "meyerhof"; STATE.sigmaMax = 20000; }
   else { STATE.diameter_mm = 609.6; STATE.thickness_mm = 12; STATE.bearingMethod = "rock"; STATE.sigmaMax = 235000; }
+  autoDetectBearingLayer(true);
   recalculate();
 }
 function handleDiamChange(v) {
@@ -2609,9 +2618,9 @@ function handlePhcGradeChange(v) {
   recalculate();
 }
 
-function autoDetectBearingLayer() {
+function autoDetectBearingLayer(silent) {
   if ((!STATE.sptData || STATE.sptData.length === 0) && (!STATE.layers || STATE.layers.length === 0)) {
-    showToast('SPT 데이터 및 지층 정보가 없습니다', 'warning'); return;
+    if (!silent) showToast('SPT 데이터 및 지층 정보가 없습니다', 'warning'); return false;
   }
   const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
   if (method === 'rock') {
@@ -2621,8 +2630,8 @@ function autoDetectBearingLayer() {
       if (remark.includes('풍화암') || remark.includes('연암') || remark.includes('경암') || remark.includes('WR') || remark.includes('SR') || remark.includes('HR')) {
         const bd = STATE.sptData[i].depth;
         STATE.bearingEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
-        showToast('지지층 자동 탐지 (SPT): ' + remark + ' (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success');
-        recalculate(); return;
+        if (!silent) { showToast('지지층 자동 탐지 (SPT): ' + remark + ' (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
+        return true;
       }
     }
     // 2차: 지층 정보(layers)에서 암반 탐색 — SPT 없는 암반층 대응
@@ -2634,20 +2643,20 @@ function autoDetectBearingLayer() {
         cumDepth = dFrom + STATE.layers[i].thickness;
         if (lt.includes('풍화암') || lt.includes('연암') || lt.includes('경암') || lt.includes('WR') || lt.includes('SR') || lt.includes('HR')) {
           STATE.bearingEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
-          showToast('지지층 자동 탐지 (지층): ' + lt + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success');
-          recalculate(); return;
+          if (!silent) { showToast('지지층 자동 탐지 (지층): ' + lt + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
+          return true;
         }
       }
     }
-    showToast('암반층(풍화암/연암/경암)을 찾을 수 없습니다', 'warning');
+    if (!silent) showToast('암반층(풍화암/연암/경암)을 찾을 수 없습니다', 'warning');
   } else {
     // 1차: SPT에서 N≥50 연속 2개
     for (let i = 0; i < (STATE.sptData || []).length - 1; i++) {
       if (STATE.sptData[i].N >= 50 && STATE.sptData[i + 1].N >= 50) {
         const bd = STATE.sptData[i].depth;
         STATE.bearingEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
-        showToast('지지층 자동 탐지: N≥50 연속 (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success');
-        recalculate(); return;
+        if (!silent) { showToast('지지층 자동 탐지: N≥50 연속 (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
+        return true;
       }
     }
     // 2차: 지층에서 N≥50인 첫 번째 층 탐색
@@ -2658,13 +2667,14 @@ function autoDetectBearingLayer() {
         cumDepth = dFrom + STATE.layers[i].thickness;
         if (STATE.layers[i].avgN >= 50) {
           STATE.bearingEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
-          showToast('지지층 자동 탐지 (지층 N≥50): ' + STATE.layers[i].soilType + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success');
-          recalculate(); return;
+          if (!silent) { showToast('지지층 자동 탐지 (지층 N≥50): ' + STATE.layers[i].soilType + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
+          return true;
         }
       }
     }
-    showToast('N≥50 연속 2개 이상 구간을 찾을 수 없습니다', 'warning');
+    if (!silent) showToast('N≥50 연속 2개 이상 구간을 찾을 수 없습니다', 'warning');
   }
+  return false;
 }
 
 function toggleFill(checked) {
@@ -3881,8 +3891,8 @@ function calcAllBoreholes() {
     const p = {
       pileType: v('pileType', STATE.pileType), diameter_mm: v('diameter_mm', STATE.diameter_mm),
       thickness_mm: v('thickness_mm', STATE.thickness_mm), phcGrade: v('phcGrade', STATE.phcGrade),
-      pileTopEL: v('pileTopEL', STATE.pileTopEL), groundEL: bh.groundEL || STATE.groundEL,
-      bearingEL: bh.bearingEL || STATE.bearingEL, gwlDepth: bh.gwlDepth || STATE.gwlDepth,
+      pileTopEL: v('pileTopEL', STATE.pileTopEL), groundEL: bh.groundEL != null ? bh.groundEL : STATE.groundEL,
+      bearingEL: bh.bearingEL != null ? bh.bearingEL : v('bearingEL', STATE.bearingEL), gwlDepth: bh.gwlDepth != null ? bh.gwlDepth : STATE.gwlDepth,
       sptData: bh.sptData, layers: bh.layers,
       alpha_kh: v('alpha_kh', STATE.alpha_kh), delta_cm: v('delta_cm', STATE.delta_cm),
       sigmaMax_kN: v('sigmaMax', STATE.sigmaMax),
@@ -4850,14 +4860,13 @@ window.addEventListener('message', function(event) {
     if (event.data.type === 'RESTORE_APP_STATE') {
         var saved = event.data.state;
         if (!saved) return;
+        _restoring = true; // 복원 중 saveCurrentToUploadedData 방지
         try {
             // 1. uploadedData 복원 (시추공 데이터 포함)
             if (saved.uploadedData && saved.uploadedData.length > 0) {
                 STATE.uploadedData = saved.uploadedData;
-                var idx = (saved.currentBhIdx != null && saved.currentBhIdx >= 0) ? saved.currentBhIdx : 0;
-                applyBoreholeData(STATE.uploadedData[idx], idx);
             }
-            // 2. 설계 파라미터 복원 (applyBoreholeData 이후 덮어쓰기)
+            // 2. 설계 파라미터 복원 (먼저 모든 STATE 값 설정)
             var paramKeys = [
                 'pileType', 'diameter_mm', 'thickness_mm', 'phcGrade',
                 'pileTopEL', 'groundEL', 'bearingEL', 'embedDepth', 'gwlDepth',
@@ -4869,13 +4878,17 @@ window.addEventListener('message', function(event) {
             paramKeys.forEach(function(key) {
                 if (saved[key] !== undefined) STATE[key] = saved[key];
             });
+            if (saved.currentBhIdx != null) STATE.currentBhIdx = saved.currentBhIdx;
+            if (saved.boreholeNo) STATE.boreholeNo = saved.boreholeNo;
             // 3. SPT/지층 데이터 복원 (저장된 것이 최종 수정본)
             if (saved.sptData) STATE.sptData = JSON.parse(JSON.stringify(saved.sptData));
             if (saved.layers) STATE.layers = JSON.parse(JSON.stringify(saved.layers));
             // 4. 재계산 + UI 갱신
+            _restoring = false;
             recalculate();
             showToast('이전 작업 상태 복원됨', 'info');
         } catch (e) {
+            _restoring = false;
             console.error('상태 복원 오류:', e);
         }
         return;
