@@ -1316,7 +1316,7 @@ function prepareReviewData() {
       말뚝종류: isPHC ? `PHC ${STATE.phcGrade}종` : '강관',
       직경_mm: STATE.diameter_mm, 두께_mm: STATE.thickness_mm,
       말뚝길이_m: +r.pileLength.toFixed(2),
-      지지방법: STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지(Meyerhof)',
+      지지방법: STATE.bearingMethod === 'rock' ? '암반지지' : '토사층 지지',
       시추공: STATE.boreholeNo,
       지반고_EL: STATE.groundEL, 지지층_EL: STATE.bearingEL,
       선단_EL: +r.tipEL.toFixed(2), 근입깊이_m: STATE.embedDepth,
@@ -1435,7 +1435,7 @@ async function parseNLInput() {
 
 현재 설계 상태:
 - 말뚝: ${STATE.pileType} ${STATE.diameter_mm}mm ${STATE.pileType==='PHC'?STATE.phcGrade+'종':'t'+STATE.thickness_mm}
-- 지지방법: ${STATE.bearingMethod==='rock'?'암반근입':'Meyerhof(토사)'}
+- 지지방법: ${STATE.bearingMethod==='rock'?'암반근입':'토사층'}
 - 말뚝두부 EL: ${STATE.pileTopEL} m
 - 지반고 EL: ${STATE.groundEL} m
 - 지지층 EL: ${STATE.bearingEL} m
@@ -1892,6 +1892,8 @@ const CHAT_SYSTEM_PROMPT = `당신은 전세계 최고 수준의 지반공학 �
 4. **위험 요소 경고**: 설계/시공상 주의사항과 잠재적 문제를 사전에 경고합니다.
 5. **실무 관점**: 이론뿐 아니라 시공성, 경제성, 품질관리 측면도 함께 고려합니다.
 6. **한국어로 답변**: 전문 용어는 한국어(영어 병기) 형태로 작성합니다.
+7. **사실 기반 엄수**: 제공된 시추공 데이터, 계산 결과, 적용 공식의 실제 값만 사용합니다. 데이터에 없는 수치를 추측하거나 만들어내지 마세요. 확신할 수 없는 내용은 "데이터 부족으로 확인 불가"라고 명시하세요.
+8. **계산 검증**: 수치를 인용할 때 반드시 제공된 컨텍스트 데이터의 실제 값과 대조합니다. 제공되지 않은 공식이나 계수를 임의로 사용하지 마세요. 절대 허위 수치를 생성하지 마세요.
 
 ## 주어진 데이터
 사용자의 시추공 데이터와 말뚝 기초 설계 계산 결과가 컨텍스트로 제공됩니다.
@@ -1919,7 +1921,7 @@ function prepareChatContext() {
   ctx += '## 설계 조건\\n';
   ctx += '말뚝종류: ' + (STATE.pileType === 'PHC' ? 'PHC ' + STATE.phcGrade + '종' : '강관') + '\\n';
   ctx += '직경: ' + STATE.diameter_mm + 'mm, 두께: ' + STATE.thickness_mm + 'mm\\n';
-  ctx += '지지방법: ' + (STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지(Meyerhof)') + '\\n';
+  ctx += '지지방법: ' + (STATE.bearingMethod === 'rock' ? '암반지지' : '토사층 지지') + '\\n';
   ctx += '근입깊이: ' + STATE.embedDepth + 'm\\n';
   if (STATE.useFill && STATE.plannedEL) {
     const diff = STATE.plannedEL - STATE.groundEL;
@@ -1927,17 +1929,22 @@ function prepareChatContext() {
   }
 
   if (isAll) {
-    // 전체 시추공 모드
+    // 전체 시추공 모드 — 시추공당 한 줄 요약 (context 절약)
     calcAllBoreholes();
-    ctx += '\\n## 전체 시추공 데이터 (' + STATE.uploadedData.length + '공)\\n';
+    const bhCount = STATE.uploadedData.length;
+    const validResults = STATE.uploadedData.filter(bh => BH_RESULTS[bh.holeNo]).map(bh => BH_RESULTS[bh.holeNo]);
+    const avgQa = validResults.length > 0 ? (validResults.reduce((s, r) => s + r.Qa_applied, 0) / validResults.length).toFixed(0) : '-';
+    const avgHa = validResults.length > 0 ? (validResults.reduce((s, r) => s + r.Ha_applied, 0) / validResults.length).toFixed(0) : '-';
+    const ngCount = validResults.filter(r => r.St >= 25).length;
+    ctx += '\\n## 전체 시추공 요약 (' + bhCount + '공, 평균 Qa=' + avgQa + 'kN, 평균 Ha=' + avgHa + 'kN, 침하 NG=' + ngCount + '공)\\n';
+    ctx += '시추공 | 지반고EL | 지지층EL | Qa(kN) | Ha(kN) | 침하(mm) | 길이(m) | 판정\\n';
     STATE.uploadedData.forEach(bh => {
       const br = BH_RESULTS[bh.holeNo];
-      ctx += '### ' + bh.holeNo + ' (지반고 EL ' + (bh.groundEL||'-') + 'm)\\n';
-      if (bh.layers && bh.layers.length > 0) {
-        bh.layers.forEach(l => { ctx += '  ' + l.soilType + ' ' + l.thickness + 'm (N=' + l.avgN + ')\\n'; });
-      }
       if (br) {
-        ctx += '  → Qa=' + br.Qa_applied.toFixed(0) + 'kN, Ha=' + br.Ha_applied.toFixed(0) + 'kN, 침하=' + br.St.toFixed(1) + 'mm, 길이=' + br.pileLength.toFixed(1) + 'm\\n';
+        const judge = br.St < 25 ? 'OK' : 'NG';
+        ctx += bh.holeNo + ' | ' + (bh.groundEL||'-') + ' | ' + (bh.bearingEL||STATE.bearingEL||'-') + ' | ' + br.Qa_applied.toFixed(0) + ' | ' + br.Ha_applied.toFixed(0) + ' | ' + br.St.toFixed(1) + ' | ' + br.pileLength.toFixed(1) + ' | ' + judge + '\\n';
+      } else {
+        ctx += bh.holeNo + ' | ' + (bh.groundEL||'-') + ' | 계산불가\\n';
       }
     });
   } else {
@@ -1957,11 +1964,15 @@ function prepareChatContext() {
     if (STATE.result) {
       const r = STATE.result;
       ctx += '\\n## 계산 결과\\n';
+      ctx += '### 적용 공식\\n';
+      ctx += '선단지지력: ' + (STATE.bearingMethod === 'rock' && STATE.pileType !== 'PHC' ? '암반 3공식 (구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값' : 'Meyerhof 공식 (250·N·Ap)') + '\\n';
+      ctx += '주면마찰력: 사질토 2·Ns·As, 점성토 6.25·Nc·Ac (KDS 11 50 40)\\n';
+      ctx += '안전율 FS: ' + r.FS + ', Qa = min(Qu/FS, 재료지지력)\\n';
+      ctx += '\\n### 산출값\\n';
       ctx += '말뚝길이: ' + r.pileLength.toFixed(2) + 'm\\n';
       ctx += '허용 수직지지력 Qa: ' + r.Qa_applied.toFixed(1) + ' kN\\n';
       ctx += '  - 극한지지력 Qu: ' + r.Qu.toFixed(1) + ' kN (선단 ' + r.Qu_tip.toFixed(1) + ' + 주면 ' + r.Qu_skin.toFixed(1) + ')\\n';
       ctx += '  - 재료지지력: ' + r.Qp_material.toFixed(1) + ' kN\\n';
-      ctx += '  - 안전율 FS: ' + r.FS + '\\n';
       ctx += '허용 수평지지력 Ha: ' + r.Ha_applied.toFixed(1) + ' kN\\n';
       ctx += '인발저항력: ' + r.Qpull.toFixed(1) + ' kN\\n';
       ctx += '침하량: ' + r.St.toFixed(2) + ' mm (' + (r.St < 25 ? 'OK' : 'NG') + ')\\n';
@@ -2103,7 +2114,7 @@ async function sendChatMessage() {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 4096,
         temperature: 0.4,
         stream: true,
         system: fullSystem,
@@ -2128,6 +2139,7 @@ async function sendChatMessage() {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let stopReason = null;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -2145,8 +2157,16 @@ async function sendChatMessage() {
             assistantDiv.innerHTML = renderAIMarkdown(fullText);
             container.scrollTop = container.scrollHeight;
           }
+          if (evt.type === 'message_delta' && evt.delta && evt.delta.stop_reason) {
+            stopReason = evt.delta.stop_reason;
+          }
         } catch (pe) {}
       }
+    }
+    // max_tokens로 잘린 경우 경고 추가
+    if (stopReason === 'max_tokens') {
+      fullText += '\n\n⚠️ 응답이 길어 중단되었습니다. 더 구체적으로 질문해주세요.';
+      assistantDiv.innerHTML = renderAIMarkdown(fullText);
     }
     // 히스토리에 추가
     CHAT_HISTORY.push({ role: 'assistant', content: fullText });
@@ -2327,13 +2347,13 @@ function renderInputTab() {
   </div>`;
 
   if (isPHC) {
-    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>Meyerhof (토사)</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
+    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
   } else {
     html += `<div class="form-grid cols-4" style="margin-top:8px">
       <div class="field"><label>부식두께 (mm) <button class="info-btn" onclick="event.stopPropagation();showGuide('corrosion')">?</button></label><input type="number" value="${STATE.corrosionThk}" onchange="STATE.corrosionThk=parseFloat(this.value)||2; recalculate()"></div>
       <div class="field"><label>이음부 수</label><input type="number" value="${STATE.jointCount}" onchange="STATE.jointCount=parseInt(this.value)||0; recalculate()"></div>
       <div class="field"><label>이음 방법</label><select onchange="STATE.jointType=this.value; recalculate()"><option value="welding" ${STATE.jointType==='welding'?'selected':''}>용접</option><option value="bolt" ${STATE.jointType==='bolt'?'selected':''}>볼트</option><option value="fill" ${STATE.jointType==='fill'?'selected':''}>충전</option></select></div>
-      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>Meyerhof (토사)</option></select></div>
+      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
     </div>
     <div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
     if (STATE.bearingMethod === "rock") {
@@ -3840,7 +3860,7 @@ function exportExcel() {
     [],
     ['[설계 조건]'],
     ['말뚝 종류', pileDesc],
-    ['지지방법', STATE.bearingMethod === 'rock' ? '암반근입' : 'Meyerhof (토사)'],
+    ['지지방법', STATE.bearingMethod === 'rock' ? '암반근입' : '토사층'],
     ['말뚝두부 EL(m)', STATE.pileTopEL],
     ['근입 깊이(m)', STATE.embedDepth],
     ['alpha (Kh)', STATE.alpha_kh],
@@ -4207,7 +4227,7 @@ function renderReportTab() {
   <tr><td class="left">단면계수 (Zp)</td><td>${fmtE(r.Zp)} m³</td><td class="left">휨강성 (EI)</td><td>${fmt(r.EI,1)} kN·m²</td></tr>
   <tr><td class="left">자중 (W)</td><td>${fmt(r.W_unit,2)} kN/m</td><td class="left">이음부</td><td>${STATE.jointType} × ${STATE.jointCount}개소</td></tr>
   ${!isPHC?`<tr><td class="left">부식두께</td><td>${STATE.corrosionThk} mm</td><td class="left">강관단면적 (At)</td><td>${fmt(r.At_steel,6)} m²</td></tr>
-  <tr><td class="left">내부면적 (Ai)</td><td>${fmt(r.Ai_steel,6)} m²</td><td class="left">지지방법</td><td>${STATE.bearingMethod==='rock'?'암반근입':'Meyerhof(토사)'}</td></tr>`:''}
+  <tr><td class="left">내부면적 (Ai)</td><td>${fmt(r.Ai_steel,6)} m²</td><td class="left">지지방법</td><td>${STATE.bearingMethod==='rock'?'암반근입':'토사층'}</td></tr>`:''}
   </tbody></table>`;
 
   // SPT Data Table
