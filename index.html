@@ -429,7 +429,10 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <span>시추공 목록</span>
-    <button onclick="toggleSidebar()" title="접기">&#9664;</button>
+    <div style="display:flex;gap:2px;align-items:center">
+      <button onclick="toggleBhSort()" id="bhSortBtn" title="시추공 정렬" style="font-size:10px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:3px;background:#f1f5f9;cursor:pointer">↑↓</button>
+      <button onclick="toggleSidebar()" title="접기">&#9664;</button>
+    </div>
   </div>
   <div id="sidebarList"></div>
 </div>
@@ -2142,6 +2145,38 @@ function toggleSidebar() {
   tog.innerHTML = sb.classList.contains('collapsed') ? '&#9654;' : '&#9654;';
 }
 
+// ===== 시추공 정렬 =====
+STATE.bhSortOrder = 'asc'; // 'asc' | 'desc' | 'original'
+
+function naturalCompare(a, b) {
+  const re = /(\d+)/g;
+  const aParts = a.replace(re, m => m.padStart(20, '0'));
+  const bParts = b.replace(re, m => m.padStart(20, '0'));
+  return aParts.localeCompare(bParts);
+}
+
+function sortBoreholes(order) {
+  if (!STATE.uploadedData || STATE.uploadedData.length <= 1) return;
+  STATE.bhSortOrder = order;
+  const curHole = STATE.boreholeNo;
+  if (order === 'asc') {
+    STATE.uploadedData.sort((a, b) => naturalCompare(a.holeNo, b.holeNo));
+  } else if (order === 'desc') {
+    STATE.uploadedData.sort((a, b) => naturalCompare(b.holeNo, a.holeNo));
+  }
+  // 현재 선택된 시추공의 인덱스 재설정
+  STATE.currentBhIdx = STATE.uploadedData.findIndex(bh => bh.holeNo === curHole);
+  if (STATE.currentBhIdx < 0) STATE.currentBhIdx = 0;
+  renderSidebar();
+  renderInputTab();
+}
+
+function toggleBhSort() {
+  const next = STATE.bhSortOrder === 'asc' ? 'desc' : 'asc';
+  sortBoreholes(next);
+  showToast('시추공 정렬: ' + (next === 'asc' ? '오름차순 ↑' : '내림차순 ↓'), 'success');
+}
+
 function renderSidebar() {
   const list = document.getElementById('sidebarList');
   if (!list) return;
@@ -2583,8 +2618,10 @@ function processJSON(text, filename) {
     const boreholes = importDrillLogJSON(json);
     if (boreholes.length === 0) { showToast('시추공 데이터를 찾을 수 없습니다', 'error'); return; }
     STATE.uploadedData = boreholes;
+    STATE.bhSortOrder = 'asc';
+    boreholes.sort((a, b) => naturalCompare(a.holeNo, b.holeNo));
     applyBoreholeData(boreholes[0], 0);
-    showToast(`${filename}: ${boreholes.length}개 시추공 로드 완료`, 'success');
+    showToast(`${filename}: ${boreholes.length}개 시추공 로드 완료 (번호순 정렬)`, 'success');
   } catch (e) { showToast('JSON 파싱 오류: ' + e.message, 'error'); }
 }
 function selectBorehole(idx) {
