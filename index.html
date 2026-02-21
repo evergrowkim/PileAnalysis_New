@@ -4790,7 +4790,131 @@ document.addEventListener('mouseenter', function(e) {
 // ===== INIT =====
 recalculate();
 
-// Tab switching (already bound above, just close script)
+// ============================================================
+// iframe postMessage 통합 (GeoAI Platform)
+// ============================================================
+
+// iframe 로드 완료 시 부모 창에 READY 전송
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.parent !== window) {
+        window.parent.postMessage({ type: 'PILE_NEW_READY' }, '*');
+    }
+});
+
+// 부모 창에서 보낸 메시지 수신
+window.addEventListener('message', function(event) {
+    if (!event.data || typeof event.data !== 'object') return;
+
+    // 플랫폼 설정 수신 (API 키 등)
+    if (event.data.type === 'SET_PLATFORM_CONFIG') {
+        var config = event.data.config;
+        if (config && config.anthropic_api_key) {
+            setAIApiKey(config.anthropic_api_key);
+        }
+        return;
+    }
+
+    // ── 플랫폼에서 앱 상태 요청 (자동저장/수동저장) ──
+    if (event.data.type === 'REQUEST_APP_STATE') {
+        var trigger = event.data.trigger || 'manual';
+        try {
+            var saveState = {
+                pileType: STATE.pileType, diameter_mm: STATE.diameter_mm,
+                thickness_mm: STATE.thickness_mm, phcGrade: STATE.phcGrade,
+                pileTopEL: STATE.pileTopEL, groundEL: STATE.groundEL,
+                bearingEL: STATE.bearingEL, embedDepth: STATE.embedDepth,
+                gwlDepth: STATE.gwlDepth, boreholeNo: STATE.boreholeNo,
+                currentBhIdx: STATE.currentBhIdx,
+                alpha_kh: STATE.alpha_kh, delta_cm: STATE.delta_cm,
+                sigmaMax: STATE.sigmaMax, useFill: STATE.useFill,
+                plannedEL: STATE.plannedEL, fillN: STATE.fillN,
+                bearingMethod: STATE.bearingMethod, corrosionThk: STATE.corrosionThk,
+                qu_kPa: STATE.qu_kPa, Sd_m: STATE.Sd_m, td_m: STATE.td_m,
+                rockPhi: STATE.rockPhi, jointCount: STATE.jointCount,
+                jointType: STATE.jointType,
+                coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand,
+                coeff_clay: STATE.coeff_clay,
+                sptData: JSON.parse(JSON.stringify(STATE.sptData)),
+                layers: JSON.parse(JSON.stringify(STATE.layers)),
+                uploadedData: STATE.uploadedData ? JSON.parse(JSON.stringify(STATE.uploadedData)) : null,
+                result: STATE.result
+            };
+            window.parent.postMessage({ type: 'SAVE_APP_STATE', state: saveState, trigger: trigger }, '*');
+        } catch (e) {
+            console.error('상태 직렬화 오류:', e);
+        }
+        return;
+    }
+
+    // ── 플랫폼에서 저장된 상태 복원 ──
+    if (event.data.type === 'RESTORE_APP_STATE') {
+        var saved = event.data.state;
+        if (!saved) return;
+        try {
+            // 1. uploadedData 복원 (시추공 데이터 포함)
+            if (saved.uploadedData && saved.uploadedData.length > 0) {
+                STATE.uploadedData = saved.uploadedData;
+                var idx = (saved.currentBhIdx != null && saved.currentBhIdx >= 0) ? saved.currentBhIdx : 0;
+                applyBoreholeData(STATE.uploadedData[idx], idx);
+            }
+            // 2. 설계 파라미터 복원 (applyBoreholeData 이후 덮어쓰기)
+            var paramKeys = [
+                'pileType', 'diameter_mm', 'thickness_mm', 'phcGrade',
+                'pileTopEL', 'groundEL', 'bearingEL', 'embedDepth', 'gwlDepth',
+                'alpha_kh', 'delta_cm', 'sigmaMax', 'useFill', 'plannedEL', 'fillN',
+                'bearingMethod', 'corrosionThk', 'qu_kPa', 'Sd_m', 'td_m',
+                'rockPhi', 'jointCount', 'jointType',
+                'coeff_tip', 'coeff_sand', 'coeff_clay'
+            ];
+            paramKeys.forEach(function(key) {
+                if (saved[key] !== undefined) STATE[key] = saved[key];
+            });
+            // 3. SPT/지층 데이터 복원 (저장된 것이 최종 수정본)
+            if (saved.sptData) STATE.sptData = JSON.parse(JSON.stringify(saved.sptData));
+            if (saved.layers) STATE.layers = JSON.parse(JSON.stringify(saved.layers));
+            // 4. 재계산 + UI 갱신
+            recalculate();
+            showToast('이전 작업 상태 복원됨', 'info');
+        } catch (e) {
+            console.error('상태 복원 오류:', e);
+        }
+        return;
+    }
+
+    if (event.data.type === 'LOAD_BOREHOLE_DATA') {
+        var jsonData = event.data.data;
+        if (!jsonData) return;
+
+        try {
+            // extracted_data 배열을 감싼 객체 생성 → importDrillLogJSON 호환
+            var payload = jsonData.extracted_data || jsonData;
+            var jsonObj = Array.isArray(payload) ? { extracted_data: payload } : payload;
+            var boreholes = importDrillLogJSON(jsonObj);
+            if (boreholes.length === 0) return;
+
+            STATE.uploadedData = boreholes;
+            applyBoreholeData(boreholes[0], 0);
+            showToast('Platform: ' + boreholes.length + '개 시추공 로드', 'success');
+
+            // 부모 창에 데이터 로드 완료 알림
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PILE_NEW_DATA_LOADED',
+                    count: boreholes.length,
+                }, '*');
+            }
+        } catch (error) {
+            console.error('postMessage 데이터 처리 오류:', error);
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PILE_NEW_ERROR',
+                    message: error.message,
+                }, '*');
+            }
+        }
+    }
+});
+
 </script>
 
 </body>
