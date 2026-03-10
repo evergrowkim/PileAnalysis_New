@@ -403,6 +403,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
     <span class="bh-label">시추공:</span>
     <span class="bh-value" id="headerBH">-</span>
   </div>
+  <button class="btn-toolbar" onclick="if(confirm('저장된 상태를 초기화하고 새로 시작하시겠습니까?')) clearSavedState()">&#128260; 초기화</button>
   <button class="btn-toolbar" onclick="openVerifyModal()">&#10003; 검증</button>
   <button class="btn-toolbar" onclick="exportExcel()">&#128196; 엑셀</button>
   <button class="ai-btn btn-toolbar" onclick="runAIReview()">&#9889; AI 검토</button>
@@ -876,7 +877,7 @@ const STATE = {
   pileType: "PHC", diameter_mm: 500, thickness_mm: 80, phcGrade: "A",
   pileTopEL: 130, groundEL: 127.38, bearingEL: 119.98, embedDepth: 1, gwlDepth: 3.75,
   boreholeNo: "NBH-03", alpha_kh: 1, delta_cm: 1.5, sigmaMax: 20000,
-  useFill: false, plannedEL: null, fillN: 5,
+  useFill: false, plannedEL: null, fillN: 5, nPilesPerBH: 1,
   coeff_tip: 250, coeff_sand: 2, coeff_clay: 6.25,
   bearingMethod: "meyerhof", corrosionThk: 2, qu_kPa: 32460,
   Sd_m: 0.15, td_m: 0.002, rockPhi: 35, jointCount: 1, jointType: "welding",
@@ -937,10 +938,11 @@ function recalculate() {
       embedDepth: STATE.embedDepth,
       coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand, coeff_clay: STATE.coeff_clay
     });
-  } catch (e) { console.error('Calc error:', e); STATE.result = null; }
+  } catch (e) { console.error('Calc error:', e); STATE.result = null; showToast('계산 오류: ' + e.message, 'error'); }
   // Auto-save edits back to uploadedData
   saveCurrentToUploadedData();
   renderAllTabs();
+  if (typeof saveStateToLS === 'function') saveStateToLS();
 }
 
 // ===== JSON IMPORT ENGINE =====
@@ -1003,6 +1005,30 @@ function parseWaterLevel(wl) {
   return m ? parseFloat(m[1]) : null;
 }
 
+function buildLayersWithAvgN(soilLayers, sptData) {
+  return soilLayers.filter(l => l.thickness > 0).map(l => {
+    const layerSPTs = sptData.filter(s => s.depth >= l.depthFrom && s.depth <= l.depthTo);
+    let avgN, sptNote;
+    if (layerSPTs.length > 0) {
+      avgN = layerSPTs.reduce((s, v) => s + v.N, 0) / layerSPTs.length;
+      sptNote = layerSPTs.map(s => s.depth + 'm(N=' + s.N + ')').join(', ');
+    } else {
+      let nearest = null, minDist = Infinity;
+      const mid = (l.depthFrom + l.depthTo) / 2;
+      sptData.forEach(s => { const d = Math.abs(s.depth - mid); if (d < minDist) { minDist = d; nearest = s; } });
+      if (nearest && minDist <= 3) {
+        avgN = nearest.N;
+        sptNote = '(인접 SPT 적용: ' + nearest.depth + 'm, N=' + nearest.N + ')';
+      } else {
+        const st = l.soilType;
+        avgN = (st.includes('연암') || st.includes('경암')) ? 50 : st.includes('풍화암') ? 50 : st.includes('풍화토') ? 30 : 10;
+        sptNote = '(SPT없음, 지층 기본값)';
+      }
+    }
+    return { soilType: l.soilType, depthFrom: parseFloat(l.depthFrom.toFixed(2)), depthTo: parseFloat(l.depthTo.toFixed(2)), thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: sptNote, _sptCount: layerSPTs.length };
+  });
+}
+
 function importDrillLogJSON(json) {
   let boreholes = [];
   // Format A/B: { extracted_data: [...] }
@@ -1027,29 +1053,7 @@ function importDrillLogJSON(json) {
         });
       });
       const sptData = Array.from(sptMap.values()).sort((a, b) => a.depth - b.depth);
-      // Build averaged layers
-      const layers = soilLayers.filter(l => l.thickness > 0).map(l => {
-        const layerSPTs = sptData.filter(s => s.depth >= l.depthFrom && s.depth <= l.depthTo);
-        let avgN, sptNote;
-        if (layerSPTs.length > 0) {
-          avgN = layerSPTs.reduce((s, v) => s + v.N, 0) / layerSPTs.length;
-          sptNote = layerSPTs.map(s => s.depth + 'm(N=' + s.N + ')').join(', ');
-        } else {
-          // 인접 SPT 탐색: 가장 가까운 SPT 사용
-          let nearest = null, minDist = Infinity;
-          const mid = (l.depthFrom + l.depthTo) / 2;
-          sptData.forEach(s => { const d = Math.abs(s.depth - mid); if (d < minDist) { minDist = d; nearest = s; } });
-          if (nearest && minDist <= 3) {
-            avgN = nearest.N;
-            sptNote = '(인접 SPT 적용: ' + nearest.depth + 'm, N=' + nearest.N + ')';
-          } else {
-            const st = l.soilType;
-            avgN = (st.includes('연암') || st.includes('경암')) ? 50 : st.includes('풍화암') ? 50 : st.includes('풍화토') ? 30 : 10;
-            sptNote = '(SPT없음, 지층 기본값)';
-          }
-        }
-        return { soilType: l.soilType, depthFrom: parseFloat(l.depthFrom.toFixed(2)), depthTo: parseFloat(l.depthTo.toFixed(2)), thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: layerSPTs.length > 0 ? sptNote : sptNote, _sptCount: layerSPTs.length };
-      });
+      const layers = buildLayersWithAvgN(soilLayers, sptData);
       return { holeNo: bh.hole_no || meta.HOLE_NO || 'Unknown', groundEL, gwlDepth, sptData, layers, soilLayers, meta };
     });
   }
@@ -1065,39 +1069,19 @@ function importDrillLogJSON(json) {
       soilName: l.soil_type || l.description, soilType: mapSoilName(l.soil_type),
       depthFrom: l.depth_from, depthTo: l.depth_to, thickness: l.depth_to - l.depth_from
     }));
-    const layers = soilLayers.filter(l => l.thickness > 0).map(l => {
-      const layerSPTs = sptData.filter(s => s.depth >= l.depthFrom && s.depth <= l.depthTo);
-      let avgN, sptNote;
-      if (layerSPTs.length > 0) {
-        avgN = layerSPTs.reduce((s, v) => s + v.N, 0) / layerSPTs.length;
-        sptNote = layerSPTs.map(s => s.depth + 'm(N=' + s.N + ')').join(', ');
-      } else {
-        let nearest = null, minDist = Infinity;
-        const mid = (l.depthFrom + l.depthTo) / 2;
-        sptData.forEach(s => { const d = Math.abs(s.depth - mid); if (d < minDist) { minDist = d; nearest = s; } });
-        if (nearest && minDist <= 3) {
-          avgN = nearest.N;
-          sptNote = '(인접 SPT 적용: ' + nearest.depth + 'm, N=' + nearest.N + ')';
-        } else {
-          const st = l.soilType;
-          avgN = (st.includes('연암') || st.includes('경암')) ? 50 : st.includes('풍화암') ? 50 : st.includes('풍화토') ? 30 : 10;
-          sptNote = '(SPT없음, 지층 기본값)';
-        }
-      }
-      return { soilType: l.soilType, depthFrom: parseFloat(l.depthFrom.toFixed(2)), depthTo: parseFloat(l.depthTo.toFixed(2)), thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: layerSPTs.length > 0 ? sptNote : sptNote, _sptCount: layerSPTs.length };
-    });
+    const layers = buildLayersWithAvgN(soilLayers, sptData);
     boreholes.push({ holeNo: meta.hole_no || meta.HOLE_NO || 'BH-1', groundEL, gwlDepth, sptData, layers, soilLayers, meta });
   }
   return boreholes;
 }
 
+const BH_SYNC_FIELDS = ['groundEL', 'gwlDepth', 'bearingEL'];
+
 function saveCurrentToUploadedData() {
-  if (_restoring) return; // 복원 중에는 중간 상태를 저장하지 않음
+  if (_restoring) return;
   if (!STATE.uploadedData || STATE.currentBhIdx < 0 || STATE.currentBhIdx >= STATE.uploadedData.length) return;
   const bh = STATE.uploadedData[STATE.currentBhIdx];
-  bh.groundEL = STATE.groundEL;
-  bh.gwlDepth = STATE.gwlDepth;
-  bh.bearingEL = STATE.bearingEL;
+  BH_SYNC_FIELDS.forEach(k => { bh[k] = STATE[k]; });
   bh.sptData = JSON.parse(JSON.stringify(STATE.sptData));
   bh.layers = JSON.parse(JSON.stringify(STATE.layers));
   bh.designParams = getDesignParamsFromState();
@@ -1107,16 +1091,13 @@ function applyBoreholeData(bh, idx) {
   if (!bh) return;
   STATE.boreholeNo = bh.holeNo;
   if (idx != null) STATE.currentBhIdx = idx;
-  if (bh.groundEL != null) STATE.groundEL = bh.groundEL;
-  if (bh.gwlDepth != null) STATE.gwlDepth = bh.gwlDepth;
+  BH_SYNC_FIELDS.forEach(k => { if (bh[k] != null) STATE[k] = bh[k]; });
   if (bh.sptData && bh.sptData.length > 0) STATE.sptData = JSON.parse(JSON.stringify(bh.sptData));
   if (bh.layers && bh.layers.length > 0) STATE.layers = JSON.parse(JSON.stringify(bh.layers));
   // Restore per-borehole design params
   if (bh.designParams) applyDesignParamsToState(bh.designParams);
-  // bearingEL: 저장된 값이 있으면 사용, 없으면 자동감지
-  if (bh.bearingEL != null) {
-    STATE.bearingEL = bh.bearingEL;
-  } else {
+  // bearingEL: BH_SYNC_FIELDS로 복원됨, 없으면 자동감지
+  if (bh.bearingEL == null) {
     autoDetectBearingLayer(true);
   }
   // Assign remark from layers to spt if missing — depthFrom/depthTo 우선 사용
@@ -1496,7 +1477,7 @@ async function parseNLInput() {
   "useFill": true/false,
   "plannedEL": 숫자,
   "fillN": 숫자,
-  "actions": ["autoDetectBearing", "autoDetectBearingAll"]
+  "actions": ["autoDetectBearing", "autoDetectBearingAll", "recalcAll", "exportExcel"]
 }
 
 규칙:
@@ -1509,6 +1490,8 @@ async function parseNLInput() {
 - "A종/B종/C종" → phcGrade에 반영
 - "지지층 자동", "지지층 EL 자동", "자동 탐지", "자동 적용" → actions에 "autoDetectBearing" 추가
 - "모든 시추공", "전체 시추공", "전부", "일괄" + 지지층 자동 → actions에 "autoDetectBearingAll" 추가
+- "전체 재계산", "다시 계산", "재계산" → actions에 "recalcAll" 추가
+- "엑셀", "내보내기", "다운로드", "export" → actions에 "exportExcel" 추가
 - actions 배열은 실행할 명령이 있을 때만 포함
 - JSON만 반환. 다른 텍스트 없이.`,
     userMessage: input,
@@ -1541,7 +1524,9 @@ function showNLPreview(parsed, container) {
   };
   const actionNames = {
     autoDetectBearing: '지지층 EL 자동 탐지 (현재 시추공)',
-    autoDetectBearingAll: '지지층 EL 자동 탐지 (모든 시추공)'
+    autoDetectBearingAll: '지지층 EL 자동 탐지 (모든 시추공)',
+    recalcAll: '전체 시추공 재계산',
+    exportExcel: '엑셀 내보내기'
   };
   let html = '';
   // 설계 파라미터 표시
@@ -1594,6 +1579,10 @@ function applyNLParsed() {
         autoDetectBearingAllBoreholes();
       } else if (action === 'autoDetectBearing') {
         autoDetectBearingLayer();
+      } else if (action === 'recalcAll') {
+        calcAllBoreholes();
+      } else if (action === 'exportExcel') {
+        if (typeof exportExcel === 'function') exportExcel();
       }
     });
   }
@@ -1609,6 +1598,7 @@ function autoDetectBearingAllBoreholes() {
   }
   const globalMethod = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
   let applied = 0, failed = 0;
+  const failedNames = [];
   const origIdx = STATE.currentBhIdx;
   const origBhNo = STATE.boreholeNo;
 
@@ -1682,10 +1672,12 @@ function autoDetectBearingAllBoreholes() {
         bh.bearingEL = bearingEL;
         applied++;
       } else {
-        failed++; // 지지층이 말뚝두부보다 높음 → 무효
+        failed++;
+        failedNames.push((bh.holeNo || ('BH-' + (idx+1))) + '(EL초과)');
       }
     } else {
       failed++;
+      failedNames.push(bh.holeNo || ('BH-' + (idx+1)));
     }
   });
 
@@ -1697,9 +1689,11 @@ function autoDetectBearingAllBoreholes() {
   recalculate();
 
   if (applied > 0) {
-    showToast('\uC9C0\uC9C0\uCE35 EL \uC790\uB3D9 \uD0D0\uC9C0: ' + applied + '\uAC1C \uC131\uACF5' + (failed > 0 ? ', ' + failed + '\uAC1C \uC2E4\uD328' : ''), 'success');
+    let msg = '지지층 EL 자동 탐지: ' + applied + '개 성공';
+    if (failed > 0) msg += ', ' + failed + '개 실패 (' + failedNames.slice(0, 5).join(', ') + (failedNames.length > 5 ? ' 외' : '') + ')';
+    showToast(msg, 'success');
   } else {
-    showToast('\uC9C0\uC9C0\uCE35\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4', 'warning');
+    showToast('지지층을 찾을 수 없습니다', 'warning');
   }
 }
 
@@ -2342,14 +2336,8 @@ function getThkOptions() {
   return dr.options.map(o => `<option value="${o.t}" ${o.t === STATE.thickness_mm ? 'selected' : ''}>${o.t} mm</option>`).join('');
 }
 
-function renderInputTab() {
-  const isPHC = STATE.pileType === "PHC";
-  const r = STATE.result;
-  const spec = getSpecInfo();
-  let html = '';
-
-  // AI Natural Language Input
-  html += `<div class="ai-nl-box">
+function renderNLInputSection() {
+  let html = `<div class="ai-nl-box">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:14px">&#9889;</span>
       <span style="font-size:11px;font-weight:700;color:#4338ca">AI 자연어 입력</span>
@@ -2364,8 +2352,6 @@ function renderInputTab() {
     </div>
     <div id="nlPreview" style="display:none;margin-top:8px;padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0"></div>
   </div>`;
-
-  // Borehole selector (if uploaded)
   if (STATE.uploadedData && STATE.uploadedData.length > 0) {
     html += `<div class="bh-selector">
       <label>시추공 선택:</label>
@@ -2375,6 +2361,14 @@ function renderInputTab() {
       <button class="btn btn-sm" onclick="openLogPanel(); renderLogPanel()">&#128200; 로그 보기</button>
     </div>`;
   }
+  return html;
+}
+
+function renderInputTab() {
+  const isPHC = STATE.pileType === "PHC";
+  const r = STATE.result;
+  const spec = getSpecInfo();
+  let html = renderNLInputSection();
 
   // Section 1: Design Specs
   html += `<h3 class="sec-title" style="display:flex;align-items:center;justify-content:space-between">1. 설계제원${STATE.uploadedData && STATE.uploadedData.length > 1 ? '<button class="btn-sm" style="font-size:11px;padding:2px 10px;background:#1E3A5F;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="if(confirm(\'현재 설계조건을 전체 시추공에 일괄 적용하시겠습니까?\')) applyDesignToAllBoreholes()">전체 시추공에 적용</button>' : ''}</h3>
@@ -2504,8 +2498,16 @@ function renderInputTab() {
     </div>
   </div>`;
 
-  // SPT Data
-  html += `<h3 class="sec-title">2. SPT N값</h3>
+  html += renderSPTSection();
+  html += renderLayerSection();
+
+  document.getElementById('tab-input').innerHTML = html;
+  var inputEl = document.getElementById('tab-input');
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([inputEl]).catch(function(e){});
+}
+
+function renderSPTSection() {
+  return `<h3 class="sec-title">2. SPT N값</h3>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
     <span style="font-size:11px; font-weight:600; color:var(--text-secondary)">SPT 데이터</span>
     <div style="display:flex;gap:4px">
@@ -2525,9 +2527,12 @@ function renderInputTab() {
       <td><button class="btn btn-sm btn-danger" onclick="STATE.sptData.splice(${i},1); recalculate()">삭제</button></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
 
-  // Layers
-  html += `<h3 class="sec-title">3. 지층 평균</h3>
+function renderLayerSection() {
+  const cutD_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.groundEL - STATE.plannedEL, 0) : 0;
+  const fillH_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.plannedEL - STATE.groundEL, 0) : 0;
+  let html = `<h3 class="sec-title">3. 지층 평균</h3>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
     <span style="font-size:11px; font-weight:600; color:var(--text-secondary)">지층 정보</span>
     <button class="btn btn-sm" onclick="addLayer()">+ 추가</button>
@@ -2535,9 +2540,6 @@ function renderInputTab() {
   <table>
     <thead><tr><th>지층</th><th>깊이</th><th>두께(m)</th><th>평균N</th><th>단위중량</th><th>분류</th><th></th></tr></thead>
     <tbody>`;
-  // Fill layer row (if active) or Cut indicator
-  const cutD_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.groundEL - STATE.plannedEL, 0) : 0;
-  const fillH_ui = STATE.useFill && STATE.plannedEL != null ? Math.max(STATE.plannedEL - STATE.groundEL, 0) : 0;
   if (fillH_ui > 0) {
     const fElFrom = fmt(STATE.plannedEL);
     const fElTo = fmt(STATE.groundEL);
@@ -2561,7 +2563,6 @@ function renderInputTab() {
         const elTo = fmt(STATE.groundEL - l.depthTo);
         depthRange = 'EL.' + elFrom + ' ~ ' + elTo;
       }
-      // 절토 처리: 지층별 절토 상태 판정
       const layerTop = l.depthFrom || 0;
       const layerBot = layerTop + l.thickness;
       const isFullyCut = cutD_ui > 0 && layerBot <= cutD_ui;
@@ -2581,10 +2582,7 @@ function renderInputTab() {
     </tr>`;
     }).join('')}</tbody>
   </table>`;
-
-  document.getElementById('tab-input').innerHTML = html;
-  var inputEl = document.getElementById('tab-input');
-  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([inputEl]).catch(function(e){});
+  return html;
 }
 
 function addSPT() {
@@ -2625,58 +2623,63 @@ function autoDetectBearingLayer(silent) {
     if (!silent) showToast('SPT 데이터 및 지층 정보가 없습니다', 'warning'); return false;
   }
   const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
+  let candidateEL = null, detectLabel = '';
   if (method === 'rock') {
-    // 1차: SPT remark에서 암반 탐색
     for (let i = 0; i < (STATE.sptData || []).length; i++) {
       const remark = STATE.sptData[i].remark || '';
       if (remark.includes('풍화암') || remark.includes('연암') || remark.includes('경암') || remark.includes('WR') || remark.includes('SR') || remark.includes('HR')) {
         const bd = STATE.sptData[i].depth;
-        STATE.bearingEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
-        if (!silent) { showToast('지지층 자동 탐지 (SPT): ' + remark + ' (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
-        return true;
+        candidateEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
+        detectLabel = '(SPT): ' + remark + ' (GL-' + bd + 'm)';
+        break;
       }
     }
-    // 2차: 지층 정보(layers)에서 암반 탐색 — SPT 없는 암반층 대응
-    if (STATE.layers && STATE.layers.length > 0) {
+    if (candidateEL == null && STATE.layers && STATE.layers.length > 0) {
       let cumDepth = 0;
       for (let i = 0; i < STATE.layers.length; i++) {
         const lt = STATE.layers[i].soilType || '';
         const dFrom = STATE.layers[i].depthFrom != null ? STATE.layers[i].depthFrom : cumDepth;
         cumDepth = dFrom + STATE.layers[i].thickness;
         if (lt.includes('풍화암') || lt.includes('연암') || lt.includes('경암') || lt.includes('WR') || lt.includes('SR') || lt.includes('HR')) {
-          STATE.bearingEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
-          if (!silent) { showToast('지지층 자동 탐지 (지층): ' + lt + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
-          return true;
+          candidateEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
+          detectLabel = '(지층): ' + lt + ' (GL-' + fmt(dFrom) + 'm)';
+          break;
         }
       }
     }
-    if (!silent) showToast('암반층(풍화암/연암/경암)을 찾을 수 없습니다', 'warning');
+    if (candidateEL == null) { if (!silent) showToast('암반층(풍화암/연암/경암)을 찾을 수 없습니다', 'warning'); return false; }
   } else {
-    // 1차: SPT에서 N≥50 연속 2개
     for (let i = 0; i < (STATE.sptData || []).length - 1; i++) {
       if (STATE.sptData[i].N >= 50 && STATE.sptData[i + 1].N >= 50) {
         const bd = STATE.sptData[i].depth;
-        STATE.bearingEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
-        if (!silent) { showToast('지지층 자동 탐지: N≥50 연속 (GL-' + bd + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
-        return true;
+        candidateEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
+        detectLabel = 'N≥50 연속 (GL-' + bd + 'm)';
+        break;
       }
     }
-    // 2차: 지층에서 N≥50인 첫 번째 층 탐색
-    if (STATE.layers && STATE.layers.length > 0) {
+    if (candidateEL == null && STATE.layers && STATE.layers.length > 0) {
       let cumDepth = 0;
       for (let i = 0; i < STATE.layers.length; i++) {
         const dFrom = STATE.layers[i].depthFrom != null ? STATE.layers[i].depthFrom : cumDepth;
         cumDepth = dFrom + STATE.layers[i].thickness;
         if (STATE.layers[i].avgN >= 50) {
-          STATE.bearingEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
-          if (!silent) { showToast('지지층 자동 탐지 (지층 N≥50): ' + STATE.layers[i].soilType + ' (GL-' + fmt(dFrom) + 'm) → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
-          return true;
+          candidateEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
+          detectLabel = '(지층 N≥50): ' + STATE.layers[i].soilType + ' (GL-' + fmt(dFrom) + 'm)';
+          break;
         }
       }
     }
-    if (!silent) showToast('N≥50 연속 2개 이상 구간을 찾을 수 없습니다', 'warning');
+    if (candidateEL == null) { if (!silent) showToast('N≥50 연속 2개 이상 구간을 찾을 수 없습니다', 'warning'); return false; }
   }
-  return false;
+  // 유효성 검증: tipEL이 pileTopEL보다 낮아야 말뚝 길이가 양수
+  const tipEL = candidateEL - (STATE.embedDepth || 1);
+  if (tipEL >= STATE.pileTopEL) {
+    if (!silent) showToast('지지층 EL(' + fmt(candidateEL) + ')이 말뚝두부 EL(' + fmt(STATE.pileTopEL) + ')보다 높아 적용 불가 (지반고가 높은 시추공)', 'warning');
+    return false;
+  }
+  STATE.bearingEL = candidateEL;
+  if (!silent) { showToast('지지층 자동 탐지 ' + detectLabel + ' → EL.' + fmt(STATE.bearingEL), 'success'); recalculate(); }
+  return true;
 }
 
 function toggleFill(checked) {
@@ -4022,16 +4025,17 @@ async function exportExcel() {
   // ── Sheet 2: 종합결과 ──
   (function(){
     const ws=wb.addWorksheet('종합결과');
-    const hdr=['No','시추공','지반고(EL)','선단EL','지하수위(GL,m)','말뚝길이(m)','Qa 수직(kN)','Qp 재료(kN)','Qa 지반(kN)','Qu 주면(kN)','Ha 수평(kN)','Kh(kN/m³)','인발(kN)','침하(mm)','판정'];
-    xlWidths(ws,[5,11,10,9,11,10,11,11,11,11,11,11,10,9,7]);
+    const hdr=['No','시추공','지반고(EL)','지지층EL','선단EL','지하수위(GL,m)','말뚝길이(m)','Qa 수직(kN)','Qp 재료(kN)','Qa 지반(kN)','Qu 주면(kN)','Ha 수평(kN)','Kh(kN/m³)','인발(kN)','침하(mm)','판정'];
+    xlWidths(ws,[5,11,10,9,9,11,10,11,11,11,11,11,11,10,9,7]);
     ws.addRow(hdr); xlHdr(ws,1,hdr.length);
-    entries.forEach((e,i)=>{const r=e.r; if(!r){ws.addRow([i+1,e.h,'-','-','-','-','-','-','-','-','-','-','-','-','-']);return;}
+    entries.forEach((e,i)=>{const r=e.r; if(!r){ws.addRow([i+1,e.h,'-','-','-','-','-','-','-','-','-','-','-','-','-','-']);return;}
       const bh=e.bh;
-      ws.addRow([i+1,e.h,f2(bh?bh.groundEL:STATE.groundEL),f2(r.tipEL),f2(bh?bh.gwlDepth:STATE.gwlDepth),f2(r.pileLength),f2(r.Qa_applied),f2(r.Qp_material),f2(r.Qa_ground),f2(r.Qu_skin),f2(r.Ha_applied),f2(r.Kh_min),f2(r.Qpull),f2(r.St),r.St<25?'OK':'NG']);
+      const bEL = bh && bh.bearingEL != null ? bh.bearingEL : STATE.bearingEL;
+      ws.addRow([i+1,e.h,f2(bh?bh.groundEL:STATE.groundEL),f2(bEL),f2(r.tipEL),f2(bh?bh.gwlDepth:STATE.gwlDepth),f2(r.pileLength),f2(r.Qa_applied),f2(r.Qp_material),f2(r.Qa_ground),f2(r.Qu_skin),f2(r.Ha_applied),f2(r.Kh_min),f2(r.Qpull),f2(r.St),r.St<25?'OK':'NG']);
     });
     xlData(ws,2,ws.rowCount,hdr.length);
     // Conditional: pass/fail
-    for(let i=2;i<=ws.rowCount;i++){const c=ws.getCell(i,15); if(c.value==='OK'){c.fill=XL.passFill;c.font={...XL.dataFont,bold:true,color:{argb:'FF2E7D32'}};} else if(c.value==='NG'){c.fill=XL.failFill;c.font={...XL.dataFont,bold:true,color:{argb:'FFC62828'}};}}
+    for(let i=2;i<=ws.rowCount;i++){const c=ws.getCell(i,16); if(c.value==='OK'){c.fill=XL.passFill;c.font={...XL.dataFont,bold:true,color:{argb:'FF2E7D32'}};} else if(c.value==='NG'){c.fill=XL.failFill;c.font={...XL.dataFont,bold:true,color:{argb:'FFC62828'}};}}
   })();
 
   // ── Sheet 3: SPT데이터 ──
@@ -4150,12 +4154,12 @@ async function exportExcel() {
     for(let i=3;i<=ws.rowCount;i++){ws.getCell(i,1).font={...XL.dataFont,bold:true}; for(let c=1;c<=3;c++) ws.getCell(i,c).border=XL.border;}
     // Detail
     ws.addRow([]); const detRow=ws.rowCount+1;
-    ws.addRow(['시추공','말뚝길이(m)','중량(ton)','체적(m³)','표면적(m²)']); xlHdr(ws,detRow,5);
-    (q.items||[]).forEach(it=>{ws.addRow([it.holeNo,f2(it.pileLength),f2(it.weight_ton),f2(it.volume_m3),f2(it.surface_m2)]);});
+    ws.addRow(['시추공','본수','말뚝길이(m)','중량(ton)','체적(m³)','표면적(m²)']); xlHdr(ws,detRow,6);
+    (q.items||[]).forEach(it=>{ws.addRow([it.holeNo,it.nPiles||1,f2(it.pileLength),f2(it.weight_ton),f2(it.volume_m3),f2(it.surface_m2)]);});
     // Totals row
-    const totRow=ws.addRow(['합계',f2(q.totalLength),f2(q.totalWeight_ton),f2(q.totalVolume_m3),f2(q.totalSurface_m2)]);
+    const totRow=ws.addRow(['합계',q.totalPiles,f2(q.totalLength),f2(q.totalWeight_ton),f2(q.totalVolume_m3),f2(q.totalSurface_m2)]);
     totRow.eachCell(c=>{c.font={...XL.dataFont,bold:true}; c.fill=XL.subFill; c.border=XL.border;});
-    xlData(ws,detRow+1,ws.rowCount-1,5);
+    xlData(ws,detRow+1,ws.rowCount-1,6);
   })();
 
   // ── Sheet 10: 차트 (다수 시추공만) ──
@@ -4196,39 +4200,43 @@ async function exportExcel() {
 function calcQuantities() {
   const isPHC = STATE.pileType === 'PHC';
   const pileSpec = isPHC ? 'PHC ' + STATE.diameter_mm + 'mm ' + STATE.phcGrade + '\uC885' : '\uAC15\uAD00 ' + STATE.diameter_mm + 'mm';
+  const nPer = STATE.nPilesPerBH || 1;
   const items = [];
 
   if (STATE.uploadedData && STATE.uploadedData.length > 0) {
     STATE.uploadedData.forEach(bh => {
       const r = BH_RESULTS[bh.holeNo];
       if (!r) return;
+      const n = bh.nPiles || nPer;
       items.push({
-        holeNo: bh.holeNo,
+        holeNo: bh.holeNo, nPiles: n,
         pileLength: r.pileLength,
-        weight_ton: (r.W_unit * r.pileLength) / 9.80665,
-        volume_m3: r.Ap_net * r.pileLength,
-        surface_m2: r.U * r.pileLength,
+        weight_ton: (r.W_unit * r.pileLength) / 9.80665 * n,
+        volume_m3: r.Ap_net * r.pileLength * n,
+        surface_m2: r.U * r.pileLength * n,
+        weight_ton_1: (r.W_unit * r.pileLength) / 9.80665,
         W_unit: r.W_unit, Ap_net: r.Ap_net, U: r.U
       });
     });
   } else if (STATE.result) {
     const r = STATE.result;
     items.push({
-      holeNo: STATE.boreholeNo,
+      holeNo: STATE.boreholeNo, nPiles: nPer,
       pileLength: r.pileLength,
-      weight_ton: (r.W_unit * r.pileLength) / 9.80665,
-      volume_m3: r.Ap_net * r.pileLength,
-      surface_m2: r.U * r.pileLength,
+      weight_ton: (r.W_unit * r.pileLength) / 9.80665 * nPer,
+      volume_m3: r.Ap_net * r.pileLength * nPer,
+      surface_m2: r.U * r.pileLength * nPer,
+      weight_ton_1: (r.W_unit * r.pileLength) / 9.80665,
       W_unit: r.W_unit, Ap_net: r.Ap_net, U: r.U
     });
   }
 
+  const totalPiles = items.reduce((s, i) => s + i.nPiles, 0);
   const lengths = items.map(i => i.pileLength);
   return {
-    items,
-    pileSpec,
-    totalPiles: items.length,
-    totalLength: lengths.reduce((s, v) => s + v, 0),
+    items, pileSpec, nPilesPerBH: nPer,
+    totalPiles,
+    totalLength: items.reduce((s, i) => s + i.pileLength * i.nPiles, 0),
     totalWeight_ton: items.reduce((s, i) => s + i.weight_ton, 0),
     totalVolume_m3: items.reduce((s, i) => s + i.volume_m3, 0),
     totalSurface_m2: items.reduce((s, i) => s + i.surface_m2, 0),
@@ -4247,8 +4255,14 @@ function renderQuantitySection(q, isMulti) {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-size:13px;font-weight:700;color:#4338ca;display:flex;align-items:center;gap:6px">
         &#128230; \uBB3C\uB7C9 \uC0B0\uC815</div>
-      <span style="font-size:10px;color:var(--text-muted);background:#e0e7ff;padding:2px 8px;border-radius:10px;font-weight:600">
-        ${q.pileSpec} | ${q.totalPiles}\uAC1C\uC18C</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:10px;color:var(--text-muted)">개소당 본수:
+          <input type="number" min="1" max="100" value="${q.nPilesPerBH}" style="width:50px;padding:2px 4px;font-size:11px;border:1px solid #c7d2fe;border-radius:4px;text-align:center"
+            onchange="STATE.nPilesPerBH=parseInt(this.value)||1;renderOverallTab?renderOverallTab():renderAllTabs()">
+        </label>
+        <span style="font-size:10px;color:var(--text-muted);background:#e0e7ff;padding:2px 8px;border-radius:10px;font-weight:600">
+          ${q.pileSpec} | ${q.totalPiles}\uBCF8</span>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
       <div style="background:#fff;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0">
@@ -4295,6 +4309,7 @@ function renderQuantitySection(q, isMulti) {
       <table style="width:100%;margin-top:6px;font-size:11px;border-collapse:collapse">
         <thead><tr style="background:#f1f5f9">
           <th style="padding:5px 8px;text-align:left;font-weight:600;border-bottom:1px solid #e2e8f0">\uC2DC\uCD94\uACF5</th>
+          <th style="padding:5px 8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0">\uBCF8\uC218</th>
           <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uB9D0\uB69D\uAE38\uC774(m)</th>
           <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uC911\uB7C9(ton)</th>
           <th style="padding:5px 8px;text-align:right;font-weight:600;border-bottom:1px solid #e2e8f0">\uCCB4\uC801(m\u00B3)</th>
@@ -4303,6 +4318,7 @@ function renderQuantitySection(q, isMulti) {
     q.items.forEach(it => {
       html += `<tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:4px 8px;font-weight:600;color:var(--primary-navy)">${it.holeNo}</td>
+        <td style="padding:4px 8px;text-align:center;font-family:var(--font-mono)">${it.nPiles}</td>
         <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f2(it.pileLength)}</td>
         <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f3(it.weight_ton)}</td>
         <td style="padding:4px 8px;text-align:right;font-family:var(--font-mono)">${f3(it.volume_m3)}</td>
@@ -4311,6 +4327,7 @@ function renderQuantitySection(q, isMulti) {
     });
     html += `<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #cbd5e1">
       <td style="padding:5px 8px">\uD569\uACC4</td>
+      <td style="padding:5px 8px;text-align:center;font-family:var(--font-mono)">${q.totalPiles}</td>
       <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono)">${f1(q.totalLength)}</td>
       <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono);color:#7c3aed">${f2(q.totalWeight_ton)}</td>
       <td style="padding:5px 8px;text-align:right;font-family:var(--font-mono);color:#059669">${f3(q.totalVolume_m3)}</td>
@@ -4319,6 +4336,182 @@ function renderQuantitySection(q, isMulti) {
   }
   html += `</div>`;
   return html;
+}
+
+function toggleBatchEditor() {
+  const wrap = document.getElementById('batchEditorWrap');
+  if (!wrap) return;
+  if (wrap.style.display === 'none') {
+    wrap.style.display = 'block';
+    renderBatchEditor();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+function renderBatchEditor() {
+  const wrap = document.getElementById('batchEditorWrap');
+  if (!wrap || !STATE.uploadedData || STATE.uploadedData.length === 0) return;
+  const nPer = STATE.nPilesPerBH || 1;
+  let html = `<div style="margin:10px 0;padding:12px;background:#faf5ff;border:1px solid #c7d2fe;border-radius:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:700;color:#4338ca">시추공별 설계 파라미터 일괄 편집</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="applyBatchAll();renderBatchEditor()" style="background:#4338ca;color:#fff;font-size:10px">전체 적용 후 재계산</button>
+        <button class="btn btn-sm" onclick="document.getElementById('batchEditorWrap').style.display='none'" style="font-size:10px">닫기</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;font-size:10px;color:var(--text-muted)">
+      <label>전체 지지층EL: <input type="number" id="batchBearingEL" step="0.1" style="width:70px;font-size:10px" placeholder="미입력시 유지"></label>
+      <label>전체 근입깊이: <input type="number" id="batchEmbedDepth" step="0.5" min="0" style="width:60px;font-size:10px" placeholder="미입력시 유지"></label>
+      <label>전체 본수: <input type="number" id="batchNPiles" min="1" style="width:50px;font-size:10px" placeholder="미입력시 유지"></label>
+      <button class="btn btn-sm" onclick="applyBatchGlobal()" style="font-size:10px">일괄 입력</button>
+    </div>
+    <table style="width:100%;font-size:11px;border-collapse:collapse">
+      <thead><tr style="background:#f1f5f9">
+        <th style="padding:4px 6px;text-align:left;border-bottom:1px solid #e2e8f0">시추공</th>
+        <th style="padding:4px 6px;text-align:right;border-bottom:1px solid #e2e8f0">지반고</th>
+        <th style="padding:4px 6px;text-align:center;border-bottom:1px solid #e2e8f0">지지층EL</th>
+        <th style="padding:4px 6px;text-align:center;border-bottom:1px solid #e2e8f0">근입깊이(m)</th>
+        <th style="padding:4px 6px;text-align:center;border-bottom:1px solid #e2e8f0">본수</th>
+      </tr></thead><tbody>`;
+  STATE.uploadedData.forEach((bh, i) => {
+    const bEL = bh.bearingEL != null ? bh.bearingEL : STATE.bearingEL;
+    const dp = bh.designParams || {};
+    const ed = dp.embedDepth != null ? dp.embedDepth : STATE.embedDepth;
+    const np = bh.nPiles || nPer;
+    html += `<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:3px 6px;font-weight:600;color:var(--primary-navy)">${bh.holeNo}</td>
+      <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono)">${fmt(bh.groundEL||STATE.groundEL)}</td>
+      <td style="padding:3px 6px;text-align:center"><input type="number" data-bh="${i}" data-field="bearingEL" value="${fmt(bEL)}" step="0.1" style="width:70px;font-size:10px;text-align:center"></td>
+      <td style="padding:3px 6px;text-align:center"><input type="number" data-bh="${i}" data-field="embedDepth" value="${ed}" step="0.5" min="0" style="width:60px;font-size:10px;text-align:center"></td>
+      <td style="padding:3px 6px;text-align:center"><input type="number" data-bh="${i}" data-field="nPiles" value="${np}" min="1" style="width:50px;font-size:10px;text-align:center"></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  wrap.innerHTML = html;
+}
+function applyBatchGlobal() {
+  const bEL = document.getElementById('batchBearingEL')?.value;
+  const ed = document.getElementById('batchEmbedDepth')?.value;
+  const np = document.getElementById('batchNPiles')?.value;
+  document.querySelectorAll('#batchEditorWrap input[data-bh]').forEach(inp => {
+    if (inp.dataset.field === 'bearingEL' && bEL) inp.value = bEL;
+    if (inp.dataset.field === 'embedDepth' && ed) inp.value = ed;
+    if (inp.dataset.field === 'nPiles' && np) inp.value = np;
+  });
+}
+function applyBatchAll() {
+  document.querySelectorAll('#batchEditorWrap input[data-bh]').forEach(inp => {
+    const idx = parseInt(inp.dataset.bh);
+    const bh = STATE.uploadedData[idx];
+    if (!bh) return;
+    const val = parseFloat(inp.value);
+    if (isNaN(val)) return;
+    if (inp.dataset.field === 'bearingEL') { bh.bearingEL = val; }
+    if (inp.dataset.field === 'embedDepth') {
+      if (!bh.designParams) bh.designParams = {};
+      bh.designParams.embedDepth = val;
+    }
+    if (inp.dataset.field === 'nPiles') { bh.nPiles = Math.max(1, Math.round(val)); }
+  });
+  // 현재 시추공 반영
+  const curBh = STATE.uploadedData[STATE.currentBhIdx];
+  if (curBh) {
+    if (curBh.bearingEL != null) STATE.bearingEL = curBh.bearingEL;
+    if (curBh.designParams && curBh.designParams.embedDepth != null) STATE.embedDepth = curBh.designParams.embedDepth;
+  }
+  calcAllBoreholes();
+  renderOverallTab();
+  showToast('일괄 편집이 적용되었습니다', 'success');
+}
+
+function renderCrossSection() {
+  if (!STATE.uploadedData || STATE.uploadedData.length < 2) return '';
+  const bhs = STATE.uploadedData;
+  const colW = Math.min(120, Math.floor(900 / bhs.length));
+  const svgW = 60 + bhs.length * colW + 20;
+  const svgH = 400;
+  const padTop = 40, padBot = 30;
+  const chartH = svgH - padTop - padBot;
+
+  // Find global min/max EL
+  let minEL = Infinity, maxEL = -Infinity;
+  bhs.forEach(bh => {
+    const gEL = bh.groundEL || STATE.groundEL;
+    if (gEL > maxEL) maxEL = gEL;
+    const layers = bh.layers || [];
+    let cumD = 0;
+    layers.forEach(l => { cumD += l.thickness; });
+    const botEL = gEL - cumD;
+    if (botEL < minEL) minEL = botEL;
+  });
+  if (minEL === Infinity) return '';
+  const range = maxEL - minEL || 1;
+  const elToY = el => padTop + (maxEL - el) / range * chartH;
+
+  let svg = `<svg width="${svgW}" height="${svgH}" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px">`;
+  // Y-axis labels
+  const steps = 5;
+  for (let i = 0; i <= steps; i++) {
+    const el = maxEL - (range * i / steps);
+    const y = elToY(el);
+    svg += `<text x="50" y="${y+3}" text-anchor="end" fill="#64748b" font-size="9" font-family="var(--font-mono)">EL.${el.toFixed(0)}</text>`;
+    svg += `<line x1="55" y1="${y}" x2="${svgW-10}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
+  }
+
+  // Draw each borehole column
+  bhs.forEach((bh, bi) => {
+    const x = 60 + bi * colW;
+    const gEL = bh.groundEL || STATE.groundEL;
+    const layers = bh.layers || [];
+    const bEL = bh.bearingEL != null ? bh.bearingEL : STATE.bearingEL;
+    // Borehole label
+    svg += `<text x="${x + colW/2}" y="${padTop - 8}" text-anchor="middle" fill="var(--primary-navy)" font-size="9" font-weight="600">${bh.holeNo}</text>`;
+    // Ground surface line
+    const gY = elToY(gEL);
+    svg += `<line x1="${x+2}" y1="${gY}" x2="${x+colW-2}" y2="${gY}" stroke="#059669" stroke-width="2"/>`;
+    // Layer blocks
+    let cumD = 0;
+    layers.forEach(l => {
+      const topEL = gEL - cumD;
+      const botEL = topEL - l.thickness;
+      cumD += l.thickness;
+      const y1 = elToY(topEL);
+      const y2 = elToY(botEL);
+      const h = Math.max(y2 - y1, 1);
+      const color = getSoilColor(l.soilType);
+      svg += `<rect x="${x+4}" y="${y1}" width="${colW-8}" height="${h}" fill="${color}" stroke="#fff" stroke-width="0.5" opacity="0.85"/>`;
+      if (h > 12) {
+        svg += `<text x="${x + colW/2}" y="${y1 + h/2 + 3}" text-anchor="middle" fill="#333" font-size="7" font-weight="500">${l.soilType.replace(/\(.+\)/,'')}</text>`;
+      }
+    });
+    // Bearing EL line
+    if (bEL != null) {
+      const bY = elToY(bEL);
+      svg += `<line x1="${x+2}" y1="${bY}" x2="${x+colW-2}" y2="${bY}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    }
+  });
+
+  // Connect ground surface between boreholes
+  for (let i = 0; i < bhs.length - 1; i++) {
+    const x1 = 60 + i * colW + colW/2;
+    const x2 = 60 + (i+1) * colW + colW/2;
+    const y1 = elToY(bhs[i].groundEL || STATE.groundEL);
+    const y2 = elToY(bhs[i+1].groundEL || STATE.groundEL);
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#059669" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>`;
+  }
+
+  // Legend
+  svg += `<line x1="${svgW-180}" y1="${svgH-12}" x2="${svgW-160}" y2="${svgH-12}" stroke="#059669" stroke-width="2"/>`;
+  svg += `<text x="${svgW-155}" y="${svgH-9}" fill="#64748b" font-size="8">지반고</text>`;
+  svg += `<line x1="${svgW-110}" y1="${svgH-12}" x2="${svgW-90}" y2="${svgH-12}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+  svg += `<text x="${svgW-85}" y="${svgH-9}" fill="#64748b" font-size="8">지지층EL</text>`;
+
+  svg += `</svg>`;
+  return `<div style="margin:16px 0">
+    <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">지반 단면도</div>
+    <div style="overflow-x:auto">${svg}</div>
+  </div>`;
 }
 
 function renderOverallTab() {
@@ -4350,10 +4543,12 @@ function renderOverallTab() {
   let html = `<div style="display:flex;justify-content:space-between;align-items:center">
     <h3 class="sec-title" style="margin:0">종합 계산 결과 (전체 시추공)</h3>
     <div style="display:flex;gap:6px">
+      <button class="btn btn-sm" onclick="toggleBatchEditor()" style="padding:7px 12px;font-size:11px">&#9998; 일괄 편집</button>
       <button class="ai-btn" onclick="runBoreholeAnalysis()" style="padding:7px 16px;font-size:11px">&#9889; AI 시추공 분석</button>
       <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
     </div>
   </div>`;
+  html += `<div id="batchEditorWrap" style="display:none"></div>`;
   // Stats cards
   html += `<div class="dash-stats">
     <div class="dash-stat"><div class="ds-val">${count}</div><div class="ds-label">시추공 수</div></div>
@@ -4385,6 +4580,28 @@ function renderOverallTab() {
     </div>`;
   });
   html += `</div>`;
+  // bearingEL distribution chart
+  const bELs = bhs.map(bh => ({ holeNo: bh.holeNo, bEL: bh.bearingEL != null ? bh.bearingEL : STATE.bearingEL })).filter(x => x.bEL != null);
+  if (bELs.length > 0) {
+    const minBEL = Math.min(...bELs.map(x=>x.bEL));
+    const maxBEL = Math.max(...bELs.map(x=>x.bEL));
+    const range = maxBEL - minBEL || 1;
+    html += `<div style="margin-bottom:20px">
+    <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">지지층 EL 분포 (EL.${fmt(minBEL)} ~ EL.${fmt(maxBEL)})</div>`;
+    bELs.forEach(x => {
+      const pct = ((x.bEL - minBEL) / range * 80 + 10).toFixed(0);
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="width:60px;font-size:10px;font-weight:600;text-align:right">${x.holeNo}</span>
+        <div style="flex:1;height:18px;background:#f1f5f9;border-radius:3px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:linear-gradient(to right,#059669,#10b981);border-radius:3px"></div>
+        </div>
+        <span style="font-size:11px;font-weight:700;font-family:var(--font-mono);min-width:60px">EL.${fmt(x.bEL)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  // Cross-section visualization
+  html += renderCrossSection();
   // Enhanced table with sparklines
   html += `<div id="overallTableWrap">`;
   html += buildOverallTable(bhs);
@@ -4762,7 +4979,7 @@ function renderReportTab() {
 
   el.innerHTML = html;
   if (window.MathJax && MathJax.typesetPromise) {
-    MathJax.typesetPromise([el]).catch(function(err) { console.log('MathJax error:', err); });
+    MathJax.typesetPromise([el]).catch(function(err) { console.error('MathJax error:', err); });
   }
 }
 
@@ -4799,8 +5016,43 @@ document.addEventListener('mouseenter', function(e) {
   }
 }, true);
 
+// ===== LOCAL STORAGE =====
+const LS_KEY = 'pileCalc_state_v2';
+let _saveTimer = null;
+function saveStateToLS() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    try {
+      const snap = {};
+      const keys = ['pileType','diameter_mm','thickness_mm','phcGrade','pileTopEL','groundEL','bearingEL',
+        'embedDepth','gwlDepth','boreholeNo','alpha_kh','delta_cm','sigmaMax','useFill','plannedEL','fillN',
+        'coeff_tip','coeff_sand','coeff_clay','bearingMethod','corrosionThk','qu_kPa','Sd_m','td_m','rockPhi',
+        'jointCount','jointType','nPilesPerBH','sptData','layers','currentBhIdx'];
+      keys.forEach(k => { if (STATE[k] !== undefined) snap[k] = STATE[k]; });
+      if (STATE.uploadedData) snap.uploadedData = STATE.uploadedData;
+      localStorage.setItem(LS_KEY, JSON.stringify(snap));
+    } catch(e) {}
+  }, 500);
+}
+function restoreStateFromLS() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    Object.keys(snap).forEach(k => { STATE[k] = snap[k]; });
+    return true;
+  } catch(e) { return false; }
+}
+function clearSavedState() {
+  localStorage.removeItem(LS_KEY);
+  showToast('저장된 상태가 초기화되었습니다', 'success');
+  location.reload();
+}
+
 // ===== INIT =====
+const _restored = restoreStateFromLS();
 recalculate();
+if (_restored) showToast('이전 작업 상태가 복원되었습니다', 'info');
 
 // ============================================================
 // iframe postMessage 통합 (GeoAI Platform)

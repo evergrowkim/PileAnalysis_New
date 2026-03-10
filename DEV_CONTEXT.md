@@ -1,13 +1,13 @@
 # GeoAI 말뚝 기초 설계 계산기 — 개발 컨텍스트
 
 > 이 문서는 향후 세션에서 빠르게 컨텍스트를 복원하기 위한 개발 기록이다.
-> 마지막 업데이트: 2026-02-18 (v2.3)
+> 마지막 업데이트: 2026-03-10 (v2.4)
 
 ---
 
 ## 1. 프로젝트 개요
 
-- **단일 파일 웹앱**: `index.html` (약 5,000줄)
+- **단일 파일 웹앱**: `index.html` (약 5,190줄)
 - **기능**: 말뚝(PHC/강관) 기초의 수직지지력, 수평지지력, 인발, 침하 계산
 - **기준**: KDS 11 50 40, 도로교설계기준(2008), Meyerhof/암반근입 공법
 - **입력**: 시추공 JSON (drill_log) 업로드 → 다수 시추공 일괄 계산
@@ -40,7 +40,7 @@ STATE = {
   embedDepth: 1,  // 근입 깊이 (m)
 
   // 성토/절토
-  useFill: false, plannedEL, fillN,
+  useFill: false, plannedEL, fillN, nPilesPerBH: 1,
 
   // 시추공 데이터
   sptData: [{depth, N, remark}],
@@ -61,6 +61,7 @@ STATE = {
 ```
 
 **BH_RESULTS**: `{holeNo: calcPile() 결과}` — 전체 시추공 계산 결과 캐시
+**BH_SYNC_FIELDS**: `['groundEL', 'gwlDepth', 'bearingEL']` — save/restore 시 동기화 필드 목록
 
 ---
 
@@ -98,18 +99,31 @@ STATE = {
 | AI 시추공 분석 | Feature A | 전체 시추공 데이터 AI 분석 |
 | AI 검토 | Feature B | 설계 적정성 AI 검토 |
 
+### 헬퍼 / 유틸리티
+| 함수 | 위치(약) | 역할 |
+|------|----------|------|
+| `buildLayersWithAvgN(soilLayers, sptData)` | ~1006 | 지층 빌딩 공통 헬퍼 (importDrillLogJSON 내부 중복 제거) |
+| `saveStateToLS()` | ~5022 | STATE를 localStorage에 debounced 저장 |
+| `restoreStateFromLS()` | ~5037 | localStorage에서 STATE 복원 |
+| `clearSavedState()` | ~5046 | localStorage 초기화 + 새로고침 |
+
 ### 렌더링
 | 함수 | 역할 |
 |------|------|
 | `renderAllTabs()` | 전체 탭 렌더링 |
-| `renderInputTab()` | 입력 탭 (설계제원, SPT, 지층) |
+| `renderInputTab()` | 입력 탭 (서브함수 조합) |
+| `renderNLInputSection()` | AI NL 입력 + 시추공 선택 섹션 |
+| `renderSPTSection()` | SPT 데이터 테이블 섹션 |
+| `renderLayerSection()` | 지층 정보 테이블 섹션 |
 | `renderVerticalTab()` | 수직지지력 탭 |
 | `renderLateralTab()` | 수평지지력 탭 |
 | `renderPulloutTab()` | 인발 탭 |
 | `renderSettlementTab()` | 침하 탭 |
 | `renderSummaryTab()` | 요약 탭 |
 | `renderReportTab()` | 상세보고서 탭 |
-| `renderOverallTab()` | 종합결과 탭 (다수 시추공 비교 + 물량 산정) |
+| `renderOverallTab()` | 종합결과 탭 (비교 + 물량 + 차트 + 단면도) |
+| `renderCrossSection()` | 지반 단면도 SVG 생성 |
+| `renderBatchEditor()` | 시추공별 일괄 편집기 테이블 |
 
 ---
 
@@ -123,10 +137,12 @@ STATE = {
 
 ### 지원 액션
 ```javascript
-"actions": ["autoDetectBearing", "autoDetectBearingAll"]
+"actions": ["autoDetectBearing", "autoDetectBearingAll", "recalcAll", "exportExcel"]
 ```
 - `autoDetectBearing`: 현재 시추공 지지층 EL 자동 탐지
 - `autoDetectBearingAll`: 모든 시추공 지지층 EL 일괄 자동 탐지
+- `recalcAll`: 전체 시추공 재계산
+- `exportExcel`: 엑셀 내보내기 실행
 
 ### NL 파서 프롬프트 위치
 - 시스템 프롬프트: `parseNLInput()` 함수 내부 (~1400줄)
@@ -142,14 +158,15 @@ STATE = {
 ### 계산 항목
 | 항목 | 계산식 | 단위 |
 |------|--------|------|
-| 말뚝 중량 | `W_unit × pileLength / 9.80665` | ton |
-| 재료 체적 | `Ap_net × pileLength` | m³ |
-| 표면적 | `U × pileLength` | m² |
+| 말뚝 중량 | `W_unit × pileLength / 9.80665 × nPiles` | ton |
+| 재료 체적 | `Ap_net × pileLength × nPiles` | m³ |
+| 표면적 | `U × pileLength × nPiles` | m² |
 
 ### UI 구성
 - 4열 카드 그리드: 총 본수, 총 길이, 총 중량(ton), 총 체적(m³)
 - 추가 카드: 평균/최장/최단 길이, 총 표면적
-- `<details>` 접기/펼치기: 시추공별 물량 상세 테이블
+- 개소당 본수(nPilesPerBH) 입력 필드 지원
+- `<details>` 접기/펼치기: 시추공별 물량 상세 테이블 (본수 컬럼 포함)
 
 ---
 
@@ -198,30 +215,41 @@ calcAllBoreholes()
 | v2.0 | bce6cda | 전면 업데이트 (기본 기능 완성) |
 | v2.1 | e31116f | 근입 깊이 추가, 버그 수정 대규모 업데이트 |
 | v2.2 | 9e45583 | 수평지지력 가이드 기준 전면 수정, 성토층 EL 버그 수정 |
-| v2.3 | (현재) | AI 기능 4종 추가, AI 채팅, 물량 산정, 개별 bearingEL, NL 액션 시스템 |
+| v2.3 | — | AI 기능 4종 추가, AI 채팅, 물량 산정, 개별 bearingEL, NL 액션 시스템 |
+| v2.4 | (현재) | 코드 개선 + 버그 수정 + 신규 기능 (12개 항목) |
 
-### v2.3 변경사항 상세
-1. **Claude API 연동 (Haiku 4.5)**
-   - AI 자연어 입력 → 설계 파라미터 자동 적용
-   - AI 시추공 분석 (Feature A)
-   - AI 설계 검토 (Feature B)
-   - AI 채팅 (지반공학 전문가 모드, 스트리밍)
-2. **AI NL 액션 시스템**: `autoDetectBearing`, `autoDetectBearingAll`
-3. **물량 산정**: 종합결과 탭에 물량 카드 + 시추공별 상세 테이블
-4. **개별 bearingEL**: 시추공별 지지층 EL 개별 관리 (save/restore/calcAll 연동)
-5. **AI 캐시**: 반복 호출 방지
-6. **절토 로직**: useFill에 절토 시나리오 포함
+### v2.4 변경사항 상세
+**Phase 1: 버그 수정 / 제한사항 해결**
+1. **autoDetect groundEL 방어**: groundEL > pileTopEL 시추공 자동 탐지 시 유효성 검증 + 경고 토스트
+2. **엑셀 bearingEL 컬럼**: Sheet 2 종합결과에 지지층EL 컬럼 추가
+3. **NL 파서 액션 확장**: `recalcAll`, `exportExcel` 2개 액션 추가
+4. **bearingEL 분포 차트**: 종합결과 탭에 녹색 수평 바차트
+5. **nPiles 입력**: 물량 산정에 개소당 본수 입력 + 본수 반영 계산
+
+**Phase 2: 코드 품질 개선**
+6. **에러 핸들링 표준화**: calcPile catch에 showToast 추가, console.log → console.error
+7. **BH_SYNC_FIELDS**: save/restore 필드 루프 자동화 (수동 나열 제거)
+8. **buildLayersWithAvgN 헬퍼**: importDrillLogJSON 내 지층 빌딩 중복 제거
+9. **renderInputTab 분할**: renderNLInputSection, renderSPTSection, renderLayerSection 추출
+
+**Phase 3: 신규 기능**
+10. **localStorage 상태 영속화**: 자동 저장/복원 + 초기화 버튼
+11. **일괄 편집기**: 시추공별 bearingEL/embedDepth/nPiles 일괄 편집 테이블
+12. **지반 단면도**: SVG 기반 시추공 지층 단면 시각화
 
 ---
 
 ## 10. 알려진 제한사항 / 향후 개선 후보
 
-- [ ] NBH-1, NBH-2 등 groundEL이 pileTopEL보다 높은 시추공은 자동 탐지 실패 → 사용자 수동 입력 필요
-- [ ] 물량 산정에 말뚝 본수(nPiles) 입력 미지원 (현재 1본/공 가정)
-- [ ] AI 자연어 입력에 더 많은 액션 추가 가능 (예: 말뚝 종류 변경 후 전체 재계산)
-- [ ] 종합결과 탭에 bearingEL별 분포 차트 추가 가능
-- [ ] 엑셀 내보내기에 개별 bearingEL 컬럼 추가 필요
+- [x] ~~groundEL > pileTopEL 시추공 자동 탐지 실패~~ → v2.4에서 방어 로직 추가
+- [x] ~~물량 산정에 nPiles 미지원~~ → v2.4에서 개소당 본수 입력 추가
+- [x] ~~NL 파서 액션 부족~~ → v2.4에서 recalcAll, exportExcel 추가
+- [x] ~~bearingEL 분포 차트 없음~~ → v2.4에서 추가
+- [x] ~~엑셀 bearingEL 컬럼 없음~~ → v2.4에서 추가
 - [ ] AI 채팅에 이미지/차트 첨부 기능
+- [ ] 시추공별 개별 nPiles 입력 (현재는 전역 nPilesPerBH만 지원, 일괄 편집기에서 개별 설정 가능)
+- [ ] 지반 단면도에 말뚝 위치/길이 오버레이
+- [ ] 다크 모드 지원
 
 ---
 
@@ -244,16 +272,21 @@ geoai_result_2026-02-15.json  (18개 시추공)
 ## 12. 빠른 코드 탐색 가이드
 
 ```
-~200    : calcPile() — 핵심 계산 엔진
+~605    : calcPile() — 핵심 계산 엔진 (수정 금지)
+~876    : STATE 초기화
 ~893    : recalculate() — STATE 기반 재계산
-~1059   : saveCurrentToUploadedData() — 시추공 데이터 저장
-~1069   : applyBoreholeData() — 시추공 전환
-~1400   : AI NL 파서 (parseNLInput, showNLPreview, applyNLParsed)
-~1547   : autoDetectBearingAllBoreholes() — 일괄 자동 탐지
-~2200   : renderInputTab() — 입력 탭 렌더링
-~2473   : autoDetectBearingLayer() — 단일 시추공 자동 탐지
-~2550   : 파일 업로드 핸들러
-~3732   : calcAllBoreholes() — 전체 시추공 일괄 계산
-~3800   : renderOverallTab() — 종합결과 탭 (물량 산정 포함)
-~4500+  : AI 채팅 시스템
+~1006   : buildLayersWithAvgN() — 지층 빌딩 공통 헬퍼
+~1081   : saveCurrentToUploadedData() — BH_SYNC_FIELDS 루프
+~1109   : applyBoreholeData() — BH_SYNC_FIELDS 루프
+~1461   : AI NL 파서 (parseNLInput, showNLPreview, applyNLParsed)
+~1599   : autoDetectBearingAllBoreholes() — 일괄 자동 탐지
+~2345   : renderInputTab() — 서브함수 조합 (NL, SPT, Layer)
+~2623   : autoDetectBearingLayer() — 단일 시추공 자동 탐지 (유효성 검증 포함)
+~2700   : 파일 업로드 핸들러
+~3800   : calcAllBoreholes() — 전체 시추공 일괄 계산
+~3900   : renderOverallTab() — 종합결과 탭 (물량 + 차트 + 단면도 + 일괄 편집)
+~4600+  : AI 채팅 시스템
+~5020   : localStorage 영속화 (saveStateToLS, restoreStateFromLS)
+~5052   : 초기화 블록 (INIT)
+~5057   : iframe postMessage 통합
 ```
