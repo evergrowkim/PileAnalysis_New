@@ -82,6 +82,12 @@ body { font-family: var(--font-body); background: var(--bg-secondary); color: va
 .bh-list-item .bh-status { padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: 700; }
 .bh-list-item .bh-status.ok { background: #dcfce7; color: #15803d; }
 .bh-list-item .bh-status.ng { background: #fee2e2; color: #dc2626; }
+table tr.from-json { background: #f0f7ff !important; }
+table tr.from-json:nth-child(even) { background: #e8f0fe !important; }
+table tr.from-json td:first-child { border-left: 3px solid #93c5fd; }
+.origin-badge { display:inline-block; padding:1px 4px; border-radius:3px; font-size:7px; font-weight:700; margin-left:3px; vertical-align:middle; }
+.origin-badge.json { background:#dbeafe; color:#1d4ed8; }
+.origin-badge.manual { background:#f3f4f6; color:#9ca3af; }
 .sidebar-toggle { position: fixed; left: 210px; top: 50%; transform: translateY(-50%); z-index: 10; width: 18px; height: 36px; background: #f1f5f9; border: 1px solid var(--border-color); border-left: none; border-radius: 0 4px 4px 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text-muted); transition: left 0.2s; }
 .sidebar.collapsed ~ .sidebar-toggle { left: 0; }
 .main-content { flex: 1; overflow-y: auto; }
@@ -429,7 +435,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 <!-- Sidebar: Borehole List -->
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <span>시추공 목록</span>
+    <span>시추공 목록 <button onclick="event.stopPropagation();alert('OK: 침하량 25mm 미만 (적합)\\nNG: 침하량 25mm 이상 (부적합)\\n\\n각 시추공의 설계조건별로 판정됩니다.\\n배지에 마우스를 올리면 상세 침하량을 확인할 수 있습니다.')" style="width:14px;height:14px;font-size:8px;border-radius:50%;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:#fff;cursor:pointer;padding:0;line-height:1">?</button></span>
     <div style="display:flex;gap:4px;align-items:center">
       <button onclick="toggleBhSort()" id="bhSortBtn" title="시추공 정렬 (오름차순/내림차순)" style="font-size:9px;padding:2px 6px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(255,255,255,0.15);cursor:pointer;color:#fff;letter-spacing:-0.5px">A↓</button>
       <button onclick="toggleSidebar()" title="접기">&#9664;</button>
@@ -825,15 +831,15 @@ function calcPile(p) {
   const Wp = W_unit * pileLength - (l2 > 0 ? Ap_tip * l2 * 10 : 0);
   const Qpull = Qu_skin / FS + Math.max(Wp, 0);
   // Settlement
-  const ratio_tip = Qu_tip / Math.max(Qu, 1);
+  const ratio_tip = Math.min(Math.max(Qu_tip / Math.max(Qu, 1), 0), 1);
   const Qps = Qa_applied * ratio_tip, Qfs = Qa_applied * (1 - ratio_tip);
-  const Ss = (Qps + 0.67 * Qfs) * (pileLength * 1000) / (Ap_net * E);
+  const Ss = Math.max((Qps + 0.67 * Qfs) * (pileLength * 1000) / (Ap_net * E), 0);
   const Cp = 0.09;
   const qp = Qu_tip / Math.max(Ap_tip, 0.001);
-  const Sp = (Qps * Cp) / (D * Math.max(qp, 1)) * 1000;
+  const Sp = Math.max((Qps * Cp) / (D * Math.max(qp, 1)) * 1000, 0);
   const Cs = (0.93 + 0.16 * Math.sqrt(pileLength / D)) * Cp;
-  const Sps = (Qfs * Cs) / (pileLength * Math.max(qp, 1)) * 1000;
-  const St = Ss + Sp + Sps;
+  const Sps = Math.max((Qfs * Cs) / (pileLength * Math.max(qp, 1)) * 1000, 0);
+  const St = Math.max(Ss + Sp + Sps, 0);
   return { D, t, pileLength, cutFillDepth, fillHeight, cutDepth, gwlEL, U, Ap_tip, Ap_net, I, Zp, E, EI, W_unit,
     I_h, Zp_h, EI_h,
     L_over_d, mu1, mu2, Qap, Qp_material, n_slender,
@@ -921,7 +927,7 @@ const VERIFY_DATA = {
 
 function recalculate() {
   invalidateAICache();
-  // 계획고 적용 시 말뚝두부 EL = 계획고 EL 동기화
+  // 계획고 적용 시 말뚝 상단 EL = 계획고 EL 동기화
   if (STATE.useFill && STATE.plannedEL != null) {
     STATE.pileTopEL = STATE.plannedEL;
   }
@@ -1025,7 +1031,7 @@ function buildLayersWithAvgN(soilLayers, sptData) {
         sptNote = '(SPT없음, 지층 기본값)';
       }
     }
-    return { soilType: l.soilType, depthFrom: parseFloat(l.depthFrom.toFixed(2)), depthTo: parseFloat(l.depthTo.toFixed(2)), thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: sptNote, _sptCount: layerSPTs.length };
+    return { soilType: l.soilType, depthFrom: parseFloat(l.depthFrom.toFixed(2)), depthTo: parseFloat(l.depthTo.toFixed(2)), thickness: parseFloat(l.thickness.toFixed(2)), avgN: parseFloat(avgN.toFixed(1)), unitWeight: UW_DEF[l.soilType] || 18, _sptDetail: sptNote, _sptCount: layerSPTs.length, _fromJSON: true };
   });
 }
 
@@ -1048,7 +1054,7 @@ function importDrillLogJSON(json) {
           const key = s.Depth || s.depth;
           const nVal = parseHits(s.Hits || s.hits);
           if (key != null && nVal !== null && !sptMap.has(key)) {
-            sptMap.set(key, { depth: key, N: nVal, remark: mappedSoil });
+            sptMap.set(key, { depth: key, N: nVal, remark: mappedSoil, _fromJSON: true });
           }
         });
       });
@@ -1063,7 +1069,7 @@ function importDrillLogJSON(json) {
     const groundEL = meta.elevation || parseElevation(meta.GROUND_SURFACE_LEVEL);
     const gwlDepth = meta.water_level || parseWaterLevel(meta.GROUND_WATER_LEVEL);
     const sptData = (json.spt_data || []).map(s => ({
-      depth: s.depth, N: Math.min(s.n_value || s.N || 10, 50), remark: mapSoilName(s.soil_type || s.notes || "")
+      depth: s.depth, N: Math.min(s.n_value || s.N || 10, 50), remark: mapSoilName(s.soil_type || s.notes || ""), _fromJSON: true
     }));
     const soilLayers = (json.soil_layers || []).map(l => ({
       soilName: l.soil_type || l.description, soilType: mapSoilName(l.soil_type),
@@ -1186,7 +1192,22 @@ const GUIDE_DATA = {
   fillN: { title: '성토재 N값 - 성토 재료의 SPT N값',
     def: '성토(Fill) 구간에 적용할 표준관입시험(SPT) N값입니다. 성토 다짐 상태와 재료 품질에 따라 결정합니다.',
     range: '느슨한 성토: 3 ~ 5\n보통 다짐 성토: 5 ~ 10\n양호한 다짐 성토: 10 ~ 15',
-    sig: '성토 구간의 주면마찰력 산정에 직접 사용: fs = 2 x N x As (사질토 기준).', refs: ['도로설계편람 (2012)', 'KDS 11 50 40', '지반공학회 (1996)'] }
+    sig: '성토 구간의 주면마찰력 산정에 직접 사용: fs = 2 x N x As (사질토 기준).', refs: ['도로설계편람 (2012)', 'KDS 11 50 40', '지반공학회 (1996)'] },
+  bearingMethod_rock: { title: '암반근입 지지 (Rock Socketed)',
+    def: '말뚝 선단을 암반(풍화암/연암)에 근입하여 지지력을 확보하는 방법입니다.\n\n■ 근입 대상 암반 구분:\n• 풍화암(WR): 일축압축강도 qu ≈ 1,000~10,000 kPa\n• 연암(SR): 일축압축강도 qu ≈ 10,000~50,000 kPa\n\n※ 시추주상도에서 풍화암(WR)이 확인되면 풍화암에 근입합니다.\n※ 풍화암이 없고 연암(SR)만 있는 경우, 연암에 근입합니다.\n\n선단지지력은 3가지 공식(구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값을 적용합니다.',
+    range: '강관말뚝: 기본 적용\nPHC말뚝: 암반 상태 양호 시 적용 가능',
+    sig: 'qu(일축압축강도), Sd(불연속면간격), td(불연속면두께), rockPhi(내부마찰각) 입력이 필요합니다.\n하단 rock-params 입력란이 자동으로 표시됩니다.',
+    refs: ['KDS 11 50 40 (2018)', '도로교설계기준 (2008)', 'Goodman (1989)'] },
+  bearingMethod_meyerhof: { title: '토사층 지지 (Meyerhof 공식)',
+    def: '말뚝 선단을 단단한 토사층(N≥50 연속 구간)에 지지하는 방법입니다.\n\n■ Meyerhof 공식:\n  Qu = α·N_tip·Ap + Σ(β·Ns·As) + Σ(γ·Nc·Ac)\n\n■ 지지층 판정 기준:\nSPT N값이 50 이상인 구간이 연속 2개 이상 확인될 때 지지층으로 판정합니다.\n\n■ 토사 지지 적용 시:\n사질토 기준: β=2 (KDS 11 50 40)\n점성토 기준: γ=6.25 (KDS 11 50 40)\n선단 계수: α=250\n\n지지력 계수(α, β, γ)는 하단 입력란에서 조정 가능합니다.',
+    range: 'PHC말뚝: 기본 적용 (α=250, β=2, γ=6.25)\n강관말뚝: 토사 지지 시 적용 가능',
+    sig: '선단 SPT N값(최대 50)과 각 지층의 평균 N값이 직접 사용됩니다.\n계수 조정으로 보수적/공격적 설계를 제어합니다.',
+    refs: ['KDS 11 50 40 (2018)', 'Meyerhof (1976)'] },
+  pileTopEL: { title: '말뚝 상단 EL (m) — 말뚝 상단(두부) 설치 표고',
+    def: '말뚝 상단(두부)이 설치되는 표고(EL)입니다.\n말뚝 길이 = 말뚝 상단 EL − 선단 EL\n\n계획고 적용(성토/절토) 사용 시:\n  → 말뚝 상단 EL = 계획고 EL (자동 동기화)\n  → 직접 수정 불가 (비활성)\n\n계획고 미적용 시:\n  → 직접 입력 가능',
+    range: '현장 조건에 따라 결정\n일반적으로 계획고 EL과 동일',
+    sig: '말뚝 길이(L)를 결정하는 핵심 입력값입니다.\n세장비(L/D), 수직지지력, 수평지지력 모두에 영향을 줍니다.',
+    refs: ['KDS 11 50 40 (2018)'] }
 };
 function showGuide(key) {
   const d = GUIDE_DATA[key]; if (!d) return;
@@ -1455,7 +1476,7 @@ async function parseNLInput() {
 현재 설계 상태:
 - 말뚝: ${STATE.pileType} ${STATE.diameter_mm}mm ${STATE.pileType==='PHC'?STATE.phcGrade+'종':'t'+STATE.thickness_mm}
 - 지지방법: ${STATE.bearingMethod==='rock'?'암반근입':'토사층'}
-- 말뚝두부 EL: ${STATE.pileTopEL} m
+- 말뚝 상단 EL: ${STATE.pileTopEL} m
 - 지반고 EL: ${STATE.groundEL} m
 - 지지층 EL: ${STATE.bearingEL} m
 - 근입깊이: ${STATE.embedDepth} m
@@ -1518,7 +1539,7 @@ async function parseNLInput() {
 function showNLPreview(parsed, container) {
   const names = {
     pileType:'말뚝종류', diameter_mm:'직경(mm)', thickness_mm:'두께(mm)',
-    phcGrade:'PHC등급', bearingMethod:'지지방법', pileTopEL:'말뚝두부EL',
+    phcGrade:'PHC등급', bearingMethod:'지지방법', pileTopEL:'말뚝 상단EL',
     groundEL:'지반고EL', bearingEL:'지지층EL', gwlDepth:'지하수위(GL,m)',
     embedDepth:'근입깊이(m)', useFill:'성토적용', plannedEL:'계획고EL', fillN:'성토N값'
   };
@@ -2273,7 +2294,7 @@ function renderSidebar() {
     list.innerHTML = `<div class="bh-list-item active">
       <div><div class="bh-name">${STATE.boreholeNo}</div>
       <div class="bh-qa">${r ? 'Qa=' + fmt(r.Qa_applied) + ' kN' : '-'}</div></div>
-      ${r ? '<span class="bh-status ' + (ok?'ok':'ng') + '">' + (ok?'OK':'NG') + '</span>' : ''}
+      ${r ? '<span class="bh-status ' + (ok?'ok':'ng') + '" title="침하량 ' + fmt(r.St) + 'mm ' + (ok?'< 25mm: 적합':'≥ 25mm: 부적합') + '">' + (ok?'OK':'NG') + '</span>' : ''}
     </div>`;
     return;
   }
@@ -2286,7 +2307,7 @@ function renderSidebar() {
     html += `<div class="bh-list-item ${isActive ? 'active' : ''}" onclick="selectBoreholeFromSidebar(${i})">
       <div><div class="bh-name">${bh.holeNo}</div>
       <div class="bh-qa">${r ? 'Qa=' + fmt(r.Qa_applied) : '-'}</div></div>
-      ${r ? '<span class="bh-status ' + (ok?'ok':'ng') + '">' + (ok?'OK':'NG') + '</span>' : ''}
+      ${r ? '<span class="bh-status ' + (ok?'ok':'ng') + '" title="침하량 ' + fmt(r.St) + 'mm ' + (ok?'< 25mm: 적합':'≥ 25mm: 부적합') + '">' + (ok?'OK':'NG') + '</span>' : ''}
     </div>`;
   });
   list.innerHTML = html;
@@ -2380,13 +2401,13 @@ function renderInputTab() {
   </div>`;
 
   if (isPHC) {
-    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; autoDetectBearingLayer(true); recalculate()"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
+    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
   } else {
     html += `<div class="form-grid cols-4" style="margin-top:8px">
       <div class="field"><label>부식두께 (mm) <button class="info-btn" onclick="event.stopPropagation();showGuide('corrosion')">?</button></label><input type="number" value="${STATE.corrosionThk}" onchange="STATE.corrosionThk=parseFloat(this.value)||2; recalculate()"></div>
       <div class="field"><label>이음부 수</label><input type="number" value="${STATE.jointCount}" onchange="STATE.jointCount=parseInt(this.value)||0; recalculate()"></div>
       <div class="field"><label>이음 방법</label><select onchange="STATE.jointType=this.value; recalculate()"><option value="welding" ${STATE.jointType==='welding'?'selected':''}>용접</option><option value="bolt" ${STATE.jointType==='bolt'?'selected':''}>볼트</option><option value="fill" ${STATE.jointType==='fill'?'selected':''}>충전</option></select></div>
-      <div class="field"><label>지지방법</label><select onchange="STATE.bearingMethod=this.value; autoDetectBearingLayer(true); recalculate()"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
+      <div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
     </div>
     <div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
     if (STATE.bearingMethod === "rock") {
@@ -2400,7 +2421,7 @@ function renderInputTab() {
   }
 
   html += `<div class="form-grid cols-4" style="margin-top:8px">
-    <div class="field"><label>말뚝두부 EL (m)</label><input type="number" value="${STATE.pileTopEL}" step="0.1" ${STATE.useFill?'disabled style="background:#f0f0f0"':''} onchange="var v=parseFloat(this.value); STATE.pileTopEL=isNaN(v)?130:v; recalculate()"></div>
+    <div class="field"><label>말뚝 상단 EL (m) <button class="info-btn" onclick="event.stopPropagation();showGuide('pileTopEL')">?</button></label><input type="number" value="${STATE.pileTopEL}" step="0.1" ${STATE.useFill?'disabled style="background:#f0f0f0"':''} onchange="var v=parseFloat(this.value); STATE.pileTopEL=isNaN(v)?130:v; recalculate()"></div>
     <div class="field"><label>지반고 EL (m)</label><input type="number" value="${STATE.groundEL}" step="0.01" onchange="var v=parseFloat(this.value); STATE.groundEL=isNaN(v)?127:v; recalculate()"></div>
     <div class="field"><label>지지층 EL (m)</label>
       <div style="display:flex;gap:4px"><input type="number" value="${STATE.bearingEL}" step="0.01" style="flex:1" onchange="var v=parseFloat(this.value); STATE.bearingEL=isNaN(v)?120:v; recalculate()">
@@ -2437,7 +2458,7 @@ function renderInputTab() {
     } else {
       html += `<div class="field"></div><div class="field"><label>성토/절토 없음</label><input type="text" value="계획고 = 지반고" disabled style="background:#f0f0f0;font-size:10px"></div>`;
     }
-    html += `<div class="field"><label>말뚝두부 EL (자동)</label><input type="number" value="${STATE.plannedEL!=null?fmt(STATE.plannedEL):''}" disabled style="background:#f0f0f0"></div>
+    html += `<div class="field"><label>말뚝 상단 EL (자동)</label><input type="number" value="${STATE.plannedEL!=null?fmt(STATE.plannedEL):''}" disabled style="background:#f0f0f0"></div>
     </div>`;
   }
   html += `</div>
@@ -2463,7 +2484,7 @@ function renderInputTab() {
     const D_m = STATE.diameter_mm / 1000;
     const t_m = STATE.thickness_mm / 1000;
     const corr_m = isPHC ? 0 : (STATE.corrosionThk || 2) / 1000;
-    const tipPileLen = `L = 말뚝두부EL − 선단EL\n  = ${fmt(STATE.pileTopEL)} − ${fmt(r.tipEL)}\n  = ${fmt(r.pileLength)} m`;
+    const tipPileLen = `L = 말뚝 상단EL − 선단EL\n  = ${fmt(STATE.pileTopEL)} − ${fmt(r.tipEL)}\n  = ${fmt(r.pileLength)} m`;
     const tipApTip = `Ap = π/4 × D²\n  = π/4 × ${D_m}²\n  = ${fmt(r.Ap_tip,4)} m²`;
     const tipE = isPHC
       ? `PHC 콘크리트 탄성계수\nE = 4700 × √fck\n  = 4700 × √(80)\n  ≈ 39,200 MPa = 39.2 GPa`
@@ -2485,17 +2506,28 @@ function renderInputTab() {
   }
 
   // 지지력 계수 편집
+  const _ud = getUserDefaults();
+  const _diffTip = STATE.coeff_tip !== _ud.coeff_tip;
+  const _diffSand = STATE.coeff_sand !== _ud.coeff_sand;
+  const _diffClay = STATE.coeff_clay !== _ud.coeff_clay;
+  const _dS = 'border:2px solid #f59e0b;background:#fffbeb';
   html += `<div style="margin-top:12px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <span style="font-size:11px;font-weight:700;color:var(--text-secondary)">지지력 계수 (KDS 11 50 40)</span>
       <span style="font-size:10px;color:#94a3b8">$Q_u = \\alpha \\cdot N_{tip} \\cdot A_p + \\sum \\beta \\cdot N_s \\cdot A_s + \\sum \\gamma \\cdot N_c \\cdot A_c$</span>
     </div>
     <div class="form-grid cols-4" style="margin:0">
-      <div class="field"><label>선단 계수 ($\\alpha$)</label><input type="number" value="${STATE.coeff_tip}" step="10" style="font-weight:600" onchange="STATE.coeff_tip=parseFloat(this.value)||250; recalculate()"></div>
-      <div class="field"><label>사질토 주면 ($\\beta$)</label><input type="number" value="${STATE.coeff_sand}" step="0.5" style="font-weight:600" onchange="STATE.coeff_sand=parseFloat(this.value)||2; recalculate()"></div>
-      <div class="field"><label>점성토 주면 ($\\gamma$)</label><input type="number" value="${STATE.coeff_clay}" step="0.25" style="font-weight:600" onchange="STATE.coeff_clay=parseFloat(this.value)||6.25; recalculate()"></div>
-      <div class="field"><label>&nbsp;</label><button class="btn btn-sm btn-outline" style="width:100%" onclick="STATE.coeff_tip=250;STATE.coeff_sand=2;STATE.coeff_clay=6.25;recalculate()">기본값 복원</button></div>
+      <div class="field"><label>선단 계수 ($\\alpha$)</label><input type="number" value="${STATE.coeff_tip}" step="10" style="font-weight:600;${_diffTip?_dS:''}" onchange="STATE.coeff_tip=parseFloat(this.value)||250; recalculate()"></div>
+      <div class="field"><label>사질토 주면 ($\\beta$)</label><input type="number" value="${STATE.coeff_sand}" step="0.5" style="font-weight:600;${_diffSand?_dS:''}" onchange="STATE.coeff_sand=parseFloat(this.value)||2; recalculate()"></div>
+      <div class="field"><label>점성토 주면 ($\\gamma$)</label><input type="number" value="${STATE.coeff_clay}" step="0.25" style="font-weight:600;${_diffClay?_dS:''}" onchange="STATE.coeff_clay=parseFloat(this.value)||6.25; recalculate()"></div>
+      <div class="field"><label>&nbsp;</label>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-outline" style="flex:1;font-size:9px" onclick="saveUserDefaults()" title="현재 계수를 기준값으로 저장">기준값 저장</button>
+          <button class="btn btn-sm btn-outline" style="flex:1;font-size:9px" onclick="restoreUserDefaults()" title="저장된 기준값 또는 KDS 기본값 복원">기준값 복원</button>
+        </div>
+      </div>
     </div>
+    ${localStorage.getItem('pileCalc_userDefaults') ? '<div style="font-size:9px;color:#94a3b8;margin-top:4px">저장된 기준값: α=' + _ud.coeff_tip + ', β=' + _ud.coeff_sand + ', γ=' + _ud.coeff_clay + '</div>' : ''}
   </div>`;
 
   html += renderSPTSection();
@@ -2516,10 +2548,11 @@ function renderSPTSection() {
       <button class="btn btn-sm" onclick="addSPT()">+ 추가</button>
     </div>
   </div>
+  <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px"><span class="origin-badge json">JSON</span> 추출 데이터 &nbsp; <span class="origin-badge manual">수동</span> 사용자 입력</div>
   <div style="overflow-x:auto"><table>
     <thead><tr><th>No.</th><th>EL.+</th><th>깊이</th><th>N값</th><th>비고</th><th></th></tr></thead>
-    <tbody>${STATE.sptData.map((s, i) => `<tr>
-      <td>${i+1}</td>
+    <tbody>${STATE.sptData.map((s, i) => `<tr class="${s._fromJSON ? 'from-json' : ''}">
+      <td>${i+1}${s._fromJSON ? '<span class="origin-badge json">J</span>' : ''}</td>
       <td>${fmt(STATE.groundEL - s.depth + 1)}</td>
       <td><input type="number" value="${s.depth}" step="0.1" onchange="STATE.sptData[${i}].depth=parseFloat(this.value)||0; recalculate()"></td>
       <td><input type="number" value="${s.N}" onchange="STATE.sptData[${i}].N=parseInt(this.value)||0; recalculate()"></td>
@@ -2571,7 +2604,8 @@ function renderLayerSection() {
       const remainThickness = isPartiallyCut ? (layerBot - cutD_ui) : l.thickness;
       const rowStyle = isFullyCut ? 'background:#fee2e2;opacity:0.5;text-decoration:line-through' : (isPartiallyCut ? 'background:#fef3c7' : '');
       const cutNote = isFullyCut ? '<div style="font-size:9px;color:#dc2626;font-weight:600">절토 삭제</div>' : (isPartiallyCut ? '<div style="font-size:9px;color:#1e40af;font-weight:600">절토: ' + fmt(cutThickness) + 'm 삭제 → 잔여 ' + fmt(remainThickness) + 'm</div>' : '');
-      return `<tr style="${rowStyle}">
+      const _jc = l._fromJSON ? ' from-json' : '';
+      return `<tr class="${_jc}" style="${rowStyle}">
       <td><select onchange="STATE.layers[${i}].soilType=this.value; STATE.layers[${i}].unitWeight=UW_DEF[this.value]||18; recalculate()">${soilOptions(l.soilType)}</select>${cutNote}</td>
       <td style="font-size:10.5px;color:var(--text-secondary);white-space:nowrap">${depthRange}</td>
       <td><input type="number" value="${l.thickness}" step="0.1" onchange="STATE.layers[${i}].thickness=parseFloat(this.value)||0; recalculate()"></td>
@@ -2615,6 +2649,14 @@ function handlePhcGradeChange(v) {
   // PHC 등급별 허용압축응력 (KS F 4306)
   const PHC_SIGMA = { A: 20000, B: 40000, C: 50000 };
   STATE.sigmaMax = PHC_SIGMA[v] || 20000;
+  recalculate();
+}
+
+function handleBearingMethodChange(newMethod) {
+  const guideKey = newMethod === 'rock' ? 'bearingMethod_rock' : 'bearingMethod_meyerhof';
+  showGuide(guideKey);
+  STATE.bearingMethod = newMethod;
+  autoDetectBearingLayer(true);
   recalculate();
 }
 
@@ -2674,7 +2716,7 @@ function autoDetectBearingLayer(silent) {
   // 유효성 검증: tipEL이 pileTopEL보다 낮아야 말뚝 길이가 양수
   const tipEL = candidateEL - (STATE.embedDepth || 1);
   if (tipEL >= STATE.pileTopEL) {
-    if (!silent) showToast('지지층 EL(' + fmt(candidateEL) + ')이 말뚝두부 EL(' + fmt(STATE.pileTopEL) + ')보다 높아 적용 불가 (지반고가 높은 시추공)', 'warning');
+    if (!silent) showToast('지지층 EL(' + fmt(candidateEL) + ')이 말뚝 상단 EL(' + fmt(STATE.pileTopEL) + ')보다 높아 적용 불가 (지반고가 높은 시추공)', 'warning');
     return false;
   }
   STATE.bearingEL = candidateEL;
@@ -2908,6 +2950,9 @@ function renderVerticalTab() {
   <div style="font-size:14px;font-weight:800;color:var(--primary-navy)">$$Q_{a,적용} = \\min(Q_p,\\; Q_a) = \\min(${fmt(r.Qp_material)},\\; ${fmt(r.Qa_ground)}) = ${fmt(r.Qa_applied)} \\text{ kN}$$</div>
   <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${r.Qa_applied === r.Qp_material ? '→ 재료 허용지지력이 지배 (Qp < Qa)' : '→ 지반 허용지지력이 지배 (Qa < Qp)'}</div>
   </div></div>`;
+
+  // ── 누적 지지력 분포 차트 ──
+  html += renderCumulativeCapacityChart();
 
   el.innerHTML = html;
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
@@ -3161,6 +3206,112 @@ function renderSettlementTab() {
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(function(e){});
 }
 
+// ===== CUMULATIVE CAPACITY CHART =====
+function renderCumulativeCapacityChart() {
+  const r = STATE.result;
+  if (!r || !r.processedLayers || r.processedLayers.length === 0) return '';
+  const W = 520, H = 400, margin = { top: 50, right: 30, bottom: 50, left: 60 };
+  const plotW = W - margin.left - margin.right;
+  const plotH = H - margin.top - margin.bottom;
+
+  // Build cumulative data points
+  let cumCap = 0;
+  const points = [{ depth: 0, cap: 0, soilType: '' }];
+  r.processedLayers.forEach(function(l) {
+    const skinF = (l.skinFriction_sand || 0) + (l.skinFriction_clay || 0);
+    cumCap += skinF;
+    points.push({ depth: l.depthTo, cap: cumCap, soilType: l.soilType });
+  });
+  const totalSkin = cumCap;
+  const Qu = r.Qu || 0;
+  const Qa = r.Qa_applied || 0;
+  const maxCap = Math.max(Qu, Qa, totalSkin, 1) * 1.15;
+  const maxDepth = Math.max(points[points.length - 1].depth + 1, r.pileLength || 10);
+
+  function sx(v) { return margin.left + (v / maxCap) * plotW; }
+  function sy(d) { return margin.top + (d / maxDepth) * plotH; }
+
+  var svg = '<div class="report-section"><div class="report-title">누적 지지력 분포도</div>';
+  svg += '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="font-family:\'Noto Sans KR\',sans-serif;background:#fff;border:1px solid #e2e8f0;border-radius:6px">';
+
+  // Grid lines
+  var capStep = Math.pow(10, Math.floor(Math.log10(maxCap / 4)));
+  if (maxCap / capStep > 8) capStep *= 2;
+  for (var c = 0; c <= maxCap; c += capStep) {
+    svg += '<line x1="' + sx(c) + '" y1="' + margin.top + '" x2="' + sx(c) + '" y2="' + (H - margin.bottom) + '" stroke="#f0f0f0" stroke-width="0.5"/>';
+    svg += '<text x="' + sx(c) + '" y="' + (H - margin.bottom + 14) + '" font-size="8" text-anchor="middle" fill="#888">' + Math.round(c) + '</text>';
+  }
+  var depthStep = maxDepth > 30 ? 5 : maxDepth > 15 ? 2 : 1;
+  for (var d = 0; d <= maxDepth; d += depthStep) {
+    svg += '<line x1="' + margin.left + '" y1="' + sy(d) + '" x2="' + (W - margin.right) + '" y2="' + sy(d) + '" stroke="#f0f0f0" stroke-width="0.5"/>';
+    svg += '<text x="' + (margin.left - 5) + '" y="' + (sy(d) + 3) + '" font-size="8" text-anchor="end" fill="#888">GL-' + d + '</text>';
+  }
+
+  // Axes
+  svg += '<line x1="' + margin.left + '" y1="' + margin.top + '" x2="' + margin.left + '" y2="' + (H - margin.bottom) + '" stroke="#333" stroke-width="1"/>';
+  svg += '<line x1="' + margin.left + '" y1="' + (H - margin.bottom) + '" x2="' + (W - margin.right) + '" y2="' + (H - margin.bottom) + '" stroke="#333" stroke-width="1"/>';
+  svg += '<text x="' + (margin.left + plotW / 2) + '" y="' + (H - 5) + '" font-size="10" text-anchor="middle" fill="#333" font-weight="600">지지력 (kN)</text>';
+  svg += '<text x="15" y="' + (margin.top + plotH / 2) + '" font-size="10" text-anchor="middle" fill="#333" font-weight="600" transform="rotate(-90,15,' + (margin.top + plotH / 2) + ')">깊이 (GL-m)</text>';
+
+  // Layer boundaries (dashed lines + labels)
+  var cumD2 = 0;
+  STATE.layers.forEach(function(l) {
+    cumD2 += l.thickness;
+    if (cumD2 < maxDepth) {
+      svg += '<line x1="' + margin.left + '" y1="' + sy(cumD2) + '" x2="' + (W - margin.right) + '" y2="' + sy(cumD2) + '" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3,3"/>';
+      svg += '<text x="' + (W - margin.right - 2) + '" y="' + (sy(cumD2) - 3) + '" font-size="7" text-anchor="end" fill="#999">' + l.soilType + '</text>';
+    }
+  });
+
+  // Blue solid line: cumulative skin friction
+  var pts = points.map(function(p) { return sx(p.cap) + ',' + sy(p.depth); }).join(' ');
+  svg += '<polyline points="' + pts + '" fill="none" stroke="#2563eb" stroke-width="2.5"/>';
+  points.forEach(function(p) {
+    if (p.cap > 0) svg += '<circle cx="' + sx(p.cap) + '" cy="' + sy(p.depth) + '" r="3" fill="#2563eb"/>';
+  });
+
+  // Red dashed line: Qu (skin + tip) at bearing depth
+  var bearingD = r.bearingDepthFromGL || points[points.length - 1].depth;
+  svg += '<line x1="' + sx(totalSkin) + '" y1="' + sy(bearingD) + '" x2="' + sx(Qu) + '" y2="' + sy(bearingD) + '" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3"/>';
+  svg += '<circle cx="' + sx(Qu) + '" cy="' + sy(bearingD) + '" r="4" fill="#dc2626"/>';
+  svg += '<text x="' + (sx(Qu) + 5) + '" y="' + (sy(bearingD) - 5) + '" font-size="8" fill="#dc2626" font-weight="700">Qu=' + Math.round(Qu) + '</text>';
+
+  // Green dashed line: Qa reference
+  if (Qa > 0 && Qa < maxCap) {
+    svg += '<line x1="' + sx(Qa) + '" y1="' + margin.top + '" x2="' + sx(Qa) + '" y2="' + (H - margin.bottom) + '" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4,4"/>';
+    svg += '<text x="' + (sx(Qa) + 3) + '" y="' + (margin.top + 12) + '" font-size="8" fill="#16a34a" font-weight="700">Qa=' + Math.round(Qa) + '</text>';
+  }
+
+  // Legend
+  var ly = margin.top - 30;
+  svg += '<line x1="' + margin.left + '" y1="' + ly + '" x2="' + (margin.left + 20) + '" y2="' + ly + '" stroke="#2563eb" stroke-width="2.5"/>';
+  svg += '<text x="' + (margin.left + 24) + '" y="' + (ly + 3) + '" font-size="8" fill="#333">누적 주면마찰력</text>';
+  svg += '<line x1="' + (margin.left + 110) + '" y1="' + ly + '" x2="' + (margin.left + 130) + '" y2="' + ly + '" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3"/>';
+  svg += '<text x="' + (margin.left + 134) + '" y="' + (ly + 3) + '" font-size="8" fill="#333">선단지지력 (Qu)</text>';
+  svg += '<line x1="' + (margin.left + 230) + '" y1="' + ly + '" x2="' + (margin.left + 250) + '" y2="' + ly + '" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4,4"/>';
+  svg += '<text x="' + (margin.left + 254) + '" y="' + (ly + 3) + '" font-size="8" fill="#333">허용지지력 (Qa)</text>';
+
+  svg += '</svg></div>';
+  return svg;
+}
+
+function showCumulativeChartPopup() {
+  var chartHtml = renderCumulativeCapacityChart();
+  if (!chartHtml) { alert('계산 결과가 없습니다.'); return; }
+  showGuideModal('누적 지지력 분포도', chartHtml);
+}
+
+function showGuideModal(title, bodyHtml) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center';
+  overlay.onclick = function(e) { if (e.target === overlay) document.body.removeChild(overlay); };
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:600px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+  modal.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:15px">' + title + '</h3><button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888">&times;</button></div>' + bodyHtml;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
 // ===== SUMMARY TAB =====
 function renderSummaryTab() {
   const r = STATE.result;
@@ -3197,6 +3348,7 @@ function renderSummaryTab() {
     <button class="ai-btn" onclick="runAIReview()" style="padding:8px 18px;font-size:11px">&#9889; AI 설계 검토</button>
     <button class="ai-btn" onclick="generateAIReport()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#059669,#10b981)">&#128203; AI 보고서 생성</button>
     <button class="ai-btn" onclick="openChatPanel()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+    <button class="ai-btn" onclick="showCumulativeChartPopup()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#1e40af,#3b82f6)">&#128200; 누적 지지력 그래프</button>
   </div>`;
   document.getElementById('tab-summary').innerHTML = html;
   drawSVGDesign();
@@ -4009,7 +4161,7 @@ async function exportExcel() {
     xlTitle(ws,'말뚝 기초 설계 종합 보고서',2);
     const rows=[['작성일',new Date().toISOString().slice(0,10)],[],
       ['말뚝 종류',pileDesc],['지지방법',STATE.bearingMethod==='rock'?'암반근입':'토사층'],
-      ['말뚝두부 EL (m)',STATE.pileTopEL],['근입 깊이 (m)',STATE.embedDepth],
+      ['말뚝 상단 EL (m)',STATE.pileTopEL],['근입 깊이 (m)',STATE.embedDepth],
       ['Alpha (Kh)',STATE.alpha_kh],['허용변위 (cm)',STATE.delta_cm],
       [isPHC?'허용압축응력 (kN/m²)':'항복응력 (kN/m²)',STATE.sigmaMax],
       ['이음 방법',STATE.jointType+' × '+STATE.jointCount+'개소'],
@@ -4672,7 +4824,7 @@ function renderReportTab() {
   <tr><td class="left">말뚝 종류</td><td>${isPHC?'PHC '+STATE.phcGrade+'종':'강관말뚝'}</td><td class="left">직경 (D)</td><td>${STATE.diameter_mm} mm = ${fmt(r.D,4)} m</td></tr>
   <tr><td class="left">두께 (t)</td><td>${STATE.thickness_mm} mm = ${fmt(r.t,4)} m</td><td class="left">말뚝 길이 (L)</td><td>${fmt(r.pileLength)} m</td></tr>
   <tr><td class="left">지반고 (GL)</td><td>EL.${fmt(STATE.groundEL,2)} m</td><td class="left">지하수위 (GWL)</td><td>GL-${fmt(STATE.gwlDepth,2)} m (EL.${fmt(r.gwlEL,2)} m)</td></tr>
-  <tr><td class="left">말뚝두부 EL</td><td>EL.${fmt(STATE.pileTopEL,2)} m</td><td class="left">지지층 EL (상단)</td><td>EL.${fmt(STATE.bearingEL,2)} m</td></tr>
+  <tr><td class="left">말뚝 상단 EL</td><td>EL.${fmt(STATE.pileTopEL,2)} m</td><td class="left">지지층 EL (상단)</td><td>EL.${fmt(STATE.bearingEL,2)} m</td></tr>
   <tr><td class="left">근입 깊이</td><td>${fmt(r.embedDepth)} m</td><td class="left">선단 지지층 EL</td><td>EL.${fmt(r.tipEL,2)} m</td></tr>
   <tr><td class="left">절성토</td><td>${r.cutFillDepth > 0 ? '성토 '+fmt(r.fillHeight)+'m' : r.cutFillDepth < 0 ? '<span style="color:#1e40af;font-weight:600">절토 '+fmt(r.cutDepth)+'m</span>' : '없음'} (${fmt(r.cutFillDepth)} m)</td><td class="left">둘레 (U)</td><td>$\\pi D = \\pi \\times ${fmt(r.D,4)} = ${fmt(r.U,4)}$ m</td></tr>
   <tr><td class="left">탄성계수 (E)</td><td>${(r.E/1e6).toFixed(1)} GPa = ${(r.E/1e3).toFixed(0)} kN/m²</td><td class="left">단면2차모멘트 (I)</td><td>${fmtE(r.I)} m⁴</td></tr>
@@ -5018,6 +5170,33 @@ document.addEventListener('mouseenter', function(e) {
 
 // ===== LOCAL STORAGE =====
 const LS_KEY = 'pileCalc_state_v2';
+const LS_DEFAULTS_KEY = 'pileCalc_userDefaults';
+function getUserDefaults() {
+  try { const raw = localStorage.getItem(LS_DEFAULTS_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
+  return { coeff_tip: 250, coeff_sand: 2, coeff_clay: 6.25 };
+}
+function saveUserDefaults() {
+  const defaults = { coeff_tip: STATE.coeff_tip, coeff_sand: STATE.coeff_sand, coeff_clay: STATE.coeff_clay };
+  localStorage.setItem(LS_DEFAULTS_KEY, JSON.stringify(defaults));
+  showToast('현재 계수가 사용자 기준값으로 저장되었습니다', 'success');
+  recalculate();
+}
+function restoreUserDefaults() {
+  const raw = localStorage.getItem(LS_DEFAULTS_KEY);
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      if (d.coeff_tip != null) STATE.coeff_tip = d.coeff_tip;
+      if (d.coeff_sand != null) STATE.coeff_sand = d.coeff_sand;
+      if (d.coeff_clay != null) STATE.coeff_clay = d.coeff_clay;
+      showToast('사용자 기준값이 복원되었습니다', 'success');
+    } catch(e) { showToast('기준값 복원 오류', 'error'); }
+  } else {
+    STATE.coeff_tip = 250; STATE.coeff_sand = 2; STATE.coeff_clay = 6.25;
+    showToast('KDS 기본값이 복원되었습니다 (저장된 사용자 기준값 없음)', 'info');
+  }
+  recalculate();
+}
 let _saveTimer = null;
 function saveStateToLS() {
   clearTimeout(_saveTimer);
