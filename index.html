@@ -608,6 +608,10 @@ function getSoilColor(name) {
   return '#E0E0E0';
 }
 
+function isRockMethod(m) { return m === 'rock_wr' || m === 'rock_sr'; }
+function bearingMethodLabel(m) { return m === 'rock_wr' ? '풍화암 근입' : m === 'rock_sr' ? '연암 근입' : '토사층'; }
+function getRockDefaults(m) { return m === 'rock_wr' ? { qu_kPa: 5000, rockPhi: 30 } : m === 'rock_sr' ? { qu_kPa: 30000, rockPhi: 35 } : {}; }
+
 function calcPile(p) {
   const isPHC = p.pileType === "PHC";
   const D = p.diameter_mm / 1000, t = p.thickness_mm / 1000;
@@ -706,8 +710,8 @@ function calcPile(p) {
   const tipSPT = p.sptData && p.sptData.length > 0 ? p.sptData[p.sptData.length - 1] : { N: 50 };
   const N_tip = Math.min(tipSPT.N, 50);
   let Pu_tip, Pu_goodman = null, Pu_canadian = null, Pu_selected, rockCalcDetails = null;
-  const method = p.bearingMethod || (isPHC ? "meyerhof" : "rock");
-  if (!isPHC && method === "rock") {
+  const method = p.bearingMethod || (isPHC ? "meyerhof" : "rock_wr");
+  if (!isPHC && isRockMethod(method)) {
     const qu_eff = Math.min(p.qu_kPa || 10000, 10000);
     const qu_lab = p.qu_kPa || 32460;
     Pu_tip = 443 * Math.pow(qu_eff, 0.5) * Math.pow(At_steel, 2 / 5) * Math.pow(Ai_steel, 1 / 3);
@@ -918,7 +922,7 @@ const VERIFY_DATA = {
   steel: {
     label: "Steel D609.6x12t (NBH-09)", pileType: "강관", diameter_mm: 609.6, thickness_mm: 12,
     boreholeNo: "NBH-09", groundEL: 125.19, bearingEL: 112.19, pileTopEL: 130, gwlDepth: 1.7,
-    bearingMethod: "rock", sigmaMax: 235000, corrosionThk: 2, qu_kPa: 32460, Sd_m: 0.15, td_m: 0.002, rockPhi: 35,
+    bearingMethod: "rock_wr", sigmaMax: 235000, corrosionThk: 2, qu_kPa: 32460, Sd_m: 0.15, td_m: 0.002, rockPhi: 35,
     alpha_kh: 1, delta_cm: 1.5, jointCount: 1, jointType: "welding", embedDepth: 1,
     sptData: [{depth:1,N:10,remark:"성토층"},{depth:2,N:10,remark:"성토층"},{depth:3,N:10,remark:"성토층"},{depth:4,N:10,remark:"성토층"},{depth:5,N:6,remark:"퇴적층(SM)"},{depth:6,N:9,remark:"퇴적층(SM)"},{depth:7,N:22,remark:"퇴적층(SM)"},{depth:8,N:28,remark:"퇴적층(SM)"},{depth:9,N:50,remark:"풍화토(SM)"},{depth:10,N:50,remark:"풍화토(SM)"},{depth:11,N:50,remark:"풍화토(SM)"},{depth:12,N:50,remark:"풍화토(SM)"},{depth:13,N:50,remark:"풍화토(SM)"},{depth:14,N:50,remark:"풍화암(WR)"},{depth:15,N:50,remark:"풍화암(WR)"},{depth:16,N:50,remark:"연암(SR)"}],
     layers: [{soilType:"성토층",thickness:4.81,avgN:10,unitWeight:18},{soilType:"전답토(CL)",thickness:0.6,avgN:6,unitWeight:16},{soilType:"퇴적층(SM)",thickness:1.9,avgN:7.5,unitWeight:18},{soilType:"퇴적층(SP)",thickness:2,avgN:25,unitWeight:18},{soilType:"풍화토(SM)",thickness:5.5,avgN:50,unitWeight:19},{soilType:"풍화암(WR)",thickness:2,avgN:50,unitWeight:20},{soilType:"연암(SR)",thickness:1,avgN:50,unitWeight:23}],
@@ -1193,10 +1197,15 @@ const GUIDE_DATA = {
     def: '성토(Fill) 구간에 적용할 표준관입시험(SPT) N값입니다. 성토 다짐 상태와 재료 품질에 따라 결정합니다.',
     range: '느슨한 성토: 3 ~ 5\n보통 다짐 성토: 5 ~ 10\n양호한 다짐 성토: 10 ~ 15',
     sig: '성토 구간의 주면마찰력 산정에 직접 사용: fs = 2 x N x As (사질토 기준).', refs: ['도로설계편람 (2012)', 'KDS 11 50 40', '지반공학회 (1996)'] },
-  bearingMethod_rock: { title: '암반근입 지지 (Rock Socketed)',
-    def: '말뚝 선단을 암반(풍화암/연암)에 근입하여 지지력을 확보하는 방법입니다.\n\n■ 근입 대상 암반 구분:\n• 풍화암(WR): 일축압축강도 qu ≈ 1,000~10,000 kPa\n• 연암(SR): 일축압축강도 qu ≈ 10,000~50,000 kPa\n\n※ 시추주상도에서 풍화암(WR)이 확인되면 풍화암에 근입합니다.\n※ 풍화암이 없고 연암(SR)만 있는 경우, 연암에 근입합니다.\n\n선단지지력은 3가지 공식(구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값을 적용합니다.',
-    range: '강관말뚝: 기본 적용\nPHC말뚝: 암반 상태 양호 시 적용 가능',
-    sig: 'qu(일축압축강도), Sd(불연속면간격), td(불연속면두께), rockPhi(내부마찰각) 입력이 필요합니다.\n하단 rock-params 입력란이 자동으로 표시됩니다.',
+  bearingMethod_rock_wr: { title: '풍화암 근입 지지 (Weathered Rock)',
+    def: '말뚝 선단을 풍화암(WR)에 근입하여 지지력을 확보하는 방법입니다.\n\n■ 풍화암(WR) 특성:\n• 일축압축강도 qu ≈ 1,000~10,000 kPa\n• 내부마찰각 φ = 25~35°\n• 풍화 진행으로 강도 변동이 클 수 있음\n• 기본값: qu = 5,000 kPa, φ = 30°\n\n■ 자동 탐지:\n시추주상도에서 풍화암(WR) 지층을 자동 탐지합니다.\n\n선단지지력은 3가지 공식(구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값을 적용합니다.',
+    range: '강관말뚝: 기본 적용\nPHC말뚝: 풍화암 상태 양호 시 적용 가능',
+    sig: 'qu(일축압축강도), Sd(불연속면간격), td(불연속면두께), rockPhi(내부마찰각) 입력이 필요합니다.\n선택 시 풍화암 기본값(qu=5,000, φ=30°)이 자동 설정됩니다.',
+    refs: ['KDS 11 50 40 (2018)', '도로교설계기준 (2008)', 'Goodman (1989)'] },
+  bearingMethod_rock_sr: { title: '연암 근입 지지 (Soft Rock)',
+    def: '말뚝 선단을 연암(SR) 또는 경암(HR)에 근입하여 지지력을 확보하는 방법입니다.\n\n■ 연암(SR) 특성:\n• 일축압축강도 qu ≈ 10,000~50,000 kPa\n• 내부마찰각 φ = 30~40°\n• 풍화암보다 안정적인 지지력 확보 가능\n• 기본값: qu = 30,000 kPa, φ = 35°\n\n■ 자동 탐지:\n시추주상도에서 연암(SR) 또는 경암(HR) 지층을 자동 탐지합니다.\n\n선단지지력은 3가지 공식(구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값을 적용합니다.',
+    range: '강관말뚝: 기본 적용\nPHC말뚝: 연암/경암 상태 양호 시 적용 가능',
+    sig: 'qu(일축압축강도), Sd(불연속면간격), td(불연속면두께), rockPhi(내부마찰각) 입력이 필요합니다.\n선택 시 연암 기본값(qu=30,000, φ=35°)이 자동 설정됩니다.',
     refs: ['KDS 11 50 40 (2018)', '도로교설계기준 (2008)', 'Goodman (1989)'] },
   bearingMethod_meyerhof: { title: '토사층 지지 (Meyerhof 공식)',
     def: '말뚝 선단을 단단한 토사층(N≥50 연속 구간)에 지지하는 방법입니다.\n\n■ Meyerhof 공식:\n  Qu = α·N_tip·Ap + Σ(β·Ns·As) + Σ(γ·Nc·Ac)\n\n■ 지지층 판정 기준:\nSPT N값이 50 이상인 구간이 연속 2개 이상 확인될 때 지지층으로 판정합니다.\n\n■ 토사 지지 적용 시:\n사질토 기준: β=2 (KDS 11 50 40)\n점성토 기준: γ=6.25 (KDS 11 50 40)\n선단 계수: α=250\n\n지지력 계수(α, β, γ)는 하단 입력란에서 조정 가능합니다.',
@@ -1356,7 +1365,7 @@ function prepareReviewData() {
       말뚝종류: isPHC ? `PHC ${STATE.phcGrade}종` : '강관',
       직경_mm: STATE.diameter_mm, 두께_mm: STATE.thickness_mm,
       말뚝길이_m: +r.pileLength.toFixed(2),
-      지지방법: STATE.bearingMethod === 'rock' ? '암반지지' : '토사층 지지',
+      지지방법: bearingMethodLabel(STATE.bearingMethod),
       시추공: STATE.boreholeNo,
       지반고_EL: STATE.groundEL, 지지층_EL: STATE.bearingEL,
       선단_EL: +r.tipEL.toFixed(2), 근입깊이_m: STATE.embedDepth,
@@ -1475,7 +1484,7 @@ async function parseNLInput() {
 
 현재 설계 상태:
 - 말뚝: ${STATE.pileType} ${STATE.diameter_mm}mm ${STATE.pileType==='PHC'?STATE.phcGrade+'종':'t'+STATE.thickness_mm}
-- 지지방법: ${STATE.bearingMethod==='rock'?'암반근입':'토사층'}
+- 지지방법: ${bearingMethodLabel(STATE.bearingMethod)}
 - 말뚝 상단 EL: ${STATE.pileTopEL} m
 - 지반고 EL: ${STATE.groundEL} m
 - 지지층 EL: ${STATE.bearingEL} m
@@ -1489,7 +1498,7 @@ async function parseNLInput() {
   "diameter_mm": 숫자,
   "thickness_mm": 숫자,
   "phcGrade": "A"/"B"/"C" (PHC인 경우만),
-  "bearingMethod": "meyerhof" 또는 "rock",
+  "bearingMethod": "meyerhof" 또는 "rock_wr"(풍화암) 또는 "rock_sr"(연암),
   "pileTopEL": 숫자,
   "groundEL": 숫자,
   "bearingEL": 숫자,
@@ -1506,7 +1515,7 @@ async function parseNLInput() {
 - 상대적 표현은 현재 상태 기반으로 계산하세요 (예: "지반고보다 5m 높게" → plannedEL = 현재 groundEL + 5)
 - PHC 가용 직경: 350, 400, 450, 500, 600 mm (두께는 직경별 규격 참조)
 - 강관 가용 직경: 406.4, 508.0, 609.6 mm
-- "토사" = bearingMethod: "meyerhof", "암반/암지지" = bearingMethod: "rock"
+- "토사" = bearingMethod: "meyerhof", "풍화암/풍화암지지" = bearingMethod: "rock_wr", "연암/연암지지/경암" = bearingMethod: "rock_sr", "암반/암지지" = bearingMethod: "rock_wr"
 - "계획고" 언급 = useFill: true + plannedEL 값
 - "A종/B종/C종" → phcGrade에 반영
 - "지지층 자동", "지지층 EL 자동", "자동 탐지", "자동 적용" → actions에 "autoDetectBearing" 추가
@@ -1617,7 +1626,7 @@ function autoDetectBearingAllBoreholes() {
     autoDetectBearingLayer();
     return;
   }
-  const globalMethod = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
+  const globalMethod = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock_wr');
   let applied = 0, failed = 0;
   const failedNames = [];
   const origIdx = STATE.currentBhIdx;
@@ -1632,7 +1641,9 @@ function autoDetectBearingAllBoreholes() {
     let detected = false;
     let bearingEL = null;
 
-    if (method === 'rock') {
+    if (isRockMethod(method)) {
+      const isWR = method === 'rock_wr';
+      function _batchRockMatch(s) { return isWR ? (s.includes('풍화암') || s.includes('WR')) : (s.includes('연암') || s.includes('경암') || s.includes('SR') || s.includes('HR')); }
       // SPT remark에서 암반 탐색
       for (let i = 0; i < sptData.length; i++) {
         let remark = sptData[i].remark || '';
@@ -1646,7 +1657,7 @@ function autoDetectBearingAllBoreholes() {
           });
           if (layer) remark = layer.soilType || '';
         }
-        if (remark.includes('\uD48D\uD654\uC554') || remark.includes('\uC5F0\uC554') || remark.includes('\uACBD\uC554') || remark.includes('WR') || remark.includes('SR') || remark.includes('HR')) {
+        if (_batchRockMatch(remark)) {
           bearingEL = parseFloat((groundEL - sptData[i].depth + 1).toFixed(2));
           detected = true; break;
         }
@@ -1658,7 +1669,7 @@ function autoDetectBearingAllBoreholes() {
           const lt = layers[i].soilType || '';
           const dFrom = layers[i].depthFrom != null ? layers[i].depthFrom : cumDepth;
           cumDepth = dFrom + layers[i].thickness;
-          if (lt.includes('\uD48D\uD654\uC554') || lt.includes('\uC5F0\uC554') || lt.includes('\uACBD\uC554') || lt.includes('WR') || lt.includes('SR') || lt.includes('HR')) {
+          if (_batchRockMatch(lt)) {
             bearingEL = parseFloat((groundEL - dFrom).toFixed(2));
             detected = true; break;
           }
@@ -1771,7 +1782,7 @@ async function runBoreholeAnalysis(forceRefresh) {
 
 ${JSON.stringify(data, null, 2)}
 
-현재 설계 조건: ${STATE.pileType} ${STATE.diameter_mm}mm, ${STATE.bearingMethod === 'rock' ? '암반지지' : '토사지지'}
+현재 설계 조건: ${STATE.pileType} ${STATE.diameter_mm}mm, ${bearingMethodLabel(STATE.bearingMethod)}
 
 다음 항목을 분석해주세요:
 ### 1. SPT N값 경향 분석
@@ -1975,7 +1986,7 @@ function prepareChatContext() {
   ctx += '## 설계 조건\\n';
   ctx += '말뚝종류: ' + (STATE.pileType === 'PHC' ? 'PHC ' + STATE.phcGrade + '종' : '강관') + '\\n';
   ctx += '직경: ' + STATE.diameter_mm + 'mm, 두께: ' + STATE.thickness_mm + 'mm\\n';
-  ctx += '지지방법: ' + (STATE.bearingMethod === 'rock' ? '암반지지' : '토사층 지지') + '\\n';
+  ctx += '지지방법: ' + (bearingMethodLabel(STATE.bearingMethod)) + '\\n';
   ctx += '근입깊이: ' + STATE.embedDepth + 'm\\n';
   if (STATE.useFill && STATE.plannedEL) {
     const diff = STATE.plannedEL - STATE.groundEL;
@@ -2019,7 +2030,7 @@ function prepareChatContext() {
       const r = STATE.result;
       ctx += '\\n## 계산 결과\\n';
       ctx += '### 적용 공식\\n';
-      ctx += '선단지지력: ' + (STATE.bearingMethod === 'rock' && STATE.pileType !== 'PHC' ? '암반 3공식 (구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값' : '토사 공식 (' + STATE.coeff_tip + '·N·Ap)') + '\\n';
+      ctx += '선단지지력: ' + (isRockMethod(STATE.bearingMethod) && STATE.pileType !== 'PHC' ? '암반 3공식 (구조물기초설계기준, Goodman, Canadian FEM) 중 최솟값' : '토사 공식 (' + STATE.coeff_tip + '·N·Ap)') + '\\n';
       ctx += '주면마찰력: 사질토 ' + STATE.coeff_sand + '·Ns·As, 점성토 ' + STATE.coeff_clay + '·Nc·Ac (KDS 11 50 40)\\n';
       ctx += '안전율 FS: ' + r.FS + ', Qa = min(Qu/FS, 재료지지력)\\n';
       ctx += '\\n### 산출값\\n';
@@ -2401,16 +2412,16 @@ function renderInputTab() {
   </div>`;
 
   if (isPHC) {
-    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
+    html += `<div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>PHC 등급</label><select onchange="handlePhcGradeChange(this.value)"><option value="A" ${STATE.phcGrade==='A'?'selected':''}>A종</option><option value="B" ${STATE.phcGrade==='B'?'selected':''}>B종</option><option value="C" ${STATE.phcGrade==='C'?'selected':''}>C종</option></select></div><div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option><option value="rock_wr" ${STATE.bearingMethod==='rock_wr'?'selected':''}>풍화암 근입</option><option value="rock_sr" ${STATE.bearingMethod==='rock_sr'?'selected':''}>연암 근입</option></select></div><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
   } else {
     html += `<div class="form-grid cols-4" style="margin-top:8px">
       <div class="field"><label>부식두께 (mm) <button class="info-btn" onclick="event.stopPropagation();showGuide('corrosion')">?</button></label><input type="number" value="${STATE.corrosionThk}" onchange="STATE.corrosionThk=parseFloat(this.value)||2; recalculate()"></div>
       <div class="field"><label>이음부 수</label><input type="number" value="${STATE.jointCount}" onchange="STATE.jointCount=parseInt(this.value)||0; recalculate()"></div>
       <div class="field"><label>이음 방법</label><select onchange="STATE.jointType=this.value; recalculate()"><option value="welding" ${STATE.jointType==='welding'?'selected':''}>용접</option><option value="bolt" ${STATE.jointType==='bolt'?'selected':''}>볼트</option><option value="fill" ${STATE.jointType==='fill'?'selected':''}>충전</option></select></div>
-      <div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="rock" ${STATE.bearingMethod==='rock'?'selected':''}>암반근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
+      <div class="field"><label>지지방법</label><select onchange="handleBearingMethodChange(this.value)"><option value="rock_wr" ${STATE.bearingMethod==='rock_wr'?'selected':''}>풍화암 근입</option><option value="rock_sr" ${STATE.bearingMethod==='rock_sr'?'selected':''}>연암 근입</option><option value="meyerhof" ${STATE.bearingMethod==='meyerhof'?'selected':''}>토사층</option></select></div>
     </div>
     <div class="form-grid cols-4" style="margin-top:8px"><div class="field"><label>근입 깊이 (m)</label><input type="number" value="${STATE.embedDepth}" step="0.5" min="0" onchange="STATE.embedDepth=parseFloat(this.value)||0; recalculate()"></div></div>`;
-    if (STATE.bearingMethod === "rock") {
+    if (isRockMethod(STATE.bearingMethod)) {
       html += `<div class="rock-params"><div class="form-grid cols-4">
         <div class="field"><label>qu (kPa) <button class="info-btn" onclick="event.stopPropagation();showGuide('qu_kPa')">?</button></label><input type="number" value="${STATE.qu_kPa}" onchange="STATE.qu_kPa=parseFloat(this.value)||10000; recalculate()"></div>
         <div class="field"><label>Sd (m) <button class="info-btn" onclick="event.stopPropagation();showGuide('Sd_m')">?</button></label><input type="number" value="${STATE.Sd_m}" step="0.01" onchange="STATE.Sd_m=parseFloat(this.value)||0.15; recalculate()"></div>
@@ -2632,7 +2643,7 @@ function addLayer() {
 function handlePileTypeChange(v) {
   STATE.pileType = v;
   if (v === "PHC") { STATE.diameter_mm = 500; STATE.thickness_mm = 80; STATE.bearingMethod = "meyerhof"; STATE.sigmaMax = 20000; }
-  else { STATE.diameter_mm = 609.6; STATE.thickness_mm = 12; STATE.bearingMethod = "rock"; STATE.sigmaMax = 235000; }
+  else { STATE.diameter_mm = 609.6; STATE.thickness_mm = 12; STATE.bearingMethod = "rock_wr"; STATE.sigmaMax = 235000; }
   autoDetectBearingLayer(true);
   recalculate();
 }
@@ -2653,9 +2664,14 @@ function handlePhcGradeChange(v) {
 }
 
 function handleBearingMethodChange(newMethod) {
-  const guideKey = newMethod === 'rock' ? 'bearingMethod_rock' : 'bearingMethod_meyerhof';
+  const guideKey = newMethod === 'rock_wr' ? 'bearingMethod_rock_wr' : newMethod === 'rock_sr' ? 'bearingMethod_rock_sr' : 'bearingMethod_meyerhof';
   showGuide(guideKey);
   STATE.bearingMethod = newMethod;
+  if (isRockMethod(newMethod)) {
+    const defaults = getRockDefaults(newMethod);
+    STATE.qu_kPa = defaults.qu_kPa;
+    STATE.rockPhi = defaults.rockPhi;
+  }
   autoDetectBearingLayer(true);
   recalculate();
 }
@@ -2664,12 +2680,14 @@ function autoDetectBearingLayer(silent) {
   if ((!STATE.sptData || STATE.sptData.length === 0) && (!STATE.layers || STATE.layers.length === 0)) {
     if (!silent) showToast('SPT 데이터 및 지층 정보가 없습니다', 'warning'); return false;
   }
-  const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock');
+  const method = STATE.bearingMethod || (STATE.pileType === 'PHC' ? 'meyerhof' : 'rock_wr');
   let candidateEL = null, detectLabel = '';
-  if (method === 'rock') {
+  if (isRockMethod(method)) {
+    const isWR = method === 'rock_wr';
+    function _rockMatch(s) { return isWR ? (s.includes('풍화암') || s.includes('WR')) : (s.includes('연암') || s.includes('경암') || s.includes('SR') || s.includes('HR')); }
     for (let i = 0; i < (STATE.sptData || []).length; i++) {
       const remark = STATE.sptData[i].remark || '';
-      if (remark.includes('풍화암') || remark.includes('연암') || remark.includes('경암') || remark.includes('WR') || remark.includes('SR') || remark.includes('HR')) {
+      if (_rockMatch(remark)) {
         const bd = STATE.sptData[i].depth;
         candidateEL = parseFloat((STATE.groundEL - bd + 1).toFixed(2));
         detectLabel = '(SPT): ' + remark + ' (GL-' + bd + 'm)';
@@ -2682,14 +2700,14 @@ function autoDetectBearingLayer(silent) {
         const lt = STATE.layers[i].soilType || '';
         const dFrom = STATE.layers[i].depthFrom != null ? STATE.layers[i].depthFrom : cumDepth;
         cumDepth = dFrom + STATE.layers[i].thickness;
-        if (lt.includes('풍화암') || lt.includes('연암') || lt.includes('경암') || lt.includes('WR') || lt.includes('SR') || lt.includes('HR')) {
+        if (_rockMatch(lt)) {
           candidateEL = parseFloat((STATE.groundEL - dFrom).toFixed(2));
           detectLabel = '(지층): ' + lt + ' (GL-' + fmt(dFrom) + 'm)';
           break;
         }
       }
     }
-    if (candidateEL == null) { if (!silent) showToast('암반층(풍화암/연암/경암)을 찾을 수 없습니다', 'warning'); return false; }
+    if (candidateEL == null) { if (!silent) showToast(isWR ? '풍화암(WR)을 찾을 수 없습니다' : '연암/경암(SR/HR)을 찾을 수 없습니다', 'warning'); return false; }
   } else {
     for (let i = 0; i < (STATE.sptData || []).length - 1; i++) {
       if (STATE.sptData[i].N >= 50 && STATE.sptData[i + 1].N >= 50) {
@@ -2900,7 +2918,7 @@ function renderVerticalTab() {
     </div>`;
   } else {
     html += `<div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px">
-    <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 선단지지력 (암반근입)</div>
+    <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:4px">▸ 선단지지력 (${bearingMethodLabel(STATE.bearingMethod)})</div>
     <div style="font-size:11px">위 Step 2에서 산정: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN</div>
     </div>`;
   }
@@ -4160,14 +4178,14 @@ async function exportExcel() {
     const ws=wb.addWorksheet('설계조건'); xlWidths(ws,[28,20]);
     xlTitle(ws,'말뚝 기초 설계 종합 보고서',2);
     const rows=[['작성일',new Date().toISOString().slice(0,10)],[],
-      ['말뚝 종류',pileDesc],['지지방법',STATE.bearingMethod==='rock'?'암반근입':'토사층'],
+      ['말뚝 종류',pileDesc],['지지방법',bearingMethodLabel(STATE.bearingMethod)],
       ['말뚝 상단 EL (m)',STATE.pileTopEL],['근입 깊이 (m)',STATE.embedDepth],
       ['Alpha (Kh)',STATE.alpha_kh],['허용변위 (cm)',STATE.delta_cm],
       [isPHC?'허용압축응력 (kN/m²)':'항복응력 (kN/m²)',STATE.sigmaMax],
       ['이음 방법',STATE.jointType+' × '+STATE.jointCount+'개소'],
       ['선단 계수 (α)',STATE.coeff_tip],['사질토 주면 계수 (β)',STATE.coeff_sand],['점성토 주면 계수 (γ)',STATE.coeff_clay]
     ];
-    if(!isPHC){rows.push(['부식두께 (mm)',STATE.corrosionThk]); if(STATE.bearingMethod==='rock'){rows.push(['qu (kPa)',STATE.qu_kPa],['Sd (m)',STATE.Sd_m],['td (m)',STATE.td_m],['Rock Phi (°)',STATE.rockPhi]);}}
+    if(!isPHC){rows.push(['부식두께 (mm)',STATE.corrosionThk]); if(isRockMethod(STATE.bearingMethod)){rows.push(['qu (kPa)',STATE.qu_kPa],['Sd (m)',STATE.Sd_m],['td (m)',STATE.td_m],['Rock Phi (°)',STATE.rockPhi]);}}
     if(STATE.useFill){const d=STATE.plannedEL-STATE.groundEL; if(d>0)rows.push([],['[성토 조건]',''],['계획고 EL (m)',STATE.plannedEL],['성토재 N값',STATE.fillN],['성토고 (m)',f2(d)]); else if(d<0)rows.push([],['[절토 조건]',''],['계획고 EL (m)',STATE.plannedEL],['절토 깊이 (m)',f2(Math.abs(d))]);}
     rows.forEach((r,i)=>{const row=ws.addRow(r); if(i===0)return; row.eachCell(c=>{c.border=XL.border; c.font=XL.dataFont; c.alignment={vertical:'middle'};}); if(r[0]&&r[0].startsWith&&r[0].startsWith('[')){row.getCell(1).font=XL.subFont; row.getCell(1).fill=XL.subFill; row.getCell(2).fill=XL.subFill;}});
     // Label column bold
@@ -4832,7 +4850,7 @@ function renderReportTab() {
   <tr><td class="left">단면계수 (Zp)</td><td>${fmtE(r.Zp)} m³</td><td class="left">휨강성 (EI)</td><td>${fmt(r.EI,1)} kN·m²</td></tr>
   <tr><td class="left">자중 (W)</td><td>${fmt(r.W_unit,2)} kN/m</td><td class="left">이음부</td><td>${STATE.jointType} × ${STATE.jointCount}개소</td></tr>
   ${!isPHC?`<tr><td class="left">부식두께</td><td>${STATE.corrosionThk} mm</td><td class="left">강관단면적 (At)</td><td>${fmt(r.At_steel,6)} m²</td></tr>
-  <tr><td class="left">내부면적 (Ai)</td><td>${fmt(r.Ai_steel,6)} m²</td><td class="left">지지방법</td><td>${STATE.bearingMethod==='rock'?'암반근입':'토사층'}</td></tr>`:''}
+  <tr><td class="left">내부면적 (Ai)</td><td>${fmt(r.Ai_steel,6)} m²</td><td class="left">지지방법</td><td>${bearingMethodLabel(STATE.bearingMethod)}</td></tr>`:''}
   </tbody></table>`;
 
   // SPT Data Table
@@ -4939,7 +4957,7 @@ function renderReportTab() {
     <div style="font-size:11px;font-weight:700">$P_u = ${STATE.coeff_tip} \\times ${tipN} \\times ${fmt(r.Ap_tip,4)} = ${fmt(r.Qu_tip)}$ kN</div>
     </div>`;
   } else {
-    html += `<div style="margin-top:6px;font-size:11px;font-weight:700">선단지지력: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN (암반근입, 위에서 산정)</div>`;
+    html += `<div style="margin-top:6px;font-size:11px;font-weight:700">선단지지력: $P_u = ${fmt(r.rockCalcDetails.Pu_selected)}$ kN (${bearingMethodLabel(STATE.bearingMethod)}, 위에서 산정)</div>`;
   }
 
   // Skin friction table
@@ -5218,6 +5236,11 @@ function restoreStateFromLS() {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return false;
     const snap = JSON.parse(raw);
+    // 하위호환: 이전 'rock' 값 마이그레이션
+    if (snap.bearingMethod === 'rock') snap.bearingMethod = 'rock_wr';
+    if (snap.uploadedData) snap.uploadedData.forEach(function(bh) {
+      if (bh.designParams && bh.designParams.bearingMethod === 'rock') bh.designParams.bearingMethod = 'rock_wr';
+    });
     Object.keys(snap).forEach(k => { STATE[k] = snap[k]; });
     return true;
   } catch(e) { return false; }
@@ -5293,6 +5316,11 @@ window.addEventListener('message', function(event) {
     if (event.data.type === 'RESTORE_APP_STATE') {
         var saved = event.data.state;
         if (!saved) return;
+        // 하위호환: 이전 'rock' 값 마이그레이션
+        if (saved.bearingMethod === 'rock') saved.bearingMethod = 'rock_wr';
+        if (saved.uploadedData) saved.uploadedData.forEach(function(bh) {
+          if (bh.designParams && bh.designParams.bearingMethod === 'rock') bh.designParams.bearingMethod = 'rock_wr';
+        });
         _restoring = true; // 복원 중 saveCurrentToUploadedData 방지
         try {
             // 1. uploadedData 복원 (시추공 데이터 포함)
