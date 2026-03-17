@@ -393,6 +393,74 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 .chat-send-btn:disabled { opacity:.4; cursor:not-allowed; }
 .chat-context-badge { font-size:10px; color:var(--text-muted); padding:4px 0; display:flex; align-items:center; gap:4px; }
 .chat-context-badge span { background:#e0e7ff; color:#4338ca; padding:1px 6px; border-radius:10px; font-weight:600; }
+
+/* ===== A1. Print-Friendly CSS ===== */
+@media print {
+  .toolbar, .tab-nav, .sidebar, .sidebar-toggle, .toast-container,
+  .chat-overlay, .chat-panel, .panel-overlay, .log-panel,
+  .guide-overlay, .guide-modal, .modal-overlay, .modal,
+  .btn-toolbar, .ai-btn, .info-btn, .btn-sm,
+  #sptPasteModal, .breadcrumb-bar, .shortcut-overlay { display: none !important; }
+  body { background: #fff !important; }
+  .app-layout { display: block !important; }
+  .main-content { overflow: visible !important; margin: 0 !important; padding: 10px !important; }
+  .tab-content { display: none !important; }
+  .tab-content.active { display: block !important; page-break-inside: avoid; }
+  .summary-cards, .form-grid { break-inside: avoid; }
+  .result-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .bh-status, .soil-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table { font-size: 10px; }
+  .sec-title { font-size: 12px; border-bottom: 1px solid #333; }
+  a { text-decoration: none; color: inherit; }
+}
+
+/* ===== A2. Tab Switch Animation ===== */
+.tab-content { opacity: 0; transform: translateY(6px); transition: opacity 0.15s ease, transform 0.15s ease; }
+.tab-content.active { opacity: 1; transform: translateY(0); }
+
+/* ===== A3. Input Validation Feedback ===== */
+.field input:invalid, .field input:out-of-range,
+.field select:invalid { border-color: var(--status-fail) !important; background: #fff5f5 !important; }
+.field input:invalid:focus, .field input:out-of-range:focus { box-shadow: 0 0 0 2px rgba(198,40,40,0.15) !important; }
+
+/* ===== A4. Sticky Table Headers ===== */
+table thead th { position: sticky; top: 0; z-index: 5; }
+.dash-table { max-height: 70vh; overflow-y: auto; display: block; }
+.dash-table table { width: 100%; }
+
+/* ===== A5. Colorblind-Accessible Status Indicators ===== */
+.bh-status.ok::before { content: '\2713 '; font-weight: 700; }
+.bh-status.ng::before { content: '\2717 '; font-weight: 700; }
+.result-bar.ng { border-left-style: dashed; border-left-width: 4px; }
+.result-bar.ok { border-left-style: solid; border-left-width: 4px; }
+
+/* ===== B5. Required/Optional Input Distinction ===== */
+.req-star { color: var(--status-fail); margin-left: 2px; font-weight: 700; }
+
+/* ===== B3. Sidebar Borehole Search ===== */
+.bh-search-box { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+.bh-search-box input { width: 100%; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px;
+  font-size: 11px; outline: none; }
+.bh-search-box input:focus { border-color: var(--primary-navy); box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
+.bh-search-count { font-size: 9px; color: var(--text-muted); text-align: right; padding: 2px 8px 0; }
+
+/* ===== B1. Keyboard Shortcuts Help ===== */
+.shortcut-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000;
+  display: flex; align-items: center; justify-content: center; }
+.shortcut-modal { background: #fff; border-radius: 10px; padding: 20px 24px; max-width: 420px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.shortcut-modal h3 { margin: 0 0 12px; font-size: 15px; color: var(--primary-navy); }
+.shortcut-modal table { width: 100%; font-size: 12px; }
+.shortcut-modal td { padding: 4px 0; }
+.shortcut-modal kbd { background: #f1f5f9; border: 1px solid #d1d5db; border-radius: 4px;
+  padding: 1px 6px; font-family: var(--font-mono); font-size: 11px; }
+.shortcut-modal .close-btn { float: right; cursor: pointer; font-size: 18px; color: #999; border: none; background: none; }
+
+/* ===== B4. Calculation Progress Bar ===== */
+.calc-progress { position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 100001;
+  background: linear-gradient(90deg, var(--accent-coral), #f59e0b); transition: width 0.2s; }
+.calc-progress.active { animation: progressPulse 1.5s infinite; }
+@keyframes progressPulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
 </style>
 </head>
 <body>
@@ -441,9 +509,15 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
       <button onclick="toggleSidebar()" title="접기">&#9664;</button>
     </div>
   </div>
+  <div class="bh-search-box" id="bhSearchBox" style="display:none">
+    <input type="text" id="bhSearchInput" placeholder="시추공 검색..." oninput="filterSidebar(this.value)">
+    <div class="bh-search-count" id="bhSearchCount"></div>
+  </div>
   <div id="sidebarList"></div>
 </div>
 <div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="시추공 목록">&#9654;</div>
+<!-- Progress Bar -->
+<div class="calc-progress" id="calcProgress"></div>
 
 <!-- Main Content -->
 <div class="main-content">
@@ -1231,7 +1305,7 @@ function showGuide(key) {
 function closeGuide() { document.getElementById('guideOverlay').classList.remove('open'); }
 
 // ESC key handler
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); }});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); const so = document.querySelector('.shortcut-overlay'); if (so) so.remove(); }});
 
 // ===== AI INTEGRATION =====
 let AI_API_KEY = localStorage.getItem('claude_api_key') || '';
@@ -2438,7 +2512,7 @@ function renderInputTab() {
       <div style="display:flex;gap:4px"><input type="number" value="${STATE.bearingEL}" step="0.01" style="flex:1" onchange="var v=parseFloat(this.value); STATE.bearingEL=isNaN(v)?120:v; recalculate()">
       <button class="btn btn-sm" onclick="autoDetectBearingLayer()" title="SPT 데이터 기반 자동 탐지" style="font-size:9px;padding:3px 6px">자동</button></div>
     </div>
-    <div class="field"><label>지하수위 (GL,m) <button class="info-btn" onclick="event.stopPropagation();showGuide('gwlDepth')">?</button></label><input type="number" value="${STATE.gwlDepth}" step="0.1" onchange="var v=parseFloat(this.value); STATE.gwlDepth=isNaN(v)?3:v; recalculate()"></div>
+    <div class="field"><label>지하수위 (GL,m) <button class="info-btn" onclick="event.stopPropagation();showGuide('gwlDepth')">?</button></label><input type="number" value="${STATE.gwlDepth}" step="0.1" min="0" onchange="var v=parseFloat(this.value); STATE.gwlDepth=isNaN(v)?3:v; recalculate()"></div>
   </div>
   <div class="form-grid cols-4" style="margin-top:4px">
     <div class="field"></div><div class="field"></div>
@@ -2473,11 +2547,14 @@ function renderInputTab() {
     </div>`;
   }
   html += `</div>
-  <div class="form-grid cols-3" style="margin-top:8px">
-    <div class="field"><label>alpha (Kh) <button class="info-btn" onclick="event.stopPropagation();showGuide('alpha_kh')">?</button></label><input type="number" value="${STATE.alpha_kh}" step="0.1" onchange="STATE.alpha_kh=parseFloat(this.value)||1; recalculate()"></div>
-    <div class="field"><label>허용변위 (cm) <button class="info-btn" onclick="event.stopPropagation();showGuide('delta_cm')">?</button></label><input type="number" value="${STATE.delta_cm}" step="0.1" onchange="STATE.delta_cm=parseFloat(this.value)||1.5; recalculate()"></div>
-    <div class="field"><label>${isPHC?'허용압축응력':'항복응력'} (kN/m²) <button class="info-btn" onclick="event.stopPropagation();showGuide('sigmaMax')">?</button></label><input type="number" value="${STATE.sigmaMax}" onchange="STATE.sigmaMax=parseFloat(this.value)||20000; recalculate()"></div>
-  </div>`;
+  <details style="margin-top:8px">
+    <summary style="cursor:pointer;font-size:11px;font-weight:600;color:var(--primary-slate);padding:6px 0">&#9881; 고급 설정 (수평지지력 계수)</summary>
+    <div class="form-grid cols-3" style="margin-top:6px">
+      <div class="field"><label>alpha (Kh) <button class="info-btn" onclick="event.stopPropagation();showGuide('alpha_kh')">?</button></label><input type="number" value="${STATE.alpha_kh}" step="0.1" min="0.1" max="5" onchange="STATE.alpha_kh=parseFloat(this.value)||1; recalculate()"></div>
+      <div class="field"><label>허용변위 (cm) <button class="info-btn" onclick="event.stopPropagation();showGuide('delta_cm')">?</button></label><input type="number" value="${STATE.delta_cm}" step="0.1" min="0.1" max="10" onchange="STATE.delta_cm=parseFloat(this.value)||1.5; recalculate()"></div>
+      <div class="field"><label>${isPHC?'허용압축응력':'항복응력'} (kN/m²) <button class="info-btn" onclick="event.stopPropagation();showGuide('sigmaMax')">?</button></label><input type="number" value="${STATE.sigmaMax}" min="1000" onchange="STATE.sigmaMax=parseFloat(this.value)||20000; recalculate()"></div>
+    </div>
+  </details>`;
 
   // Spec card
   if (spec) {
@@ -2528,9 +2605,9 @@ function renderInputTab() {
       <span style="font-size:10px;color:#94a3b8">$Q_u = \\alpha \\cdot N_{tip} \\cdot A_p + \\sum \\beta \\cdot N_s \\cdot A_s + \\sum \\gamma \\cdot N_c \\cdot A_c$</span>
     </div>
     <div class="form-grid cols-4" style="margin:0">
-      <div class="field"><label>선단 계수 ($\\alpha$)</label><input type="number" value="${STATE.coeff_tip}" step="10" style="font-weight:600;${_diffTip?_dS:''}" onchange="STATE.coeff_tip=parseFloat(this.value)||250; recalculate()"></div>
-      <div class="field"><label>사질토 주면 ($\\beta$)</label><input type="number" value="${STATE.coeff_sand}" step="0.5" style="font-weight:600;${_diffSand?_dS:''}" onchange="STATE.coeff_sand=parseFloat(this.value)||2; recalculate()"></div>
-      <div class="field"><label>점성토 주면 ($\\gamma$)</label><input type="number" value="${STATE.coeff_clay}" step="0.25" style="font-weight:600;${_diffClay?_dS:''}" onchange="STATE.coeff_clay=parseFloat(this.value)||6.25; recalculate()"></div>
+      <div class="field"><label>선단 계수 ($\\alpha$)</label><input type="number" value="${STATE.coeff_tip}" step="10" min="1" style="font-weight:600;${_diffTip?_dS:''}" onchange="STATE.coeff_tip=parseFloat(this.value)||250; recalculate()"></div>
+      <div class="field"><label>사질토 주면 ($\\beta$)</label><input type="number" value="${STATE.coeff_sand}" step="0.5" min="0.1" style="font-weight:600;${_diffSand?_dS:''}" onchange="STATE.coeff_sand=parseFloat(this.value)||2; recalculate()"></div>
+      <div class="field"><label>점성토 주면 ($\\gamma$)</label><input type="number" value="${STATE.coeff_clay}" step="0.25" min="0.1" style="font-weight:600;${_diffClay?_dS:''}" onchange="STATE.coeff_clay=parseFloat(this.value)||6.25; recalculate()"></div>
       <div class="field"><label>&nbsp;</label>
         <div style="display:flex;gap:4px">
           <button class="btn btn-sm btn-outline" style="flex:1;font-size:9px" onclick="saveUserDefaults()" title="현재 계수를 기준값으로 저장">기준값 저장</button>
@@ -2565,8 +2642,8 @@ function renderSPTSection() {
     <tbody>${STATE.sptData.map((s, i) => `<tr class="${s._fromJSON ? 'from-json' : ''}">
       <td>${i+1}${s._fromJSON ? '<span class="origin-badge json">J</span>' : ''}</td>
       <td>${fmt(STATE.groundEL - s.depth + 1)}</td>
-      <td><input type="number" value="${s.depth}" step="0.1" onchange="STATE.sptData[${i}].depth=parseFloat(this.value)||0; recalculate()"></td>
-      <td><input type="number" value="${s.N}" onchange="STATE.sptData[${i}].N=parseInt(this.value)||0; recalculate()"></td>
+      <td><input type="number" value="${s.depth}" step="0.1" min="0" max="100" onchange="STATE.sptData[${i}].depth=parseFloat(this.value)||0; recalculate()"></td>
+      <td><input type="number" value="${s.N}" min="0" max="100" onchange="STATE.sptData[${i}].N=parseInt(this.value)||0; recalculate()"></td>
       <td><select onchange="STATE.sptData[${i}].remark=this.value">${soilOptions(s.remark)}</select></td>
       <td><button class="btn btn-sm btn-danger" onclick="STATE.sptData.splice(${i},1); recalculate()">삭제</button></td>
     </tr>`).join('')}</tbody>
@@ -2591,7 +2668,7 @@ function renderLayerSection() {
       <td style="font-weight:600;color:#92400e">성토층(계획)</td>
       <td style="font-size:10.5px;color:#92400e;white-space:nowrap">EL.${fElFrom} ~ ${fElTo}</td>
       <td><input type="number" value="${fmt(fillH_ui)}" disabled style="background:#fef3c7"></td>
-      <td><input type="number" value="${STATE.fillN}" style="background:#fef3c7" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></td>
+      <td><input type="number" value="${STATE.fillN}" min="1" max="50" style="background:#fef3c7" onchange="STATE.fillN=parseFloat(this.value)||5; recalculate()"></td>
       <td><input type="number" value="18" disabled style="background:#fef3c7"></td>
       <td><span class="soil-badge sand">sand</span></td>
       <td></td>
@@ -2619,9 +2696,9 @@ function renderLayerSection() {
       return `<tr class="${_jc}" style="${rowStyle}">
       <td><select onchange="STATE.layers[${i}].soilType=this.value; STATE.layers[${i}].unitWeight=UW_DEF[this.value]||18; recalculate()">${soilOptions(l.soilType)}</select>${cutNote}</td>
       <td style="font-size:10.5px;color:var(--text-secondary);white-space:nowrap">${depthRange}</td>
-      <td><input type="number" value="${l.thickness}" step="0.1" onchange="STATE.layers[${i}].thickness=parseFloat(this.value)||0; recalculate()"></td>
-      <td><span class="calc-tip" style="display:inline-block;width:100%"><input type="number" value="${l.avgN}" step="0.1" style="width:100%" onchange="STATE.layers[${i}].avgN=parseFloat(this.value)||0; recalculate()"><span class="tip-content">${tipText}</span></span></td>
-      <td><input type="number" value="${l.unitWeight}" step="0.5" onchange="STATE.layers[${i}].unitWeight=parseFloat(this.value)||18; recalculate()"></td>
+      <td><input type="number" value="${l.thickness}" step="0.1" min="0.1" max="100" onchange="STATE.layers[${i}].thickness=parseFloat(this.value)||0; recalculate()"></td>
+      <td><span class="calc-tip" style="display:inline-block;width:100%"><input type="number" value="${l.avgN}" step="0.1" min="0" max="100" style="width:100%" onchange="STATE.layers[${i}].avgN=parseFloat(this.value)||0; recalculate()"><span class="tip-content">${tipText}</span></span></td>
+      <td><input type="number" value="${l.unitWeight}" step="0.5" min="10" max="30" onchange="STATE.layers[${i}].unitWeight=parseFloat(this.value)||18; recalculate()"></td>
       <td><span class="soil-badge ${SOIL_CLS[l.soilType]||'sand'}">${SOIL_CLS[l.soilType]||'sand'}</span></td>
       <td><button class="btn btn-sm btn-danger" onclick="STATE.layers.splice(${i},1); recalculate()">삭제</button></td>
     </tr>`;
@@ -2791,6 +2868,9 @@ function processJSON(text, filename) {
     boreholes.sort((a, b) => naturalCompare(a.holeNo, b.holeNo));
     applyBoreholeData(boreholes[0], 0);
     showToast(`${filename}: ${boreholes.length}개 시추공 로드 완료 (번호순 정렬)`, 'success');
+    // Show search box for large datasets
+    const sb = document.getElementById('bhSearchBox');
+    if (sb && boreholes.length > 5) sb.style.display = '';
   } catch (e) { showToast('JSON 파싱 오류: ' + e.message, 'error'); }
 }
 function selectBorehole(idx) {
@@ -3285,13 +3365,13 @@ function renderCumulativeCapacityChart() {
   var pts = points.map(function(p) { return sx(p.cap) + ',' + sy(p.depth); }).join(' ');
   svg += '<polyline points="' + pts + '" fill="none" stroke="#2563eb" stroke-width="2.5"/>';
   points.forEach(function(p) {
-    if (p.cap > 0) svg += '<circle cx="' + sx(p.cap) + '" cy="' + sy(p.depth) + '" r="3" fill="#2563eb"/>';
+    if (p.cap > 0) svg += '<circle cx="' + sx(p.cap) + '" cy="' + sy(p.depth) + '" r="4" fill="#2563eb" style="cursor:pointer"><title>깊이: GL-' + p.depth.toFixed(1) + 'm\n누적 주면마찰력: ' + Math.round(p.cap) + ' kN\n지층: ' + (p.soilType||'-') + '</title></circle>';
   });
 
   // Red dashed line: Qu (skin + tip) at bearing depth
   var bearingD = r.bearingDepthFromGL || points[points.length - 1].depth;
   svg += '<line x1="' + sx(totalSkin) + '" y1="' + sy(bearingD) + '" x2="' + sx(Qu) + '" y2="' + sy(bearingD) + '" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3"/>';
-  svg += '<circle cx="' + sx(Qu) + '" cy="' + sy(bearingD) + '" r="4" fill="#dc2626"/>';
+  svg += '<circle cx="' + sx(Qu) + '" cy="' + sy(bearingD) + '" r="5" fill="#dc2626" style="cursor:pointer"><title>극한지지력 Qu: ' + Math.round(Qu) + ' kN\n주면마찰력: ' + Math.round(totalSkin) + ' kN\n선단지지력: ' + Math.round(Qu - totalSkin) + ' kN\n깊이: GL-' + bearingD.toFixed(1) + 'm</title></circle>';
   svg += '<text x="' + (sx(Qu) + 5) + '" y="' + (sy(bearingD) - 5) + '" font-size="8" fill="#dc2626" font-weight="700">Qu=' + Math.round(Qu) + '</text>';
 
   // Green dashed line: Qa reference
@@ -3427,7 +3507,7 @@ function drawSVGDesign() {
     const nCapped = Math.min(s.N, 50);
     const barW = (nCapped / 50) * colW.nval * 0.85;
     const isRefusal = s.N >= 50;
-    svg += `<rect x="${margin.left + colX.nval + 5}" y="${y - 5}" width="${Math.max(barW, 3)}" height="10" fill="${isRefusal ? '#2E7D32' : '#1976d2'}" rx="1"/>`;
+    svg += `<rect x="${margin.left + colX.nval + 5}" y="${y - 5}" width="${Math.max(barW, 3)}" height="10" fill="${isRefusal ? '#2E7D32' : '#1976d2'}" rx="1" style="cursor:pointer"><title>깊이: GL-${s.depth.toFixed(1)}m (EL.${fmt(STATE.groundEL - s.depth, 1)})\nN값: ${s.N}${isRefusal ? ' (리퓨절)' : ''}\n토질: ${s.remark || '-'}</title></rect>`;
     svg += `<text x="${margin.left + colX.nval + barW + 10}" y="${y + 3}" font-size="8" font-weight="700" fill="${isRefusal ? '#2E7D32' : '#1976d2'}">${s.N}</text>`;
   });
 
@@ -3445,7 +3525,7 @@ function drawSVGDesign() {
     const pts = capPoints.map(p => `${margin.left + colX.cap + 10 + (p.cap / maxCap) * (colW.cap - 20)},${margin.top + p.d * scale}`).join(' ');
     svg += `<polyline points="${pts}" fill="none" stroke="#e94560" stroke-width="2"/>`;
     capPoints.forEach(p => {
-      if (p.cap > 0) svg += `<circle cx="${margin.left + colX.cap + 10 + (p.cap / maxCap) * (colW.cap - 20)}" cy="${margin.top + p.d * scale}" r="3" fill="#e94560"/>`;
+      if (p.cap > 0) svg += `<circle cx="${margin.left + colX.cap + 10 + (p.cap / maxCap) * (colW.cap - 20)}" cy="${margin.top + p.d * scale}" r="4" fill="#e94560" style="cursor:pointer"><title>깊이: GL-${p.d.toFixed(1)}m\n누적 지지력: ${Math.round(p.cap)} kN (${(p.cap/maxCap*100).toFixed(0)}%)</title></circle>`;
     });
   }
 
@@ -4060,7 +4140,10 @@ const BH_RESULTS = {};
 
 function calcAllBoreholes() {
   if (!STATE.uploadedData) return;
-  STATE.uploadedData.forEach(bh => {
+  const total = STATE.uploadedData.length;
+  const showProg = total > 5;
+  if (showProg) showProgress(0);
+  STATE.uploadedData.forEach((bh, idx) => {
     const dp = bh.designParams || {};
     const v = (k, fallback) => dp[k] != null ? dp[k] : fallback;
     const p = {
@@ -4081,7 +4164,9 @@ function calcAllBoreholes() {
       coeff_clay: v('coeff_clay', STATE.coeff_clay)
     };
     try { BH_RESULTS[bh.holeNo] = calcPile(p); } catch(e) { BH_RESULTS[bh.holeNo] = null; }
+    if (showProg) showProgress(((idx + 1) / total) * 100);
   });
+  if (showProg) setTimeout(() => showProgress(-1), 500);
 }
 
 function applyDesignToAllBoreholes() {
@@ -4650,7 +4735,7 @@ function renderCrossSection() {
       const y2 = elToY(botEL);
       const h = Math.max(y2 - y1, 1);
       const color = getSoilColor(l.soilType);
-      svg += `<rect x="${x+4}" y="${y1}" width="${colW-8}" height="${h}" fill="${color}" stroke="#fff" stroke-width="0.5" opacity="0.85"/>`;
+      svg += `<rect x="${x+4}" y="${y1}" width="${colW-8}" height="${h}" fill="${color}" stroke="#fff" stroke-width="0.5" opacity="0.85" style="cursor:pointer"><title>${bh.holeNo}\n지층: ${l.soilType}\n두께: ${l.thickness.toFixed(1)}m\nEL.${topEL.toFixed(1)} ~ EL.${botEL.toFixed(1)}\n평균N: ${l.avgN || '-'}</title></rect>`;
       if (h > 12) {
         svg += `<text x="${x + colW/2}" y="${y1 + h/2 + 3}" text-anchor="middle" fill="#333" font-size="7" font-weight="500">${l.soilType.replace(/\(.+\)/,'')}</text>`;
       }
@@ -5251,7 +5336,108 @@ function clearSavedState() {
   location.reload();
 }
 
+// ===== B3: Sidebar Borehole Search/Filter =====
+function filterSidebar(query) {
+  if (!STATE.uploadedData) return;
+  const list = document.getElementById('sidebarList');
+  const countEl = document.getElementById('bhSearchCount');
+  const q = (query || '').trim().toLowerCase();
+  const items = list.querySelectorAll('.bh-item');
+  let shown = 0;
+  items.forEach((item, i) => {
+    const bh = STATE.uploadedData[i];
+    if (!bh) return;
+    const match = !q || bh.holeNo.toLowerCase().includes(q);
+    item.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  if (countEl) countEl.textContent = q ? `${shown} / ${STATE.uploadedData.length}` : '';
+}
+// Show search box when boreholes loaded
+const _origRenderSidebar = typeof renderSidebar === 'function' ? renderSidebar : null;
+
+// ===== B1: Keyboard Shortcuts =====
+const TAB_KEYS = ['tab-input','tab-vertical','tab-horizontal','tab-pullout','tab-settlement','tab-summary','tab-report','tab-overall','tab-sensitivity'];
+function showShortcutHelp() {
+  if (document.querySelector('.shortcut-overlay')) return;
+  const ov = document.createElement('div');
+  ov.className = 'shortcut-overlay';
+  ov.onclick = function(e) { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="shortcut-modal">
+    <button class="close-btn" onclick="this.closest('.shortcut-overlay').remove()">&times;</button>
+    <h3>&#9000; 키보드 단축키</h3>
+    <table>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>~<kbd>9</kbd></td><td>탭 전환 (입력~민감도)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>엑셀 내보내기</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>AI 채팅 열기</td></tr>
+      <tr><td><kbd>?</kbd></td><td>단축키 도움말 (이 창)</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>모달/패널 닫기</td></tr>
+    </table>
+  </div>`;
+  document.body.appendChild(ov);
+}
+document.addEventListener('keydown', function(e) {
+  // Ignore if typing in input/textarea/select
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+  // ? key → shortcut help
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey) { showShortcutHelp(); return; }
+  // Ctrl+1~9 → tab switch
+  if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '9') {
+    e.preventDefault();
+    const idx = parseInt(e.key) - 1;
+    if (idx < TAB_KEYS.length) {
+      const tabId = TAB_KEYS[idx];
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const tabEl = document.getElementById(tabId);
+      if (tabEl) {
+        tabEl.classList.add('active');
+        // Find matching tab button
+        const btns = document.querySelectorAll('.tab-btn');
+        if (btns[idx]) btns[idx].classList.add('active');
+      }
+    }
+    return;
+  }
+  // Ctrl+E → Excel export
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    if (typeof exportExcel === 'function') exportExcel();
+    return;
+  }
+  // Ctrl+/ → AI Chat
+  if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+    e.preventDefault();
+    if (typeof openChatPanel === 'function') openChatPanel();
+    return;
+  }
+});
+
+// ===== B4: Calculation Progress Bar =====
+function showProgress(pct) {
+  const bar = document.getElementById('calcProgress');
+  if (!bar) return;
+  if (pct < 0) { bar.style.width = '0%'; bar.style.opacity = '0'; return; }
+  bar.style.opacity = '1';
+  bar.style.width = Math.min(pct, 100) + '%';
+  if (pct >= 100) { setTimeout(() => { bar.style.width = '0%'; bar.style.opacity = '0'; }, 600); }
+}
+
 // ===== INIT =====
+// Show bh search box after data load
+const _origProcessJSON = typeof processJSON === 'function' ? processJSON : null;
+if (_origProcessJSON) {
+  const _origPJ = processJSON;
+  // After processJSON runs, show search box
+  window._afterJSONLoad = function() {
+    const sb = document.getElementById('bhSearchBox');
+    if (sb && STATE.uploadedData && STATE.uploadedData.length > 5) sb.style.display = '';
+  };
+}
 const _restored = restoreStateFromLS();
 recalculate();
 if (_restored) showToast('이전 작업 상태가 복원되었습니다', 'info');
