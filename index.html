@@ -461,6 +461,40 @@ table thead th { position: sticky; top: 0; z-index: 5; }
   background: linear-gradient(90deg, var(--accent-coral), #f59e0b); transition: width 0.2s; }
 .calc-progress.active { animation: progressPulse 1.5s infinite; }
 @keyframes progressPulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+/* ===== Borehole Context Card (Input Tab) ===== */
+.bh-context-card { margin-bottom:14px; padding:12px 16px; background:linear-gradient(135deg,#f8fafc,#eef2f7);
+  border:1px solid var(--border-color); border-left:4px solid var(--primary-navy); border-radius:0 8px 8px 0; }
+.bcc-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.bcc-nav { display:flex; align-items:center; gap:8px; }
+.bcc-nav .btn:disabled { opacity:.35; cursor:not-allowed; }
+.bcc-body { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.bcc-metrics { display:flex; gap:16px; }
+.bcc-metric { display:flex; flex-direction:column; }
+.bcc-label { font-size:9px; color:var(--text-muted); font-weight:600; text-transform:uppercase; }
+.bcc-value { font-size:12px; font-weight:700; font-family:var(--font-mono); color:var(--primary-navy); }
+.bcc-layers { flex:1; min-width:200px; display:flex; flex-wrap:wrap; gap:3px; }
+.bcc-layer-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
+.bcc-spark { display:flex; align-items:center; }
+@media (max-width:768px) { .bcc-body { flex-direction:column; align-items:flex-start; } .bcc-metrics { flex-wrap:wrap; } }
+
+/* ===== Dashboard Tab ===== */
+.dash-table-wrap { overflow-x:auto; }
+.dash-table tr { cursor:pointer; }
+.dash-table tr:hover { background:#f0f7ff !important; }
+.dash-table tr.dash-active { background:#e3f2fd !important; }
+.dash-table td { white-space:nowrap; font-size:12px; }
+.dash-table td.soil-col { white-space:normal; max-width:280px; }
+.dash-table th { cursor:pointer; user-select:none; }
+.dash-table th:hover { background:var(--bg-secondary); }
+.dash-sort-icon { font-size:9px; color:var(--text-muted); margin-left:2px; }
+.upload-zone { border:2px dashed var(--border-color); border-radius:12px; padding:40px 20px; cursor:pointer;
+  text-align:center; transition:all 0.2s; max-width:480px; margin:0 auto; }
+.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary-navy); background:#f0f4ff; }
+.uz-icon { font-size:36px; margin-bottom:8px; }
+.uz-text { font-size:13px; font-weight:600; color:var(--primary-navy); margin-bottom:4px; }
+.uz-sub { font-size:10px; color:var(--text-muted); }
+.dash-note { font-size:9px; color:var(--text-muted); margin-top:12px; }
 </style>
 </head>
 <body>
@@ -486,6 +520,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 
 <!-- Tab Navigation -->
 <div class="tab-nav">
+  <button class="tab-btn" data-tab="dashboard" id="dashboardTabBtn" style="display:none">대시보드</button>
   <button class="tab-btn active" data-tab="input">입력</button>
   <button class="tab-btn" data-tab="vertical">수직지지력</button>
   <button class="tab-btn" data-tab="horizontal">수평지지력</button>
@@ -522,6 +557,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 <!-- Main Content -->
 <div class="main-content">
 
+<div class="tab-content" id="tab-dashboard"></div>
 <div class="tab-content active" id="tab-input"></div>
 <div class="tab-content" id="tab-vertical"></div>
 <div class="tab-content" id="tab-horizontal"></div>
@@ -2470,11 +2506,65 @@ function renderNLInputSection() {
   return html;
 }
 
+// ===== BOREHOLE CONTEXT CARD =====
+function renderBoreholeContextCard() {
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) return '';
+  const idx = STATE.currentBhIdx;
+  const total = STATE.uploadedData.length;
+  const bh = STATE.uploadedData[idx];
+  if (!bh) return '';
+  const hasPrev = idx > 0;
+  const hasNext = idx < total - 1;
+  const gwlEL = (STATE.groundEL != null && STATE.gwlDepth != null) ? fmt(STATE.groundEL - STATE.gwlDepth, 2) : '-';
+  // Layer badges
+  const layerBadges = (STATE.layers || []).map(l => {
+    const color = getSoilColor(l.soilType);
+    return `<span class="bcc-layer-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${l.soilType.replace(/\(.+\)/,'')} ${l.thickness.toFixed(1)}m</span>`;
+  }).join('');
+  // N-value sparkline
+  const sparkW = 120;
+  let spark = `<svg width="${sparkW}" height="20" style="vertical-align:middle">`;
+  if (STATE.sptData && STATE.sptData.length > 0) {
+    const step = sparkW / Math.max(STATE.sptData.length, 1);
+    STATE.sptData.forEach((s, j) => {
+      const h = (Math.min(s.N, 50) / 50) * 18;
+      spark += `<rect x="${j*step}" y="${20-h}" width="${Math.max(step-1,2)}" height="${h}" fill="${s.N>=50?'#2E7D32':'#1976d2'}" rx="1"><title>GL-${s.depth.toFixed(1)}m N=${s.N}</title></rect>`;
+    });
+  }
+  spark += '</svg>';
+  return `<div class="bh-context-card">
+    <div class="bcc-header">
+      <div class="bcc-nav">
+        <button class="btn btn-sm" ${hasPrev?`onclick="contextCardNav(${idx-1})"`:' disabled'} style="padding:3px 10px;font-size:11px">&larr; 이전</button>
+        <span style="font-size:13px;font-weight:700;color:var(--primary-navy)">${bh.holeNo}</span>
+        <span style="font-size:10px;color:var(--text-muted)">(${idx+1}/${total})</span>
+        <button class="btn btn-sm" ${hasNext?`onclick="contextCardNav(${idx+1})"`:' disabled'} style="padding:3px 10px;font-size:11px">다음 &rarr;</button>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="openLogPanel();renderLogPanel()" style="font-size:10px;padding:4px 8px">&#128200; 로그</button>
+    </div>
+    <div class="bcc-body">
+      <div class="bcc-metrics">
+        <div class="bcc-metric"><span class="bcc-label">지반고</span><span class="bcc-value">EL.${STATE.groundEL!=null?STATE.groundEL.toFixed(2):'-'}</span></div>
+        <div class="bcc-metric"><span class="bcc-label">지하수위</span><span class="bcc-value">GL-${STATE.gwlDepth!=null?STATE.gwlDepth.toFixed(2):'-'}m (EL.${gwlEL})</span></div>
+        <div class="bcc-metric"><span class="bcc-label">지지층 EL</span><span class="bcc-value">EL.${STATE.bearingEL!=null?STATE.bearingEL.toFixed(2):'-'}</span></div>
+      </div>
+      <div class="bcc-layers">${layerBadges}</div>
+      <div class="bcc-spark"><span style="font-size:10px;color:var(--text-muted);margin-right:6px">N값</span>${spark}</div>
+    </div>
+  </div>`;
+}
+function contextCardNav(idx) {
+  if (!STATE.uploadedData || idx < 0 || idx >= STATE.uploadedData.length) return;
+  saveCurrentToUploadedData();
+  applyBoreholeData(STATE.uploadedData[idx], idx);
+}
+
 function renderInputTab() {
   const isPHC = STATE.pileType === "PHC";
   const r = STATE.result;
   const spec = getSpecInfo();
   let html = renderNLInputSection();
+  html += renderBoreholeContextCard();
 
   // Section 1: Design Specs
   html += `<h3 class="sec-title" style="display:flex;align-items:center;justify-content:space-between">1. 설계제원${STATE.uploadedData && STATE.uploadedData.length > 1 ? '<button class="btn-sm" style="font-size:11px;padding:2px 10px;background:#1E3A5F;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="if(confirm(\'현재 설계조건을 전체 시추공에 일괄 적용하시겠습니까?\')) applyDesignToAllBoreholes()">전체 시추공에 적용</button>' : ''}</h3>
@@ -2868,6 +2958,14 @@ function processJSON(text, filename) {
     boreholes.sort((a, b) => naturalCompare(a.holeNo, b.holeNo));
     applyBoreholeData(boreholes[0], 0);
     showToast(`${filename}: ${boreholes.length}개 시추공 로드 완료 (번호순 정렬)`, 'success');
+    // Show dashboard tab and auto-switch
+    const dashBtn = document.getElementById('dashboardTabBtn');
+    if (dashBtn) { dashBtn.style.display = '';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      dashBtn.classList.add('active');
+      document.getElementById('tab-dashboard').classList.add('active');
+    }
     // Show search box for large datasets
     const sb = document.getElementById('bhSearchBox');
     if (sb && boreholes.length > 5) sb.style.display = '';
@@ -4769,6 +4867,196 @@ function renderCrossSection() {
   </div>`;
 }
 
+// ===== DASHBOARD TAB =====
+function renderDashboardTab() {
+  const el = document.getElementById('tab-dashboard');
+  if (!el) return;
+  if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:16px">&#128204;</div>
+      <h3 style="font-size:18px;font-weight:700;color:var(--primary-navy);margin-bottom:8px">시추공 대시보드</h3>
+      <p style="color:var(--text-muted);margin-bottom:24px">JSON 시추 데이터를 업로드하면 전체 시추공 현황을 한눈에 확인할 수 있습니다.</p>
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="event.preventDefault();this.classList.remove('dragover');if(event.dataTransfer.files[0])handleFileUpload({target:{files:event.dataTransfer.files}})">
+        <div class="uz-icon">&#128194;</div>
+        <div class="uz-text">JSON 파일을 드래그하거나 클릭하여 업로드</div>
+        <div class="uz-sub">GeoAI Platform 시추 데이터 형식 지원</div>
+      </div>
+    </div>`;
+    return;
+  }
+  calcAllBoreholes();
+  const bhs = STATE.uploadedData;
+  const count = bhs.length;
+  // Averages
+  const validGEL = bhs.filter(b => b.groundEL != null);
+  const avgGEL = validGEL.length > 0 ? (validGEL.reduce((s,b) => s + b.groundEL, 0) / validGEL.length).toFixed(2) : '-';
+  const validGWL = bhs.filter(b => b.groundEL != null && b.gwlDepth != null);
+  const avgGWLEL = validGWL.length > 0 ? (validGWL.reduce((s,b) => s + (b.groundEL - b.gwlDepth), 0) / validGWL.length).toFixed(2) : '-';
+  const wrELs = bhs.map(b => {
+    const wr = (b.layers||[]).find(l => l.soilType && l.soilType.includes('풍화암'));
+    return wr && b.groundEL != null && wr.depthFrom != null ? b.groundEL - wr.depthFrom : null;
+  }).filter(v => v !== null);
+  const avgWREL = wrELs.length > 0 ? (wrELs.reduce((s,v) => s + v, 0) / wrELs.length).toFixed(2) : '-';
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h3 class="sec-title" style="margin:0">전체 시추공 한눈에 보기</h3>
+    <button class="btn btn-sm" onclick="exportExcel()" style="padding:7px 14px;font-size:11px">&#128196; EXCEL 내보내기</button>
+  </div>`;
+  html += `<div class="dash-stats">
+    <div class="dash-stat"><div class="ds-val">${count}</div><div class="ds-label">총 시추공</div></div>
+    <div class="dash-stat"><div class="ds-val">EL.+${avgGEL}</div><div class="ds-label">평균 지표고</div></div>
+    <div class="dash-stat"><div class="ds-val">EL.+${avgGWLEL}</div><div class="ds-label">평균 지하수위</div></div>
+    <div class="dash-stat"><div class="ds-val">EL.+${avgWREL}</div><div class="ds-label">평균 풍화암 EL</div></div>
+  </div>`;
+  // Collect soil types for filter
+  const allSoils = new Set();
+  bhs.forEach(b => (b.layers||[]).forEach(l => { if(l.soilType) allSoils.add(l.soilType); }));
+  const soilOpts = [...allSoils].sort().map(s => `<option value="${s}">${s}</option>`).join('');
+  html += `<div class="dash-toolbar" style="margin-bottom:8px">
+    <input type="text" id="dashSearch" placeholder="시추공 검색..." oninput="filterDashboardTable()" style="flex:0 0 180px">
+    <select id="dashSoilFilter" onchange="filterDashboardTable()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:4px;font-size:11px">
+      <option value="">모든 토질</option>${soilOpts}
+    </select>
+  </div>`;
+  html += `<div class="dash-table-wrap" id="dashTableWrap">${buildDashboardTable(bhs)}</div>`;
+  html += `<div class="dash-note">* '-'는 해당 층이 출현하지 않음을 의미합니다.</div>`;
+  el.innerHTML = html;
+}
+
+function buildDashboardTable(bhs) {
+  let html = `<table class="dash-table"><thead><tr>
+    <th onclick="sortDashboard('holeNo')">시추공 <span class="dash-sort-icon">&#8597;</span></th>
+    <th onclick="sortDashboard('groundEL')">지표고<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th onclick="sortDashboard('gwlEL')">지하수위<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th onclick="sortDashboard('wrEL')">풍화암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th onclick="sortDashboard('srEL')">연암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th onclick="sortDashboard('endEL')">시추종료<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th>N값 추이</th>
+    <th>토질 구성</th>
+    <th>상세</th>
+    <th>삭제</th>
+  </tr></thead><tbody>`;
+  bhs.forEach(bh => {
+    const realIdx = STATE.uploadedData.indexOf(bh);
+    const gEL = bh.groundEL;
+    const gwlEL = (gEL != null && bh.gwlDepth != null) ? '+' + (gEL - bh.gwlDepth).toFixed(2) : '-';
+    const wrLayer = (bh.layers||[]).find(l => l.soilType && l.soilType.includes('풍화암'));
+    const srLayer = (bh.layers||[]).find(l => l.soilType && l.soilType.includes('연암'));
+    const wrEL = wrLayer && gEL != null && wrLayer.depthFrom != null ? '+' + (gEL - wrLayer.depthFrom).toFixed(2) : '-';
+    const srEL = srLayer && gEL != null && srLayer.depthFrom != null ? '+' + (gEL - srLayer.depthFrom).toFixed(2) : '-';
+    const maxD = (bh.layers||[]).reduce((mx,l) => Math.max(mx, l.depthTo||0), 0);
+    const endEL = gEL != null && maxD > 0 ? '+' + (gEL - maxD).toFixed(2) : '-';
+    // Sparkline
+    const sparkW = 80;
+    let spark = `<svg width="${sparkW}" height="16" style="vertical-align:middle">`;
+    if (bh.sptData && bh.sptData.length > 0) {
+      const step = sparkW / Math.max(bh.sptData.length, 1);
+      bh.sptData.forEach((s,j) => {
+        const h = (Math.min(s.N,50)/50)*14;
+        spark += `<rect x="${j*step}" y="${16-h}" width="${Math.max(step-1,2)}" height="${h}" fill="${s.N>=50?'#2E7D32':'#1976d2'}" rx="1"/>`;
+      });
+    }
+    spark += '</svg>';
+    // Soil badges
+    const soilBadges = (bh.layers||[]).map(l => {
+      const cls = SOIL_CLS[l.soilType]||'sand';
+      return `<span class="soil-badge ${cls}" style="margin:1px 2px;font-size:10px">${l.soilType.replace(/\(.+\)/,'')} ${l.thickness.toFixed(1)}m</span>`;
+    }).join('');
+    const isActive = bh.holeNo === STATE.boreholeNo;
+    html += `<tr class="${isActive?'dash-active':''}" onclick="dashboardSelectBorehole(${realIdx})">
+      <td style="font-weight:700;color:var(--primary-navy)">${bh.holeNo}</td>
+      <td>+${gEL!=null?gEL.toFixed(2):'-'}</td>
+      <td>${gwlEL}</td>
+      <td>${wrEL}</td>
+      <td>${srEL}</td>
+      <td>${endEL}</td>
+      <td>${spark}</td>
+      <td class="soil-col">${soilBadges}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();dashboardOpenLog(${realIdx})" style="font-size:10px">로그 보기</button></td>
+      <td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();dashboardDeleteBorehole(${realIdx})" style="font-size:13px;padding:2px 8px">&#10005;</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// Dashboard event handlers
+function dashboardSelectBorehole(idx) {
+  selectBoreholeFromSidebar(idx);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const inputBtn = document.querySelector('.tab-btn[data-tab="input"]');
+  if (inputBtn) inputBtn.classList.add('active');
+  document.getElementById('tab-input').classList.add('active');
+}
+function dashboardOpenLog(idx) {
+  if (STATE.uploadedData && STATE.uploadedData[idx]) {
+    saveCurrentToUploadedData();
+    applyBoreholeData(STATE.uploadedData[idx], idx);
+    openLogPanel(); renderLogPanel();
+  }
+}
+function dashboardDeleteBorehole(idx) {
+  if (!STATE.uploadedData || !STATE.uploadedData[idx]) return;
+  const name = STATE.uploadedData[idx].holeNo;
+  if (!confirm(name + ' 시추공을 삭제하시겠습니까?')) return;
+  delete BH_RESULTS[name];
+  STATE.uploadedData.splice(idx, 1);
+  if (STATE.uploadedData.length === 0) {
+    STATE.uploadedData = null; STATE.currentBhIdx = 0;
+    const db = document.getElementById('dashboardTabBtn'); if (db) db.style.display = 'none';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const ib = document.querySelector('.tab-btn[data-tab="input"]'); if (ib) ib.classList.add('active');
+    document.getElementById('tab-input').classList.add('active');
+  } else {
+    if (STATE.currentBhIdx >= STATE.uploadedData.length) STATE.currentBhIdx = 0;
+    applyBoreholeData(STATE.uploadedData[STATE.currentBhIdx], STATE.currentBhIdx);
+  }
+  showToast(name + ' 삭제됨', 'warning');
+}
+let _dashSortField = null, _dashSortDir = 'asc';
+function sortDashboard(field) {
+  if (_dashSortField === field) _dashSortDir = _dashSortDir === 'asc' ? 'desc' : 'asc';
+  else { _dashSortField = field; _dashSortDir = 'asc'; }
+  const bhs = [...(STATE.uploadedData||[])];
+  bhs.sort((a, b) => {
+    if (field === 'holeNo') return _dashSortDir === 'asc' ? naturalCompare(a.holeNo, b.holeNo) : naturalCompare(b.holeNo, a.holeNo);
+    let va = 0, vb = 0;
+    const gA = a.groundEL||0, gB = b.groundEL||0;
+    if (field === 'groundEL') { va = gA; vb = gB; }
+    else if (field === 'gwlEL') { va = gA-(a.gwlDepth||0); vb = gB-(b.gwlDepth||0); }
+    else if (field === 'wrEL') {
+      const wA = (a.layers||[]).find(l=>l.soilType&&l.soilType.includes('풍화암'));
+      const wB = (b.layers||[]).find(l=>l.soilType&&l.soilType.includes('풍화암'));
+      va = wA ? gA-(wA.depthFrom||0) : -9999; vb = wB ? gB-(wB.depthFrom||0) : -9999;
+    } else if (field === 'srEL') {
+      const sA = (a.layers||[]).find(l=>l.soilType&&l.soilType.includes('연암'));
+      const sB = (b.layers||[]).find(l=>l.soilType&&l.soilType.includes('연암'));
+      va = sA ? gA-(sA.depthFrom||0) : -9999; vb = sB ? gB-(sB.depthFrom||0) : -9999;
+    } else if (field === 'endEL') {
+      const mA = (a.layers||[]).reduce((mx,l)=>Math.max(mx,l.depthTo||0),0);
+      const mB = (b.layers||[]).reduce((mx,l)=>Math.max(mx,l.depthTo||0),0);
+      va = mA>0 ? gA-mA : -9999; vb = mB>0 ? gB-mB : -9999;
+    }
+    return _dashSortDir === 'asc' ? va - vb : vb - va;
+  });
+  const wrap = document.getElementById('dashTableWrap');
+  if (wrap) wrap.innerHTML = buildDashboardTable(bhs);
+}
+function filterDashboardTable() {
+  const q = (document.getElementById('dashSearch')?.value||'').toLowerCase();
+  const soil = document.getElementById('dashSoilFilter')?.value||'';
+  let filtered = STATE.uploadedData||[];
+  if (q) filtered = filtered.filter(b => b.holeNo.toLowerCase().includes(q));
+  if (soil) filtered = filtered.filter(b => (b.layers||[]).some(l => l.soilType === soil));
+  const wrap = document.getElementById('dashTableWrap');
+  if (wrap) wrap.innerHTML = buildDashboardTable(filtered);
+}
+
 function renderOverallTab() {
   const el = document.getElementById('tab-overall');
   if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
@@ -5242,6 +5530,7 @@ function renderReportTab() {
 function renderAllTabs() {
   updateHeader();
   renderSidebar();
+  renderDashboardTab();
   renderInputTab();
   renderVerticalTab();
   renderHorizontalTab();
@@ -5357,7 +5646,7 @@ function filterSidebar(query) {
 const _origRenderSidebar = typeof renderSidebar === 'function' ? renderSidebar : null;
 
 // ===== B1: Keyboard Shortcuts =====
-const TAB_KEYS = ['tab-input','tab-vertical','tab-horizontal','tab-pullout','tab-settlement','tab-summary','tab-report','tab-overall','tab-sensitivity'];
+const TAB_KEYS = ['tab-dashboard','tab-input','tab-vertical','tab-horizontal','tab-pullout','tab-settlement','tab-summary','tab-report','tab-overall','tab-sensitivity'];
 function showShortcutHelp() {
   if (document.querySelector('.shortcut-overlay')) return;
   const ov = document.createElement('div');
@@ -5367,7 +5656,7 @@ function showShortcutHelp() {
     <button class="close-btn" onclick="this.closest('.shortcut-overlay').remove()">&times;</button>
     <h3>&#9000; 키보드 단축키</h3>
     <table>
-      <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>~<kbd>9</kbd></td><td>탭 전환 (입력~민감도)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>~<kbd>0</kbd></td><td>탭 전환 (대시보드~민감도)</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>엑셀 내보내기</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>AI 채팅 열기</td></tr>
       <tr><td><kbd>?</kbd></td><td>단축키 도움말 (이 창)</td></tr>
@@ -5385,20 +5674,21 @@ document.addEventListener('keydown', function(e) {
   }
   // ? key → shortcut help
   if (e.key === '?' && !e.ctrlKey && !e.metaKey) { showShortcutHelp(); return; }
-  // Ctrl+1~9 → tab switch
-  if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '9') {
+  // Ctrl+1~0 → tab switch
+  if ((e.ctrlKey || e.metaKey) && ((e.key >= '1' && e.key <= '9') || e.key === '0')) {
     e.preventDefault();
-    const idx = parseInt(e.key) - 1;
+    const idx = e.key === '0' ? 9 : parseInt(e.key) - 1;
     if (idx < TAB_KEYS.length) {
       const tabId = TAB_KEYS[idx];
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       const tabEl = document.getElementById(tabId);
+      const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabId.replace('tab-','')}"]`);
+      // Skip if tab button is hidden (e.g. dashboard before JSON load)
+      if (tabBtn && tabBtn.offsetParent === null) return;
       if (tabEl) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         tabEl.classList.add('active');
-        // Find matching tab button
-        const btns = document.querySelectorAll('.tab-btn');
-        if (btns[idx]) btns[idx].classList.add('active');
+        if (tabBtn) tabBtn.classList.add('active');
       }
     }
     return;
@@ -5440,7 +5730,12 @@ if (_origProcessJSON) {
 }
 const _restored = restoreStateFromLS();
 recalculate();
-if (_restored) showToast('이전 작업 상태가 복원되었습니다', 'info');
+if (_restored) {
+  showToast('이전 작업 상태가 복원되었습니다', 'info');
+  if (STATE.uploadedData && STATE.uploadedData.length > 0) {
+    const db = document.getElementById('dashboardTabBtn'); if (db) db.style.display = '';
+  }
+}
 
 // ============================================================
 // iframe postMessage 통합 (GeoAI Platform)
