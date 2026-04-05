@@ -495,6 +495,62 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 .uz-text { font-size:13px; font-weight:600; color:var(--primary-navy); margin-bottom:4px; }
 .uz-sub { font-size:10px; color:var(--text-muted); }
 .dash-note { font-size:9px; color:var(--text-muted); margin-top:12px; }
+
+/* ===== Sensitivity Analysis Tab ===== */
+.sens-section { margin-bottom:24px; padding:16px; background:#fff; border-radius:8px; border:1px solid var(--border-color); }
+.sens-section-title { font-size:14px; font-weight:700; color:var(--primary-navy); margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--accent-coral); display:flex; align-items:center; gap:8px; }
+.sens-controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; padding:10px; background:var(--calc-bg); border-radius:6px; }
+.sens-controls label { font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; }
+.sens-controls select,.sens-controls input[type=number] { padding:5px 8px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; font-family:var(--font-mono); }
+.sens-radio-group { display:flex; gap:6px; }
+.sens-radio-group label { display:flex; align-items:center; gap:4px; font-size:11px; cursor:pointer; padding:4px 10px; border:1px solid var(--border-color); border-radius:4px; transition:all 0.2s; }
+.sens-radio-group label:has(input:checked) { background:var(--primary-navy); color:#fff; border-color:var(--primary-navy); }
+.sens-radio-group input { display:none; }
+.tornado-container { overflow-x:auto; margin-top:8px; }
+.mc-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.mc-stat-card { padding:10px; background:var(--calc-bg); border-radius:6px; text-align:center; }
+.mc-stat-card .mc-sv { font-size:16px; font-weight:800; font-family:var(--font-mono); color:var(--primary-navy); }
+.mc-stat-card .mc-sl { font-size:9px; color:var(--text-muted); margin-top:2px; }
+.mc-progress { height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden; margin:8px 0; }
+.mc-progress-bar { height:100%; background:linear-gradient(90deg,#6366f1,#8b5cf6); transition:width 0.1s; border-radius:2px; }
+.mc-histograms { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px; }
+.inv-target-row { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; }
+.inv-target-row .inv-field { flex:1; min-width:120px; }
+.inv-target-row .inv-field label { display:block; font-size:10px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+.inv-target-row .inv-field input { width:100%; padding:6px 8px; border:1px solid var(--border-color); border-radius:4px; font-family:var(--font-mono); font-size:12px; }
+.traffic-icon { display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:middle; margin-right:4px; }
+.traffic-green { background:var(--status-pass); }
+.traffic-yellow { background:var(--status-warning); }
+.traffic-red { background:var(--status-fail); }
+.spatial-container { position:relative; }
+.spatial-svg { border:1px solid #e2e8f0; border-radius:8px; background:#fafbfc; display:block; margin:0 auto; }
+.spatial-tooltip { position:absolute; background:#1e293b; color:#fff; padding:8px 12px; border-radius:6px; font-size:10px; line-height:1.5; pointer-events:none; z-index:100; display:none; max-width:220px; font-family:var(--font-mono); }
+.spatial-legend { display:flex; align-items:center; gap:6px; margin-top:8px; justify-content:center; font-size:9px; color:var(--text-muted); }
+.spatial-legend-bar { width:140px; height:10px; border-radius:2px; }
+.risk-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
+.risk-card { padding:10px; border-radius:6px; text-align:center; border:2px solid; }
+.risk-card.grade-a { border-color:#16a34a; background:#f0fdf4; }
+.risk-card.grade-b { border-color:#65a30d; background:#f7fee7; }
+.risk-card.grade-c { border-color:#ca8a04; background:#fefce8; }
+.risk-card.grade-d { border-color:#ea580c; background:#fff7ed; }
+.risk-card.grade-e { border-color:#dc2626; background:#fef2f2; }
+.risk-grade { font-size:28px; font-weight:800; font-family:var(--font-mono); }
+.risk-grade-label { font-size:9px; color:var(--text-muted); }
+.whatif-panel { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; padding:12px; background:#f8f9ff; border:1px solid #c7d2fe; border-radius:8px; }
+.whatif-btn { padding:6px 12px; border:1px solid var(--border-color); border-radius:4px; background:#fff; font-size:10px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.whatif-btn:hover { background:var(--primary-navy); color:#fff; border-color:var(--primary-navy); }
+.whatif-btn.active { background:var(--accent-coral); color:#fff; border-color:var(--accent-coral); }
+.whatif-delta { font-size:9px; font-weight:700; }
+.whatif-delta.pos { color:var(--status-pass); }
+.whatif-delta.neg { color:var(--status-fail); }
+.ai-interp-card { padding:14px; background:linear-gradient(135deg,#f8f9ff,#f0f4ff); border:1px solid #c7d2fe; border-radius:8px; margin-top:12px; }
+.ai-interp-card .aic-title { font-size:12px; font-weight:700; color:#4338ca; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.ai-interp-content { font-size:11px; line-height:1.6; color:var(--text-primary); }
+.ai-interp-content h4 { font-size:12px; color:var(--primary-navy); margin:10px 0 4px; }
+.ai-interp-content ul { margin:4px 0; padding-left:16px; }
+@media(max-width:1200px) { .mc-stats-grid{grid-template-columns:repeat(2,1fr)} .risk-cards{grid-template-columns:repeat(3,1fr)} .mc-histograms{grid-template-columns:1fr} }
+@media(max-width:768px) { .mc-stats-grid{grid-template-columns:1fr} .risk-cards{grid-template-columns:repeat(2,1fr)} .inv-target-row{flex-direction:column} .sens-controls{flex-direction:column} }
+@media print { .whatif-panel,.whatif-btn,.ai-interp-card .ai-btn{display:none!important} }
 </style>
 </head>
 <body>
@@ -530,6 +586,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
   <button class="tab-btn" data-tab="report">상세보고서</button>
   <span style="flex:1"></span>
   <button class="tab-btn" data-tab="overall" style="background:rgba(233,69,96,0.18);border-radius:4px 4px 0 0">종합결과</button>
+  <button class="tab-btn" data-tab="sensitivity" style="background:rgba(99,102,241,0.18);border-radius:4px 4px 0 0">민감도</button>
 </div>
 
 <!-- App Layout: Sidebar + Main -->
@@ -566,6 +623,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 <div class="tab-content" id="tab-summary"></div>
 <div class="tab-content" id="tab-overall"></div>
 <div class="tab-content" id="tab-report"></div>
+<div class="tab-content" id="tab-sensitivity"></div>
 
 </div><!-- /main-content -->
 </div><!-- /app-layout -->
@@ -1174,7 +1232,9 @@ function importDrillLogJSON(json) {
       });
       const sptData = Array.from(sptMap.values()).sort((a, b) => a.depth - b.depth);
       const layers = buildLayersWithAvgN(soilLayers, sptData);
-      return { holeNo: bh.hole_no || meta.HOLE_NO || 'Unknown', groundEL, gwlDepth, sptData, layers, soilLayers, meta };
+      return { holeNo: bh.hole_no || meta.HOLE_NO || 'Unknown', groundEL, gwlDepth, sptData, layers, soilLayers, meta,
+        coordX: bh.x != null ? bh.x : (meta.X_COORDINATE != null ? parseFloat(meta.X_COORDINATE) : null),
+        coordY: bh.y != null ? bh.y : (meta.Y_COORDINATE != null ? parseFloat(meta.Y_COORDINATE) : null) };
     });
   }
   // Format C: { metadata, soil_layers, spt_data }
@@ -1365,7 +1425,7 @@ function ensureApiKey() {
   showToast('유효한 API Key가 필요합니다', 'error'); return false;
 }
 
-async function callClaudeAPI({ systemPrompt, userMessage, onChunk, onComplete, onError, maxTokens=2048, temperature=0.3 }) {
+async function callClaudeAPI({ systemPrompt, userMessage, onChunk, onComplete, onError, maxTokens=2048, temperature=0.3, model=null }) {
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -1376,7 +1436,7 @@ async function callClaudeAPI({ systemPrompt, userMessage, onChunk, onComplete, o
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: model || 'claude-haiku-4-5-20251001',
         max_tokens: maxTokens,
         temperature: temperature,
         stream: true,
@@ -1557,6 +1617,7 @@ ${JSON.stringify(data, null, 2)}
 
 ### 6. 위험 요소 및 주의사항
 시공 시 유의사항, 잠재 위험, 추가 검토 필요 항목`,
+    model: 'claude-sonnet-4-5-20241022',
     maxTokens: 2500,
     temperature: 0.3,
     onChunk: (text) => {
@@ -1916,6 +1977,7 @@ N값이 낮은 연약 지반 구간 (N<10), 급격한 N값 변화 구간
 ### 7. 위험 요소 및 시공 주의사항`,
     maxTokens: 3000,
     temperature: 0.3,
+    model: 'claude-sonnet-4-5-20241022',
     onChunk: (text) => {
       fullText += text;
       document.getElementById('aiContent').innerHTML = renderAIMarkdown(fullText);
@@ -2019,6 +2081,7 @@ ${JSON.stringify(data, null, 2)}
 전문적이고 격식있는 한국어 기술보고서 스타일로 작성하세요.`,
     maxTokens: 4096,
     temperature: 0.4,
+    model: 'claude-sonnet-4-5-20241022',
     onChunk: (text) => {
       fullText += text;
       document.getElementById('aiContent').innerHTML = renderAIMarkdown(fullText);
@@ -4923,7 +4986,11 @@ function renderDashboardTab() {
   </div>`;
   html += `<div class="dash-table-wrap" id="dashTableWrap">${buildDashboardTable(bhs)}</div>`;
   html += `<div class="dash-note">* '-'는 해당 층이 출현하지 않음을 의미합니다.</div>`;
+  html += buildSpatialSection();
+  html += buildRiskDashboardSection();
   el.innerHTML = html;
+  // Render spatial map after DOM insertion
+  setTimeout(() => { if (document.getElementById('spatialMapContainer')) renderSpatialMap('Qa_applied'); }, 100);
 }
 
 function buildDashboardTable(bhs) {
@@ -5055,6 +5122,690 @@ function filterDashboardTable() {
   if (soil) filtered = filtered.filter(b => (b.layers||[]).some(l => l.soilType === soil));
   const wrap = document.getElementById('dashTableWrap');
   if (wrap) wrap.innerHTML = buildDashboardTable(filtered);
+}
+
+// ===== SENSITIVITY ANALYSIS ENGINE =====
+const SENS_STATE = { tornadoResults: null, mcStatistics: null, mcRawResults: null };
+const TORNADO_PARAMS = [
+  { key:'coeff_tip', label:'선단계수 (α)', unit:'' },
+  { key:'coeff_sand', label:'사질토계수 (β)', unit:'' },
+  { key:'coeff_clay', label:'점성토계수 (γ)', unit:'' },
+  { key:'diameter_mm', label:'직경', unit:'mm' },
+  { key:'embedDepth', label:'근입깊이', unit:'m' },
+  { key:'bearingEL', label:'지지층 EL', unit:'m' },
+  { key:'alpha_kh', label:'Alpha Kh', unit:'' },
+  { key:'delta_cm', label:'허용변위', unit:'cm' },
+];
+
+function buildCalcPileParams(overrides) {
+  const base = {
+    pileType:STATE.pileType, diameter_mm:STATE.diameter_mm, thickness_mm:STATE.thickness_mm,
+    phcGrade:STATE.phcGrade, pileTopEL:STATE.pileTopEL, groundEL:STATE.groundEL,
+    bearingEL:STATE.bearingEL, gwlDepth:STATE.gwlDepth, sptData:STATE.sptData,
+    layers:STATE.layers, alpha_kh:STATE.alpha_kh, delta_cm:STATE.delta_cm,
+    sigmaMax_kN:STATE.sigmaMax, corrosionThickness_mm:STATE.corrosionThk,
+    qu_kPa:STATE.qu_kPa, Sd_m:STATE.Sd_m, td_m:STATE.td_m, rockPhi_deg:STATE.rockPhi,
+    bearingMethod:STATE.bearingMethod, jointCount:STATE.jointCount, jointType:STATE.jointType,
+    useFill:STATE.useFill, plannedEL:STATE.plannedEL, fillN:STATE.fillN,
+    embedDepth:STATE.embedDepth,
+    coeff_tip:STATE.coeff_tip, coeff_sand:STATE.coeff_sand, coeff_clay:STATE.coeff_clay
+  };
+  return Object.assign(base, overrides || {});
+}
+
+function buildCalcPileParamsForBh(bh, overrides) {
+  const dp = bh.designParams || {};
+  const v = (k,fb) => dp[k] != null ? dp[k] : fb;
+  const base = {
+    pileType:v('pileType',STATE.pileType), diameter_mm:v('diameter_mm',STATE.diameter_mm),
+    thickness_mm:v('thickness_mm',STATE.thickness_mm), phcGrade:v('phcGrade',STATE.phcGrade),
+    pileTopEL:v('pileTopEL',STATE.pileTopEL), groundEL:bh.groundEL!=null?bh.groundEL:STATE.groundEL,
+    bearingEL:bh.bearingEL!=null?bh.bearingEL:v('bearingEL',STATE.bearingEL),
+    gwlDepth:bh.gwlDepth!=null?bh.gwlDepth:STATE.gwlDepth,
+    sptData:bh.sptData, layers:bh.layers,
+    alpha_kh:v('alpha_kh',STATE.alpha_kh), delta_cm:v('delta_cm',STATE.delta_cm),
+    sigmaMax_kN:v('sigmaMax',STATE.sigmaMax),
+    corrosionThickness_mm:v('corrosionThk',STATE.corrosionThk), qu_kPa:v('qu_kPa',STATE.qu_kPa),
+    Sd_m:v('Sd_m',STATE.Sd_m), td_m:v('td_m',STATE.td_m), rockPhi_deg:v('rockPhi',STATE.rockPhi),
+    bearingMethod:v('bearingMethod',STATE.bearingMethod),
+    jointCount:v('jointCount',STATE.jointCount), jointType:v('jointType',STATE.jointType),
+    useFill:v('useFill',STATE.useFill), plannedEL:v('plannedEL',STATE.plannedEL),
+    fillN:v('fillN',STATE.fillN), embedDepth:v('embedDepth',STATE.embedDepth),
+    coeff_tip:v('coeff_tip',STATE.coeff_tip), coeff_sand:v('coeff_sand',STATE.coeff_sand),
+    coeff_clay:v('coeff_clay',STATE.coeff_clay)
+  };
+  return Object.assign(base, overrides || {});
+}
+
+// --- Random number generators ---
+function boxMullerRandom() { let u1; do{u1=Math.random()}while(u1===0); return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*Math.random()); }
+function normalRandom(m,s) { return m + boxMullerRandom()*s; }
+function uniformRandom(lo,hi) { return lo + Math.random()*(hi-lo); }
+function calcMCPercentile(sorted,p) { const i=(sorted.length-1)*p; const lo=Math.floor(i),hi=Math.ceil(i); return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo); }
+
+// ===== SENSITIVITY TAB RENDER =====
+function renderSensitivityTab() {
+  const el = document.getElementById('tab-sensitivity');
+  if (!el) return;
+  if (!STATE.result) {
+    el.innerHTML = '<p style="color:var(--text-muted);padding:40px;text-align:center">계산 결과가 없습니다. 먼저 입력 탭에서 설계를 완료하세요.</p>';
+    return;
+  }
+  let html = '';
+  // Section 1: Tornado
+  html += `<div class="sens-section">
+    <div class="sens-section-title">&#127768; 토네이도 다이어그램 — 결정론적 민감도 분석</div>
+    <div class="sens-controls">
+      <div><label>분석 대상</label>
+        <div class="sens-radio-group" id="tornadoTarget">
+          <label><input type="radio" name="tornadoTarget" value="Qa_applied" checked onchange="runTornadoAnalysis()">수직지지력 Qa</label>
+          <label><input type="radio" name="tornadoTarget" value="Ha_applied" onchange="runTornadoAnalysis()">수평지지력 Ha</label>
+          <label><input type="radio" name="tornadoTarget" value="St" onchange="runTornadoAnalysis()">침하량 St</label>
+        </div>
+      </div>
+      <div><label>변동 범위</label>
+        <select id="tornadoRange" onchange="runTornadoAnalysis()"><option value="0.1">&plusmn;10%</option><option value="0.2" selected>&plusmn;20%</option><option value="0.3">&plusmn;30%</option></select>
+      </div>
+    </div>
+    <div id="tornadoChart" class="tornado-container"></div>
+  </div>`;
+  // Section 2: Monte Carlo
+  html += `<div class="sens-section">
+    <div class="sens-section-title">&#127922; 몬테카를로 시뮬레이션 — 확률론적 분석</div>
+    <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">N값(CV=0.3), 지표고(&sigma;=0.5m), 지하수위(&sigma;=1.0m), 설계계수(균등분포) 등을 확률 변동하여 1,000회 시뮬레이션합니다.</p>
+    <button class="btn" onclick="runMonteCarloSimulation()" id="mcRunBtn" style="margin-bottom:8px">&#9654; 시뮬레이션 실행 (1,000회)</button>
+    <div class="mc-progress" id="mcProgressWrap" style="display:none"><div class="mc-progress-bar" id="mcProgressBar" style="width:0%"></div></div>
+    <div id="mcResults"></div>
+  </div>`;
+  // Section 3: AI Interpretation
+  html += `<div class="sens-section">
+    <div class="sens-section-title">&#129302; AI 민감도 해석</div>
+    <button class="btn ai-btn" onclick="runSensitivityAI()" style="margin-bottom:8px">&#9889; AI 분석 실행</button>
+    <div id="sensAIResult"></div>
+  </div>`;
+  // Section 4: Inverse Design
+  html += buildInverseDesignSection();
+  el.innerHTML = html;
+  // Auto-run tornado
+  setTimeout(() => runTornadoAnalysis(), 100);
+}
+
+// ===== TORNADO ANALYSIS =====
+function runTornadoAnalysis() {
+  const targetEl = document.querySelector('input[name="tornadoTarget"]:checked');
+  const target = targetEl ? targetEl.value : 'Qa_applied';
+  const range = parseFloat(document.getElementById('tornadoRange')?.value || 0.2);
+  const baseParams = buildCalcPileParams();
+  let baseResult;
+  try { baseResult = calcPile(baseParams); } catch(e) { return; }
+  const baseline = baseResult[target];
+  if (baseline == null || baseline === 0) return;
+  const results = [];
+  TORNADO_PARAMS.forEach(tp => {
+    const baseVal = baseParams[tp.key];
+    if (baseVal == null || baseVal === 0) return;
+    let rHigh, rLow;
+    try { rHigh = calcPile(buildCalcPileParams({[tp.key]: baseVal*(1+range)})); } catch(e) { rHigh = null; }
+    try { rLow = calcPile(buildCalcPileParams({[tp.key]: baseVal*(1-range)})); } catch(e) { rLow = null; }
+    const dHigh = rHigh ? ((rHigh[target]-baseline)/baseline)*100 : 0;
+    const dLow = rLow ? ((rLow[target]-baseline)/baseline)*100 : 0;
+    results.push({ label:tp.label, baseVal, unit:tp.unit, dHigh, dLow, impact:Math.abs(dHigh)+Math.abs(dLow) });
+  });
+  results.sort((a,b) => b.impact - a.impact);
+  SENS_STATE.tornadoResults = { target, range, baseline, results };
+  const labels = {Qa_applied:'수직지지력 Qa (kN)',Ha_applied:'수평지지력 Ha (kN)',St:'침하량 St (mm)'};
+  document.getElementById('tornadoChart').innerHTML = renderTornadoSVG(results, labels[target]||target, baseline);
+}
+
+function renderTornadoSVG(data, label, baseline) {
+  if (!data.length) return '<p style="color:var(--text-muted)">분석할 파라미터가 없습니다.</p>';
+  const W=700, rowH=32, padT=50, padB=30, padL=140, padR=60;
+  const H = padT + data.length*rowH + padB;
+  const maxAbs = Math.max(...data.map(d => Math.max(Math.abs(d.dHigh),Math.abs(d.dLow))), 1);
+  const halfW = (W-padL-padR)/2;
+  const cx = padL + halfW;
+  let svg = `<svg width="${W}" height="${H}" style="font-family:var(--font-body)">`;
+  // Title
+  svg += `<text x="${W/2}" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="var(--primary-navy)">${label} 민감도 (기준값: ${fmt(baseline)})</text>`;
+  // Axis
+  svg += `<line x1="${cx}" y1="${padT-10}" x2="${cx}" y2="${H-padB}" stroke="var(--primary-navy)" stroke-width="2" stroke-dasharray="4,2"/>`;
+  // Grid labels
+  [-maxAbs, -maxAbs/2, 0, maxAbs/2, maxAbs].forEach(v => {
+    const x = cx + (v/maxAbs)*halfW;
+    svg += `<text x="${x}" y="${padT-14}" text-anchor="middle" font-size="8" fill="var(--text-muted)">${v>0?'+':''}${v.toFixed(1)}%</text>`;
+    svg += `<line x1="${x}" y1="${padT-8}" x2="${x}" y2="${H-padB}" stroke="#eee" stroke-width="0.5"/>`;
+  });
+  data.forEach((d,i) => {
+    const y = padT + i*rowH;
+    const yMid = y + rowH/2;
+    // Label
+    svg += `<text x="${padL-8}" y="${yMid+4}" text-anchor="end" font-size="10" fill="var(--text-primary)">${d.label}</text>`;
+    // Low bar (left of center if negative)
+    const xLow = cx + (Math.min(d.dLow,0)/maxAbs)*halfW;
+    const wLow = Math.abs(d.dLow/maxAbs)*halfW;
+    if (wLow > 0.5) svg += `<rect x="${d.dLow<0?xLow:cx}" y="${yMid-10}" width="${wLow}" height="20" rx="3" fill="${d.dLow<0?'#ef4444':'#3b82f6'}" opacity="0.8"><title>-${(d.baseVal*(1-SENS_STATE.tornadoResults?.range||0.2)).toFixed(2)} → ${d.dLow>0?'+':''}${d.dLow.toFixed(1)}%</title></rect>`;
+    // High bar
+    const xHigh = cx;
+    const wHigh = Math.abs(d.dHigh/maxAbs)*halfW;
+    if (wHigh > 0.5) svg += `<rect x="${d.dHigh>0?cx:cx-(wHigh)}" y="${yMid-10}" width="${wHigh}" height="20" rx="3" fill="${d.dHigh>0?'#3b82f6':'#ef4444'}" opacity="0.8"><title>+${(d.baseVal*(1+(SENS_STATE.tornadoResults?.range||0.2))).toFixed(2)} → ${d.dHigh>0?'+':''}${d.dHigh.toFixed(1)}%</title></rect>`;
+    // Value labels
+    if (Math.abs(d.dLow) > 0.5) svg += `<text x="${cx + (d.dLow/maxAbs)*halfW + (d.dLow<0?-4:4)}" y="${yMid+3}" text-anchor="${d.dLow<0?'end':'start'}" font-size="8" fill="var(--text-secondary)" font-family="var(--font-mono)">${d.dLow>0?'+':''}${d.dLow.toFixed(1)}%</text>`;
+    if (Math.abs(d.dHigh) > 0.5) svg += `<text x="${cx + (d.dHigh/maxAbs)*halfW + (d.dHigh>0?4:-4)}" y="${yMid+3}" text-anchor="${d.dHigh>0?'start':'end'}" font-size="8" fill="var(--text-secondary)" font-family="var(--font-mono)">${d.dHigh>0?'+':''}${d.dHigh.toFixed(1)}%</text>`;
+  });
+  // Legend
+  svg += `<rect x="${W-150}" y="${H-25}" width="12" height="12" rx="2" fill="#3b82f6" opacity="0.8"/><text x="${W-134}" y="${H-16}" font-size="9" fill="var(--text-muted)">증가</text>`;
+  svg += `<rect x="${W-90}" y="${H-25}" width="12" height="12" rx="2" fill="#ef4444" opacity="0.8"/><text x="${W-74}" y="${H-16}" font-size="9" fill="var(--text-muted)">감소</text>`;
+  svg += '</svg>';
+  return svg;
+}
+
+// ===== MONTE CARLO SIMULATION =====
+async function runMonteCarloSimulation() {
+  const btn = document.getElementById('mcRunBtn');
+  const wrap = document.getElementById('mcProgressWrap');
+  const bar = document.getElementById('mcProgressBar');
+  const container = document.getElementById('mcResults');
+  if (!STATE.result) return;
+  btn.disabled = true; btn.textContent = '시뮬레이션 실행 중...';
+  wrap.style.display = ''; bar.style.width = '0%';
+  const N=1000, BATCH=100;
+  const results = {Qa:[],Ha:[],St:[]};
+  for (let batch=0; batch<N; batch+=BATCH) {
+    await new Promise(resolve => setTimeout(() => {
+      for (let i=batch; i<Math.min(batch+BATCH,N); i++) {
+        const sptP = STATE.sptData.map(s => ({...s, N:Math.max(1,Math.round(normalRandom(s.N,s.N*0.3)))}));
+        const layersP = STATE.layers.map(l => ({...l, avgN:Math.max(1,normalRandom(l.avgN||5,Math.max(l.avgN||5,1)*0.3))}));
+        const p = buildCalcPileParams({
+          groundEL: normalRandom(STATE.groundEL,0.5),
+          gwlDepth: Math.max(0,normalRandom(STATE.gwlDepth,1.0)),
+          coeff_tip: uniformRandom(200,300),
+          coeff_sand: uniformRandom(1.5,2.5),
+          coeff_clay: uniformRandom(5.0,7.5),
+          sptData: sptP, layers: layersP
+        });
+        try { const r=calcPile(p); results.Qa.push(r.Qa_applied); results.Ha.push(r.Ha_applied); results.St.push(r.St); } catch(e) {}
+      }
+      bar.style.width = (Math.min(batch+BATCH,N)/N*100)+'%';
+      resolve();
+    }, 0));
+  }
+  wrap.style.display = 'none';
+  btn.disabled = false; btn.textContent = '\u25B6 시뮬레이션 실행 (1,000회)';
+  renderMCResults(results);
+}
+
+function renderMCResults(results) {
+  const container = document.getElementById('mcResults');
+  const stats = {};
+  ['Qa','Ha','St'].forEach(k => {
+    const arr = results[k].slice().sort((a,b)=>a-b);
+    if (!arr.length) { stats[k] = null; return; }
+    const mean = arr.reduce((s,v)=>s+v,0)/arr.length;
+    const variance = arr.reduce((s,v)=>s+(v-mean)**2,0)/arr.length;
+    stats[k] = {
+      mean, std: Math.sqrt(variance),
+      p5: calcMCPercentile(arr,0.05), p50: calcMCPercentile(arr,0.5), p95: calcMCPercentile(arr,0.95),
+      min: arr[0], max: arr[arr.length-1], n: arr.length
+    };
+    // Failure probability
+    if (k==='St') stats[k].pf = arr.filter(v=>v>25).length/arr.length;
+    else { const tgt = k==='Qa'?800:50; stats[k].pf = arr.filter(v=>v<tgt).length/arr.length; }
+  });
+  SENS_STATE.mcStatistics = stats;
+  SENS_STATE.mcRawResults = results;
+  let html = '<div class="mc-histograms">';
+  const cfgs = [
+    {k:'Qa',label:'수직지지력 Qa',unit:'kN',color:'#3b82f6',tgt:800,tgtLabel:'목표 800kN',inv:false},
+    {k:'Ha',label:'수평지지력 Ha',unit:'kN',color:'#8b5cf6',tgt:50,tgtLabel:'목표 50kN',inv:false},
+    {k:'St',label:'침하량 St',unit:'mm',color:'#f59e0b',tgt:25,tgtLabel:'한계 25mm',inv:true}
+  ];
+  cfgs.forEach(c => {
+    if (!stats[c.k]) return;
+    html += `<div>${renderMCHistogramSVG(results[c.k],c.label,c.unit,c.color,c.tgt,c.tgtLabel)}</div>`;
+  });
+  html += '</div>';
+  // Stats grid
+  html += '<div class="mc-stats-grid">';
+  cfgs.forEach(c => {
+    const s = stats[c.k]; if (!s) return;
+    const pfColor = s.pf > 0.1 ? 'var(--status-fail)' : s.pf > 0.05 ? 'var(--status-warning)' : 'var(--status-pass)';
+    html += `<div class="mc-stat-card">
+      <div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:6px">${c.label}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;text-align:left;font-size:10px">
+        <span>평균</span><span class="mc-sv" style="font-size:12px">${fmt(s.mean)}</span>
+        <span>표준편차</span><span style="font-family:var(--font-mono)">${fmt(s.std)}</span>
+        <span>P5</span><span style="font-family:var(--font-mono)">${fmt(s.p5)}</span>
+        <span>P50</span><span style="font-family:var(--font-mono)">${fmt(s.p50)}</span>
+        <span>P95</span><span style="font-family:var(--font-mono)">${fmt(s.p95)}</span>
+        <span style="font-weight:700">Pf (파괴확률)</span><span style="font-family:var(--font-mono);color:${pfColor};font-weight:700">${(s.pf*100).toFixed(1)}%</span>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderMCHistogramSVG(values, label, unit, color, tgt, tgtLabel) {
+  const W=280, H=180, m={t:30,r:10,b:35,l:40};
+  const cW=W-m.l-m.r, cH=H-m.t-m.b;
+  const sorted = values.slice().sort((a,b)=>a-b);
+  const min=sorted[0], max=sorted[sorted.length-1];
+  const bins=20, binW=(max-min)/bins||1;
+  const counts=new Array(bins).fill(0);
+  sorted.forEach(v => { const i=Math.min(Math.floor((v-min)/binW),bins-1); counts[i]++; });
+  const maxC=Math.max(...counts);
+  let svg = `<svg width="${W}" height="${H}" style="font-family:var(--font-body)">`;
+  svg += `<text x="${W/2}" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="var(--primary-navy)">${label} (${unit})</text>`;
+  // Bars
+  const bw = cW/bins;
+  counts.forEach((c,i) => {
+    const h = (c/maxC)*cH;
+    svg += `<rect x="${m.l+i*bw}" y="${m.t+cH-h}" width="${bw-1}" height="${h}" fill="${color}" opacity="0.7" rx="1"><title>${(min+i*binW).toFixed(1)}~${(min+(i+1)*binW).toFixed(1)}: ${c}회</title></rect>`;
+  });
+  // Target line
+  if (tgt >= min && tgt <= max) {
+    const tx = m.l + ((tgt-min)/(max-min))*cW;
+    svg += `<line x1="${tx}" y1="${m.t}" x2="${tx}" y2="${m.t+cH}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    svg += `<text x="${tx}" y="${m.t-4}" text-anchor="middle" font-size="7" fill="#dc2626">${tgtLabel}</text>`;
+  }
+  // Mean line
+  const mean = values.reduce((s,v)=>s+v,0)/values.length;
+  const mx = m.l + ((mean-min)/(max-min||1))*cW;
+  svg += `<line x1="${mx}" y1="${m.t}" x2="${mx}" y2="${m.t+cH}" stroke="var(--primary-navy)" stroke-width="1.5"/>`;
+  svg += `<text x="${mx}" y="${H-5}" text-anchor="middle" font-size="7" fill="var(--primary-navy)">avg=${fmt(mean)}</text>`;
+  // Axes
+  svg += `<line x1="${m.l}" y1="${m.t+cH}" x2="${m.l+cW}" y2="${m.t+cH}" stroke="#ccc" stroke-width="1"/>`;
+  svg += `<text x="${m.l}" y="${H-8}" font-size="7" fill="var(--text-muted)">${fmt(min)}</text>`;
+  svg += `<text x="${m.l+cW}" y="${H-8}" text-anchor="end" font-size="7" fill="var(--text-muted)">${fmt(max)}</text>`;
+  svg += '</svg>';
+  return svg;
+}
+
+// ===== AI SENSITIVITY INTERPRETATION =====
+async function runSensitivityAI() {
+  if (typeof ensureApiKey === 'function' && !ensureApiKey()) return;
+  if (!AI_API_KEY) { showToast('API Key를 설정하세요','error'); return; }
+  const container = document.getElementById('sensAIResult');
+  container.innerHTML = '<div class="ai-interp-card"><div class="aic-title">&#9889; AI 분석 중...</div><div class="ai-interp-content" id="sensAIContent"><span class="chat-typing"><span></span><span></span><span></span></span></div></div>';
+  const tornadoInfo = SENS_STATE.tornadoResults ? JSON.stringify(SENS_STATE.tornadoResults.results.map(r=>({param:r.label,impact:r.impact.toFixed(1),dHigh:r.dHigh.toFixed(1),dLow:r.dLow.toFixed(1)}))) : '미실행';
+  const mcInfo = SENS_STATE.mcStatistics ? JSON.stringify(Object.fromEntries(Object.entries(SENS_STATE.mcStatistics).map(([k,v])=>v?[k,{mean:v.mean.toFixed(2),std:v.std.toFixed(2),p5:v.p5.toFixed(2),p95:v.p95.toFixed(2),pf:(v.pf*100).toFixed(1)+'%'}]:[k,null]))) : '미실행';
+  let fullText = '';
+  await callClaudeAPI({
+    systemPrompt: '당신은 말뚝 기초 설계 민감도 분석 전문 지반공학자입니다. 토네이도 다이어그램과 몬테카를로 시뮬레이션 결과를 분석하여 핵심 인사이트를 제공하세요. 한국어로 답변하세요. 구조: 1)핵심발견 2)지배 파라미터 해석 3)신뢰성 평가 4)설계 권장사항',
+    userMessage: `현재 시추공: ${STATE.boreholeNo}\n말뚝: ${STATE.pileType} ${STATE.diameter_mm}mm\n\n토네이도 결과:\n${tornadoInfo}\n\n몬테카를로 결과:\n${mcInfo}`,
+    maxTokens: 1500, temperature: 0.3, model: 'claude-sonnet-4-5-20241022',
+    onChunk: t => { fullText+=t; document.getElementById('sensAIContent').innerHTML=fullText.replace(/\n/g,'<br>').replace(/###\s*(.+)/g,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); },
+    onComplete: () => { document.getElementById('sensAIContent').innerHTML=fullText.replace(/\n/g,'<br>').replace(/###\s*(.+)/g,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); },
+    onError: err => { document.getElementById('sensAIContent').innerHTML=`<span style="color:var(--status-fail)">${err.message}</span>`; }
+  });
+}
+
+// ===== INVERSE DESIGN (Feature 2) =====
+function buildInverseDesignSection() {
+  return `<div class="sens-section">
+    <div class="sens-section-title">&#127919; 역설계 최적화 — 목표 기반 사양 탐색</div>
+    <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">목표 성능을 입력하면, 각 시추공에서 이를 만족하는 최소 사양을 자동 탐색합니다.</p>
+    <div class="inv-target-row">
+      <div class="inv-field"><label>최소 Qa (kN)</label><input type="number" id="invTargetQa" value="800"></div>
+      <div class="inv-field"><label>최소 Ha (kN)</label><input type="number" id="invTargetHa" value="50"></div>
+      <div class="inv-field"><label>최대 St (mm)</label><input type="number" id="invTargetSt" value="25"></div>
+      <button class="btn" onclick="runInverseDesign()" style="white-space:nowrap;align-self:flex-end">&#128269; 전체 시추공 최적화 분석</button>
+    </div>
+    <div id="invResults"></div>
+  </div>`;
+}
+
+function runInverseDesign() {
+  if (!STATE.uploadedData || !STATE.uploadedData.length) { showToast('시추공 데이터가 없습니다','error'); return; }
+  const tQa = parseFloat(document.getElementById('invTargetQa').value) || 800;
+  const tHa = parseFloat(document.getElementById('invTargetHa').value) || 50;
+  const tSt = parseFloat(document.getElementById('invTargetSt').value) || 25;
+  const results = STATE.uploadedData.map(bh => {
+    const r = BH_RESULTS[bh.holeNo];
+    const spec = findMinimumSpec(bh, tQa, tHa, tSt);
+    return { holeNo: bh.holeNo, current: r, ...spec };
+  });
+  renderInverseResults(results, tQa, tHa, tSt);
+}
+
+function findMinimumSpec(bh, tQa, tHa, tSt) {
+  const r = BH_RESULTS[bh.holeNo];
+  if (r && r.Qa_applied >= tQa && r.Ha_applied >= tHa && r.St <= tSt) {
+    return { status:'pass', change:null, improved:r };
+  }
+  const diameters = [400,450,500,600,700,800,1000];
+  const embeds = [1,2,3,4,5];
+  const curD = (bh.designParams||{}).diameter_mm || STATE.diameter_mm;
+  for (const d of diameters) {
+    if (d < curD) continue;
+    for (const e of embeds) {
+      try {
+        const p = buildCalcPileParamsForBh(bh, {diameter_mm:d, embedDepth:e});
+        const nr = calcPile(p);
+        if (nr.Qa_applied >= tQa && nr.Ha_applied >= tHa && nr.St <= tSt) {
+          if (d === curD && e === ((bh.designParams||{}).embedDepth || STATE.embedDepth)) return {status:'pass',change:null,improved:nr};
+          return { status:'optimized', change:{diameter_mm:d,embedDepth:e}, improved:nr };
+        }
+      } catch(e) {}
+    }
+  }
+  return { status:'fail', change:null, improved:null };
+}
+
+function renderInverseResults(results, tQa, tHa, tSt) {
+  const container = document.getElementById('invResults');
+  const passN = results.filter(r=>r.status==='pass').length;
+  const optN = results.filter(r=>r.status==='optimized').length;
+  const failN = results.filter(r=>r.status==='fail').length;
+  let html = `<div class="dash-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+    <div class="dash-stat"><div class="ds-val" style="color:var(--status-pass)">${passN}</div><div class="ds-label">현재 사양 충족</div></div>
+    <div class="dash-stat"><div class="ds-val" style="color:var(--status-warning)">${optN}</div><div class="ds-label">사양 변경 필요</div></div>
+    <div class="dash-stat"><div class="ds-val" style="color:var(--status-fail)">${failN}</div><div class="ds-label">달성 불가</div></div>
+  </div>`;
+  html += `<div class="dash-table-wrap"><table class="dash-table" style="font-size:10px"><thead><tr>
+    <th>시추공</th><th>현재 Qa</th><th>현재 Ha</th><th>현재 St</th><th>판정</th><th>추천 직경</th><th>추천 근입</th><th>개선 Qa</th><th>개선 Ha</th><th>개선 St</th>
+  </tr></thead><tbody>`;
+  results.forEach(r => {
+    const ic = r.status==='pass'?'traffic-green':r.status==='optimized'?'traffic-yellow':'traffic-red';
+    const lbl = r.status==='pass'?'충족':r.status==='optimized'?'변경':'\u2717';
+    const c = r.current;
+    html += `<tr>
+      <td style="font-weight:700">${r.holeNo}</td>
+      <td style="color:${c&&c.Qa_applied>=tQa?'var(--status-pass)':'var(--status-fail)'}">${c?fmt(c.Qa_applied):'-'}</td>
+      <td style="color:${c&&c.Ha_applied>=tHa?'var(--status-pass)':'var(--status-fail)'}">${c?fmt(c.Ha_applied):'-'}</td>
+      <td style="color:${c&&c.St<=tSt?'var(--status-pass)':'var(--status-fail)'}">${c?fmt(c.St):'-'}</td>
+      <td><span class="traffic-icon ${ic}"></span>${lbl}</td>
+      <td>${r.change?r.change.diameter_mm+'mm':'-'}</td>
+      <td>${r.change?r.change.embedDepth+'m':'-'}</td>
+      <td>${r.improved?fmt(r.improved.Qa_applied):'-'}</td>
+      <td>${r.improved?fmt(r.improved.Ha_applied):'-'}</td>
+      <td>${r.improved?fmt(r.improved.St):'-'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// ===== SPATIAL INTELLIGENCE (Feature 3) =====
+function getBoreholePositions() {
+  if (!STATE.uploadedData) return [];
+  return STATE.uploadedData.map((bh, idx) => {
+    let x = bh.coordX, y = bh.coordY;
+    if (x == null || y == null || isNaN(x) || isNaN(y)) {
+      const cols = Math.ceil(Math.sqrt(STATE.uploadedData.length));
+      x = (idx % cols) * 100; y = Math.floor(idx / cols) * 100;
+    }
+    return { holeNo:bh.holeNo, x, y, idx };
+  });
+}
+
+function interpolateColor(val, min, max, invert) {
+  let t = max > min ? (val - min) / (max - min) : 0.5;
+  if (invert) t = 1 - t;
+  t = Math.max(0, Math.min(1, t));
+  // green(0) -> yellow(0.5) -> red(1)
+  const r = t < 0.5 ? Math.round(255 * t * 2) : 255;
+  const g = t < 0.5 ? 255 : Math.round(255 * (1 - (t - 0.5) * 2));
+  return `rgb(${r},${g},60)`;
+}
+
+function calcIDWValue(px, py, positions, values, power) {
+  power = power || 2;
+  let wSum=0, vSum=0;
+  positions.forEach((pos,i) => {
+    const dist = Math.sqrt((px-pos.x)**2 + (py-pos.y)**2);
+    if (dist < 0.001) { wSum=1e10; vSum=values[i]*1e10; return; }
+    const w = 1/Math.pow(dist,power);
+    wSum += w; vSum += w*values[i];
+  });
+  return wSum > 0 ? vSum/wSum : 0;
+}
+
+function detectSpatialAnomalies(values) {
+  const mean = values.reduce((s,v)=>s+v,0)/values.length;
+  const std = Math.sqrt(values.reduce((s,v)=>s+(v-mean)**2,0)/values.length);
+  return values.map(v => Math.abs(v-mean) > 2*std);
+}
+
+function buildSpatialSection() {
+  if (!STATE.uploadedData || STATE.uploadedData.length < 3) return '';
+  return `<div class="sens-section" style="margin-top:24px">
+    <div class="sens-section-title">&#127758; 시추공 공간분포 — 사이트 히트맵</div>
+    <div class="sens-controls">
+      <div><label>표시 지표</label>
+        <select id="spatialMetric" onchange="renderSpatialMap(this.value)">
+          <option value="Qa_applied">수직지지력 Qa</option>
+          <option value="Ha_applied">수평지지력 Ha</option>
+          <option value="St">침하량 St</option>
+          <option value="groundEL">지표고 EL</option>
+        </select>
+      </div>
+    </div>
+    <div class="spatial-container">
+      <div id="spatialMapContainer"></div>
+      <div class="spatial-tooltip" id="spatialTooltip"></div>
+    </div>
+  </div>`;
+}
+
+function renderSpatialMap(metric) {
+  metric = metric || 'Qa_applied';
+  const container = document.getElementById('spatialMapContainer');
+  if (!container) return;
+  const positions = getBoreholePositions();
+  if (!positions.length) return;
+  // Get values
+  const values = positions.map(p => {
+    const bh = STATE.uploadedData[p.idx];
+    const r = BH_RESULTS[bh.holeNo];
+    if (metric === 'groundEL') return bh.groundEL || 0;
+    return r ? r[metric] || 0 : 0;
+  });
+  const invert = metric === 'St'; // higher St is worse
+  // Normalize coords
+  const xs = positions.map(p=>p.x), ys = positions.map(p=>p.y);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const rangeX = maxX-minX||100, rangeY = maxY-minY||100;
+  const W=600, H=400, pad=40;
+  const norm = pos => ({ x: pad + (pos.x-minX)/rangeX*(W-2*pad), y: pad + (maxY-pos.y)/rangeY*(H-2*pad) });
+  const normPositions = positions.map(norm);
+  const minV=Math.min(...values), maxV=Math.max(...values);
+  const anomalies = detectSpatialAnomalies(values);
+  // IDW heatmap
+  const gridN = 20;
+  let svg = `<svg class="spatial-svg" width="${W}" height="${H}" onmouseleave="document.getElementById('spatialTooltip').style.display='none'">`;
+  for (let gy=0; gy<gridN; gy++) {
+    for (let gx=0; gx<gridN; gx++) {
+      const px = pad + (gx+0.5)/(gridN)*(W-2*pad);
+      const py = pad + (gy+0.5)/(gridN)*(H-2*pad);
+      // Map back to original coords
+      const origX = minX + (px-pad)/(W-2*pad)*rangeX;
+      const origY = maxY - (py-pad)/(H-2*pad)*rangeY;
+      const v = calcIDWValue(origX, origY, positions, values);
+      const color = interpolateColor(v, minV, maxV, invert);
+      const cw = (W-2*pad)/gridN, ch = (H-2*pad)/gridN;
+      svg += `<rect x="${pad+gx*cw}" y="${pad+gy*ch}" width="${cw}" height="${ch}" fill="${color}" opacity="0.4"/>`;
+    }
+  }
+  // Borehole markers
+  normPositions.forEach((np, i) => {
+    const v = values[i];
+    const color = interpolateColor(v, minV, maxV, invert);
+    const r = anomalies[i] ? 14 : 10;
+    if (anomalies[i]) svg += `<circle cx="${np.x}" cy="${np.y}" r="16" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="4,2"/>`;
+    svg += `<circle cx="${np.x}" cy="${np.y}" r="${r}" fill="${color}" stroke="#fff" stroke-width="2" cursor="pointer"
+      onmouseover="showSpatialTip(event,${i},'${metric}')" onmouseout="document.getElementById('spatialTooltip').style.display='none'"/>`;
+    svg += `<text x="${np.x}" y="${np.y-r-4}" text-anchor="middle" font-size="8" fill="var(--text-secondary)">${positions[i].holeNo}</text>`;
+  });
+  // Legend
+  const labels = {Qa_applied:'Qa (kN)',Ha_applied:'Ha (kN)',St:'St (mm)',groundEL:'EL (m)'};
+  svg += `<defs><linearGradient id="spatialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="${interpolateColor(minV,minV,maxV,invert)}"/>
+    <stop offset="50%" stop-color="${interpolateColor((minV+maxV)/2,minV,maxV,invert)}"/>
+    <stop offset="100%" stop-color="${interpolateColor(maxV,minV,maxV,invert)}"/>
+  </linearGradient></defs>`;
+  svg += `<rect x="${W/2-70}" y="${H-25}" width="140" height="10" rx="2" fill="url(#spatialGrad)"/>`;
+  svg += `<text x="${W/2-75}" y="${H-18}" text-anchor="end" font-size="8" fill="var(--text-muted)">${fmt(invert?maxV:minV)}</text>`;
+  svg += `<text x="${W/2+75}" y="${H-18}" text-anchor="start" font-size="8" fill="var(--text-muted)">${fmt(invert?minV:maxV)}</text>`;
+  svg += `<text x="${W/2}" y="${H-5}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">${labels[metric]||metric}</text>`;
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+function showSpatialTip(event, idx, metric) {
+  const tip = document.getElementById('spatialTooltip');
+  const bh = STATE.uploadedData[idx];
+  const r = BH_RESULTS[bh.holeNo];
+  tip.innerHTML = `<strong>${bh.holeNo}</strong><br>Qa: ${r?fmt(r.Qa_applied):'-'} kN<br>Ha: ${r?fmt(r.Ha_applied):'-'} kN<br>St: ${r?fmt(r.St):'-'} mm<br>EL: ${bh.groundEL?fmt(bh.groundEL):'-'} m`;
+  tip.style.display = 'block';
+  const rect = tip.closest('.spatial-container').getBoundingClientRect();
+  tip.style.left = (event.clientX - rect.left + 12) + 'px';
+  tip.style.top = (event.clientY - rect.top - 10) + 'px';
+}
+
+// ===== RISK DASHBOARD (Feature 5) =====
+function calcRiskScore(r, targets) {
+  targets = targets || {Qa:800, Ha:50, St:25};
+  if (!r) return { score:0, grade:'E', factors:{} };
+  const sfQa = r.Qa_applied / targets.Qa;
+  const sfHa = r.Ha_applied / targets.Ha;
+  const sfSt = targets.St / Math.max(r.St, 0.01);
+  const composite = Math.pow(Math.max(sfQa,0.01) * Math.max(sfHa,0.01) * Math.max(sfSt,0.01), 1/3);
+  let grade;
+  if (composite >= 2.0) grade='A'; else if (composite >= 1.5) grade='B';
+  else if (composite >= 1.0) grade='C'; else if (composite >= 0.7) grade='D'; else grade='E';
+  return { score:composite, grade, factors:{sfQa,sfHa,sfSt} };
+}
+
+function calcSiteRiskGrade(scores) {
+  if (!scores.length) return {grade:'E',avg:0,min:0};
+  const grades = scores.map(s=>s.grade);
+  const worst = ['E','D','C','B','A'].find(g => grades.includes(g)) || 'E';
+  const avg = scores.reduce((s,sc)=>s+sc.score,0)/scores.length;
+  return { grade:worst, avg, min:Math.min(...scores.map(s=>s.score)) };
+}
+
+function buildRiskDashboardSection() {
+  if (!STATE.uploadedData || STATE.uploadedData.length < 2) return '';
+  calcAllBoreholes();
+  const scores = STATE.uploadedData.map(bh => {
+    const r = BH_RESULTS[bh.holeNo];
+    return { holeNo:bh.holeNo, ...calcRiskScore(r) };
+  });
+  const site = calcSiteRiskGrade(scores);
+  const gradeColors = {A:'#16a34a',B:'#65a30d',C:'#ca8a04',D:'#ea580c',E:'#dc2626'};
+  let html = `<div class="sens-section" style="margin-top:24px">
+    <div class="sens-section-title">&#9888;&#65039; 위험도 평가 — 사이트 안전성 종합</div>
+    <div class="risk-cards">
+      <div class="risk-card grade-${site.grade.toLowerCase()}">
+        <div class="risk-grade" style="color:${gradeColors[site.grade]}">${site.grade}</div>
+        <div class="risk-grade-label">사이트 등급</div>
+      </div>`;
+  // Individual grade distribution
+  ['A','B','C','D','E'].forEach(g => {
+    const n = scores.filter(s=>s.grade===g).length;
+    if (g === site.grade) return; // skip site card
+    html += `<div class="risk-card grade-${g.toLowerCase()}">
+      <div class="risk-grade" style="color:${gradeColors[g]};font-size:20px">${n}</div>
+      <div class="risk-grade-label">등급 ${g}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  // Safety margin chart
+  html += `<div style="overflow-x:auto;margin-bottom:16px">${renderSafetyMarginChart(scores)}</div>`;
+  // What-If panel
+  html += `<div class="whatif-panel">
+    <span style="font-size:10px;font-weight:700;color:var(--primary-navy);align-self:center">What-If 시나리오:</span>
+    <button class="whatif-btn" onclick="runWhatIfScenario('gwl')">&#128167; 지하수위 +1m 상승</button>
+    <button class="whatif-btn" onclick="runWhatIfScenario('nval')">&#128200; N값 20% 감소</button>
+    <button class="whatif-btn" onclick="runWhatIfScenario('diam')">&#128316; 직경 한 단계 상향</button>
+  </div>
+  <div id="whatifResults"></div>`;
+  html += '</div>';
+  return html;
+}
+
+function renderSafetyMarginChart(scores) {
+  const W=Math.max(700,scores.length*50+100), H=250, m={t:30,r:20,b:50,l:40};
+  const cW=W-m.l-m.r, cH=H-m.t-m.b;
+  const barGroup = cW/scores.length;
+  const barW = barGroup*0.25;
+  let svg = `<svg width="${W}" height="${H}" style="font-family:var(--font-body)">`;
+  svg += `<text x="${W/2}" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="var(--primary-navy)">시추공별 안전율</text>`;
+  // Reference line at 1.0
+  const maxSF = Math.max(3, ...scores.flatMap(s=>[s.factors.sfQa||0,s.factors.sfHa||0,s.factors.sfSt||0]));
+  const y1 = m.t + cH - (1.0/maxSF)*cH;
+  svg += `<line x1="${m.l}" y1="${y1}" x2="${W-m.r}" y2="${y1}" stroke="#dc2626" stroke-width="1" stroke-dasharray="4,2"/>`;
+  svg += `<text x="${m.l-4}" y="${y1+3}" text-anchor="end" font-size="8" fill="#dc2626">1.0</text>`;
+  // Grid
+  svg += `<line x1="${m.l}" y1="${m.t+cH}" x2="${W-m.r}" y2="${m.t+cH}" stroke="#eee"/>`;
+  scores.forEach((sc,i) => {
+    const cx = m.l + i*barGroup + barGroup/2;
+    const vals = [{v:sc.factors.sfQa,c:'#3b82f6',l:'Qa'},{v:sc.factors.sfHa,c:'#8b5cf6',l:'Ha'},{v:sc.factors.sfSt,c:'#f59e0b',l:'St'}];
+    vals.forEach((vl,j) => {
+      const h = Math.min(vl.v/maxSF,1)*cH;
+      const x = cx + (j-1)*(barW+2);
+      svg += `<rect x="${x-barW/2}" y="${m.t+cH-h}" width="${barW}" height="${h}" fill="${vl.c}" opacity="0.8" rx="2"><title>${sc.holeNo} ${vl.l}: ${vl.v.toFixed(2)}</title></rect>`;
+    });
+    svg += `<text x="${cx}" y="${H-m.b+14}" text-anchor="middle" font-size="7" fill="var(--text-secondary)" transform="rotate(-30,${cx},${H-m.b+14})">${sc.holeNo}</text>`;
+  });
+  // Legend
+  [{c:'#3b82f6',l:'Qa 안전율'},{c:'#8b5cf6',l:'Ha 안전율'},{c:'#f59e0b',l:'St 여유율'}].forEach((lg,i) => {
+    svg += `<rect x="${W-180+i*60}" y="${H-14}" width="10" height="10" rx="2" fill="${lg.c}"/><text x="${W-168+i*60}" y="${H-5}" font-size="8" fill="var(--text-muted)">${lg.l}</text>`;
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function runWhatIfScenario(scenario) {
+  if (!STATE.uploadedData) return;
+  const container = document.getElementById('whatifResults');
+  const sizes = [350,400,450,500,600,700,800,1000];
+  const baseResults = {};
+  STATE.uploadedData.forEach(bh => { baseResults[bh.holeNo] = BH_RESULTS[bh.holeNo]; });
+  const newResults = {};
+  let label = '';
+  STATE.uploadedData.forEach(bh => {
+    let overrides = {};
+    if (scenario === 'gwl') {
+      label = '지하수위 +1m 상승';
+      overrides.gwlDepth = Math.max(0, (bh.gwlDepth != null ? bh.gwlDepth : STATE.gwlDepth) - 1);
+    } else if (scenario === 'nval') {
+      label = 'N값 20% 감소';
+      overrides.sptData = (bh.sptData||[]).map(s=>({...s,N:Math.max(1,Math.round(s.N*0.8))}));
+      overrides.layers = (bh.layers||[]).map(l=>({...l,avgN:Math.max(1,(l.avgN||5)*0.8)}));
+    } else if (scenario === 'diam') {
+      label = '직경 한 단계 상향';
+      const curD = (bh.designParams||{}).diameter_mm || STATE.diameter_mm;
+      const idx = sizes.indexOf(curD);
+      overrides.diameter_mm = idx >= 0 && idx < sizes.length-1 ? sizes[idx+1] : curD;
+    }
+    try { newResults[bh.holeNo] = calcPile(buildCalcPileParamsForBh(bh, overrides)); } catch(e) { newResults[bh.holeNo] = null; }
+  });
+  // Render delta table
+  let html = `<div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:8px">&#128270; 시나리오: ${label}</div>`;
+  html += `<div class="dash-table-wrap"><table class="dash-table" style="font-size:10px"><thead><tr>
+    <th>시추공</th><th>현재 Qa</th><th>변경 Qa</th><th>&Delta;</th><th>현재 Ha</th><th>변경 Ha</th><th>&Delta;</th><th>현재 St</th><th>변경 St</th><th>&Delta;</th>
+  </tr></thead><tbody>`;
+  STATE.uploadedData.forEach(bh => {
+    const base = baseResults[bh.holeNo];
+    const nw = newResults[bh.holeNo];
+    const delta = (b,n,inv) => {
+      if (!b||!n) return '-';
+      const d = n - b;
+      const pct = b !== 0 ? (d/Math.abs(b)*100).toFixed(1) : '0.0';
+      const good = inv ? d < 0 : d > 0;
+      return `<span class="whatif-delta ${good?'pos':'neg'}">${d>0?'+':''}${pct}%</span>`;
+    };
+    html += `<tr>
+      <td style="font-weight:700">${bh.holeNo}</td>
+      <td>${base?fmt(base.Qa_applied):'-'}</td><td>${nw?fmt(nw.Qa_applied):'-'}</td><td>${delta(base?.Qa_applied,nw?.Qa_applied,false)}</td>
+      <td>${base?fmt(base.Ha_applied):'-'}</td><td>${nw?fmt(nw.Ha_applied):'-'}</td><td>${delta(base?.Ha_applied,nw?.Ha_applied,false)}</td>
+      <td>${base?fmt(base.St):'-'}</td><td>${nw?fmt(nw.St):'-'}</td><td>${delta(base?.St,nw?.St,true)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
 }
 
 function renderOverallTab() {
@@ -5539,6 +6290,7 @@ function renderAllTabs() {
   renderSummaryTab();
   renderOverallTab();
   renderReportTab();
+  renderSensitivityTab();
 }
 
 // ===== Calc-tip fixed positioning =====
