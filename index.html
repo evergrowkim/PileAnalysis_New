@@ -1331,7 +1331,6 @@ function applyBoreholeData(bh, idx) {
     }
   });
   recalculate();
-  showToast(`${bh.holeNo} 데이터 적용 완료`, 'success');
 }
 
 // Tab switching
@@ -1714,7 +1713,7 @@ function generateInverseInterpretation(nSatisfied, nChange, nFail, total) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); const so = document.querySelector('.shortcut-overlay'); if (so) so.remove(); }});
 
 // ===== AI INTEGRATION =====
-let AI_API_KEY = localStorage.getItem('claude_api_key') || '';
+let AI_API_KEY = localStorage.getItem('claude_api_key') || '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';
 
 // AI 결과 캐싱 시스템
 const AI_CACHE = { review: null, borehole: null, report: null };
@@ -3099,11 +3098,10 @@ function renderSPTSection() {
       <button class="btn btn-sm" onclick="addSPT()">+ 추가</button>
     </div>
   </div>
-  <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px"><span class="origin-badge json">JSON</span> 추출 데이터 &nbsp; <span class="origin-badge manual">수동</span> 사용자 입력</div>
   <div style="overflow-x:auto"><table>
     <thead><tr><th>No.</th><th>EL.+</th><th>깊이</th><th>N값</th><th>비고</th><th></th></tr></thead>
-    <tbody>${STATE.sptData.map((s, i) => `<tr class="${s._fromJSON ? 'from-json' : ''}">
-      <td>${i+1}${s._fromJSON ? '<span class="origin-badge json">J</span>' : ''}</td>
+    <tbody>${STATE.sptData.map((s, i) => `<tr>
+      <td>${i+1}</td>
       <td>${fmt(STATE.groundEL - s.depth + 1)}</td>
       <td><input type="number" value="${s.depth}" step="0.1" min="0" max="100" onchange="STATE.sptData[${i}].depth=parseFloat(this.value)||0; recalculate()"></td>
       <td><input type="number" value="${s.N}" min="0" max="100" onchange="STATE.sptData[${i}].N=parseInt(this.value)||0; recalculate()"></td>
@@ -6812,7 +6810,6 @@ if (_origProcessJSON) {
 const _restored = restoreStateFromLS();
 recalculate();
 if (_restored) {
-  showToast('이전 작업 상태가 복원되었습니다', 'info');
   if (STATE.uploadedData && STATE.uploadedData.length > 0) {
     const db = document.getElementById('dashboardTabBtn'); if (db) db.style.display = '';
   }
@@ -6909,7 +6906,6 @@ window.addEventListener('message', function(event) {
             // 4. 재계산 + UI 갱신
             _restoring = false;
             recalculate();
-            showToast('이전 작업 상태 복원됨', 'info');
         } catch (e) {
             _restoring = false;
             console.error('상태 복원 오류:', e);
@@ -6930,7 +6926,6 @@ window.addEventListener('message', function(event) {
 
             STATE.uploadedData = boreholes;
             applyBoreholeData(boreholes[0], 0);
-            showToast('Platform: ' + boreholes.length + '개 시추공 로드', 'success');
 
             // 부모 창에 데이터 로드 완료 알림
             if (window.parent !== window) {
