@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.anthropic.com; img-src 'self' data:;">
 <title>말뚝 기초 설계 계산기 v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js" integrity="sha384-P7KKlGD3Ng66Ds7oTliLzTnol6DbK+k7PafNYXIBDQ4b5eFWtmqctplDVOxslglR" crossorigin="anonymous"></script>
 <script>window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]}};</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" integrity="sha384-Wuix6BuhrWbjDBs24bXrjf4ZQ5aFeFWBuKkFekO2t8xFU0iNaLQfp2K6/1Nxveei" crossorigin="anonymous" async></script>
 <style>
 :root {
   --primary-navy: #1e3a5f;
@@ -34,6 +35,8 @@
   --accent-coral: #e94560;
   --accent-green: #16a34a;
   --accent-blue: #3b82f6;
+  --ai-primary: #6366f1;
+  --ai-hover: #4f46e5;
   --font-body: 'Noto Sans KR', 'Pretendard', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -150,7 +153,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 .result-bar.ng .rb-val { color: var(--status-fail); }
 
 /* Spec Card */
-.spec-card { padding: 10px; border-radius: 5px; margin-top: 10px; }
+.spec-card { padding: 10px; border-radius: 6px; margin-top: 10px; }
 .spec-card.phc { background: #fffbeb; border: 1px solid #fde68a; }
 .spec-card.steel { background: #eff6ff; border: 1px solid #bfdbfe; }
 .spec-card .spec-title { font-size: 10.5px; font-weight: 700; margin-bottom: 5px; }
@@ -191,7 +194,7 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 
 /* Summary Cards */
 .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-.summary-card { padding: 14px; border-radius: 7px; background: var(--bg-primary); text-align: center; border-width: 2px; border-style: solid; }
+.summary-card { padding: 14px; border-radius: 6px; background: var(--bg-primary); text-align: center; border-width: 2px; border-style: solid; }
 .summary-card .sc-label { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
 .summary-card .sc-value { font-size: 20px; font-weight: 800; font-family: var(--font-mono); }
 .summary-card .sc-unit { font-size: 10px; color: var(--text-muted); }
@@ -550,28 +553,36 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 .ai-interp-content ul { margin:4px 0; padding-left:16px; }
 
 /* Feature Help System */
-.help-toggle-btn { margin-left:auto; padding:3px 10px; font-size:10px; font-weight:600; background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.25); border-radius:12px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.help-toggle-btn { margin-left:auto; padding:3px 10px; font-size:10px; font-weight:600; background:rgba(99,102,241,0.1); color:var(--ai-primary); border:1px solid rgba(99,102,241,0.25); border-radius:12px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
 .help-toggle-btn:hover { background:rgba(99,102,241,0.2); }
-.help-toggle-btn.open { background:#6366f1; color:#fff; }
+.help-toggle-btn.open { background:var(--ai-primary); color:#fff; }
 .help-expander { max-height:0; overflow:hidden; transition:max-height 0.35s ease-out, opacity 0.25s; opacity:0; }
 .help-expander.open { max-height:800px; opacity:1; transition:max-height 0.4s ease-in, opacity 0.3s 0.05s; }
-.help-inner { padding:14px 16px; margin:8px 0 12px; background:linear-gradient(135deg,#f5f3ff,#eff6ff); border:1px solid #c7d2fe; border-radius:8px; }
+.help-inner { padding:14px 16px; margin:8px 0 12px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; }
 .help-tabs { display:flex; gap:4px; margin-bottom:10px; border-bottom:1px solid #e0e7ff; padding-bottom:6px; }
 .help-tab { padding:4px 10px; font-size:10px; font-weight:600; background:transparent; border:none; color:#6b7280; cursor:pointer; border-radius:4px 4px 0 0; transition:all 0.15s; }
-.help-tab:hover { color:#4338ca; background:rgba(99,102,241,0.06); }
-.help-tab.active { color:#4338ca; background:rgba(99,102,241,0.12); border-bottom:2px solid #6366f1; }
+.help-tab:hover { color:var(--ai-hover); background:rgba(99,102,241,0.06); }
+.help-tab.active { color:var(--ai-hover); background:rgba(99,102,241,0.12); border-bottom:2px solid var(--ai-primary); }
 .help-tab-content { font-size:11.5px; line-height:1.7; color:var(--text-primary); }
 .help-tab-content[hidden] { display:none; }
-.help-example-box { margin:8px 0; padding:10px 12px; background:rgba(139,92,246,0.06); border-left:3px solid #8b5cf6; border-radius:0 6px 6px 0; font-size:11px; }
-.help-example-box strong { color:#7c3aed; }
+.help-example-box { margin:8px 0; padding:10px 12px; background:rgba(139,92,246,0.06); border-left:3px solid var(--primary-navy); border-radius:0 6px 6px 0; font-size:11px; }
+.help-example-box strong { color:var(--primary-navy); }
 .help-tip-box { margin:8px 0; padding:10px 12px; background:#f0fdf4; border-left:3px solid #22c55e; border-radius:0 6px 6px 0; font-size:11px; }
 .help-tip-box strong { color:#15803d; }
 .help-refs { margin-top:8px; padding-top:6px; border-top:1px solid #e5e7eb; font-size:9.5px; color:#9ca3af; }
-.result-interp { padding:10px 14px; margin-bottom:12px; background:linear-gradient(135deg,#eff6ff,#f0fdf4); border:1px solid #93c5fd; border-radius:8px; font-size:11px; line-height:1.65; color:var(--text-primary); }
+.result-interp { padding:10px 14px; margin-bottom:12px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; font-size:11px; line-height:1.65; color:var(--text-primary); }
 .result-interp strong { color:var(--primary-navy); }
 .result-interp .ri-action { margin-top:6px; padding:6px 10px; background:rgba(234,179,8,0.1); border-radius:4px; font-size:10.5px; color:#92400e; }
-.sens-welcome { padding:12px 16px; margin-bottom:16px; background:linear-gradient(135deg,#eff6ff,#f5f3ff); border:1px solid #a5b4fc; border-radius:8px; font-size:11.5px; color:var(--primary-navy); display:flex; align-items:center; gap:8px; }
+.sens-welcome { padding:12px 16px; margin-bottom:16px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; font-size:11.5px; color:var(--primary-navy); display:flex; align-items:center; gap:8px; }
 .sens-welcome button { margin-left:auto; background:none; border:none; color:#9ca3af; cursor:pointer; font-size:14px; }
+.status-tag { display:inline-block; padding:1px 6px; border-radius:3px; font-size:10px; font-weight:700; vertical-align:middle; }
+.status-tag.safe { background:#dcfce7; color:#15803d; }
+.status-tag.caution { background:#fef3c7; color:#92400e; }
+.status-tag.danger { background:#fee2e2; color:#dc2626; }
+.status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; vertical-align:middle; margin-right:3px; }
+.status-dot.green { background:#16a34a; }
+.status-dot.yellow { background:#ca8a04; }
+.status-dot.red { background:#dc2626; }
 
 @media(max-width:1200px) { .mc-stats-grid{grid-template-columns:repeat(2,1fr)} .risk-cards{grid-template-columns:repeat(3,1fr)} .mc-histograms{grid-template-columns:1fr} }
 @media(max-width:768px) { .mc-stats-grid{grid-template-columns:1fr} .risk-cards{grid-template-columns:repeat(2,1fr)} .inv-target-row{flex-direction:column} .sens-controls{flex-direction:column} }
@@ -592,11 +603,11 @@ table thead th { position: sticky; top: 0; z-index: 5; }
     <span class="bh-label">시추공:</span>
     <span class="bh-value" id="headerBH">-</span>
   </div>
-  <button class="btn-toolbar" onclick="if(confirm('저장된 상태를 초기화하고 새로 시작하시겠습니까?')) clearSavedState()">&#128260; 초기화</button>
-  <button class="btn-toolbar" onclick="openVerifyModal()">&#10003; 검증</button>
-  <button class="btn-toolbar" onclick="exportExcel()">&#128196; 엑셀</button>
-  <button class="ai-btn btn-toolbar" onclick="runAIReview()">&#9889; AI 검토</button>
-  <button class="ai-btn btn-toolbar" onclick="openChatPanel()" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+  <button class="btn-toolbar" onclick="if(confirm('저장된 상태를 초기화하고 새로 시작하시겠습니까?')) clearSavedState()">초기화</button>
+  <button class="btn-toolbar" onclick="openVerifyModal()">검증</button>
+  <button class="btn-toolbar" onclick="exportExcel()">엑셀</button>
+  <button class="ai-btn btn-toolbar" onclick="runAIReview()">AI 검토</button>
+  <button class="ai-btn btn-toolbar" onclick="openChatPanel()">AI 채팅</button>
 </div>
 
 <!-- Tab Navigation -->
@@ -691,11 +702,11 @@ table thead th { position: sticky; top: 0; z-index: 5; }
   <div class="chat-panel" id="chatPanel" onclick="event.stopPropagation()">
     <div class="chat-header">
       <div>
-        <div class="ch-title">&#9889; AI &#51648;&#48152;&#44277;&#54617; &#51204;&#47928;&#44032;</div>
+        <div class="ch-title">AI &#51648;&#48152;&#44277;&#54617; &#51204;&#47928;&#44032;</div>
         <div class="ch-sub" id="chatContextInfo">&#52968;&#53581;&#49828;&#53944; &#50630;&#51020;</div>
       </div>
       <div class="ch-actions">
-        <button class="ch-btn" onclick="clearChatHistory()" title="&#45824;&#54868; &#52488;&#44592;&#54868;">&#128260; &#52488;&#44592;&#54868;</button>
+        <button class="ch-btn" onclick="clearChatHistory()" title="&#45824;&#54868; &#52488;&#44592;&#54868;">&#52488;&#44592;&#54868;</button>
         <button class="ch-close" onclick="closeChatPanel()">&#10005;</button>
       </div>
     </div>
@@ -727,7 +738,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 <div class="modal-overlay" id="verifyOverlay" onclick="closeVerifyModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h2>&#10003; 검증 모듈</h2>
+      <h2>검증 모듈</h2>
       <button class="modal-close" onclick="closeVerifyModal()">&#10005;</button>
     </div>
     <div class="modal-body" id="verifyBody"></div>
@@ -1430,12 +1441,12 @@ const FEATURE_HELP = {
   tornado: {
     title: '토네이도 다이어그램이란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p><strong>한 번에 하나의 설계 변수만</strong> 지정된 범위(예: ±20%)로 변동시키고, 나머지 변수는 고정한 채 설계 결과(Qa, Ha, St)의 변화를 측정하는 방법입니다.</p>' +
         '<p>각 변수의 <strong>"단독 영향력"</strong>을 비교할 수 있어, 어떤 변수가 설계에 가장 큰 영향을 미치는지 한눈에 파악할 수 있습니다.</p>' +
-        '<p style="margin-top:8px;font-size:10px;color:#6b7280">📌 이름의 유래: 결과 차트가 토네이도(회오리) 모양을 닮아서 "토네이도 다이어그램"이라 부릅니다.</p>'
+        '<p style="margin-top:8px;font-size:10px;color:#6b7280"><em>참고 —</em> 결과 차트가 토네이도(회오리) 모양을 닮아서 "토네이도 다이어그램"이라 부릅니다.</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>예시 해석:</strong> 직경 막대가 "-35.3%"로 표시되면?<br>' +
         '→ 직경을 20% 줄였더니 수직지지력(Qa)이 <strong>35.3% 감소</strong>했다는 뜻입니다.<br>' +
         '→ 직경이 지지력에 가장 큰 영향을 미치므로, 직경 선정이 가장 중요합니다.</div>' +
@@ -1444,12 +1455,12 @@ const FEATURE_HELP = {
         '• <span style="color:#3b82f6">파란 막대(→)</span> = 변수를 늘렸을 때 결과가 증가<br>' +
         '• <strong>막대가 길수록</strong> = 해당 변수의 영향력이 큼</div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 실무 활용법:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>실무 활용법:</strong><br>' +
         '• 가장 긴 막대의 변수 = <strong>가장 먼저 관리해야 할 변수</strong><br>' +
         '• 막대가 거의 없는 변수 = 설계에 미미한 영향 → 대략적 값 사용 가능<br>' +
         '• 비대칭 막대 (한쪽만 긴 경우) = 해당 방향 변동에 특히 주의</div>' +
-        '<div class="help-tip-box" style="margin-top:6px"><strong>⚠️ 주의사항:</strong><br>' +
+        '<div class="help-tip-box" style="margin-top:6px"><strong>주의:</strong><br>' +
         '토네이도는 변수를 "하나씩" 변동시키므로, 여러 변수가 동시에 변할 때의 <strong>복합 효과는 반영되지 않습니다.</strong> 이를 보려면 아래의 몬테카를로 시뮬레이션을 사용하세요.</div>'
       }
     ],
@@ -1458,12 +1469,12 @@ const FEATURE_HELP = {
   montecarlo: {
     title: '몬테카를로 시뮬레이션이란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p><strong>모든 불확실한 변수를 동시에 랜덤하게 변동</strong>시켜 1,000번 반복 계산하는 확률론적 분석입니다.</p>' +
         '<p>현실에서는 N값, 지표고, 지하수위 등이 모두 동시에 변동합니다. 이 방법은 그런 현실적 불확실성을 반영하여 <strong>"설계가 얼마나 안전한지"</strong>를 확률로 보여줍니다.</p>' +
-        '<p style="margin-top:8px;font-size:10px;color:#6b7280">📌 이름의 유래: 카지노로 유명한 몬테카를로 도시에서 이름을 따왔습니다. 주사위를 던지듯 랜덤 시뮬레이션을 수행하기 때문입니다.</p>'
+        '<p style="margin-top:8px;font-size:10px;color:#6b7280"><em>참고 —</em> 카지노로 유명한 몬테카를로 도시에서 이름을 따왔습니다. 주사위를 던지듯 랜덤 시뮬레이션을 수행하기 때문입니다.</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>히스토그램 읽는 법:</strong><br>' +
         '• 가로축 = 계산된 지지력/침하량 값<br>' +
         '• 세로축 = 해당 값이 나온 빈도(횟수)<br>' +
@@ -1474,13 +1485,13 @@ const FEATURE_HELP = {
         '• <strong>P95 = 989 kN</strong> → "상위 5% 낙관적 시나리오에서 989kN"<br>' +
         '• <strong>Pf (파괴확률) = 57%</strong> → "1000번 중 570번이 목표 미달" → <span style="color:#dc2626">위험!</span></div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 판단 기준:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>판단 기준:</strong><br>' +
         '• Pf ≤ 1% → 매우 안전 (과설계 가능성 검토)<br>' +
         '• Pf ≤ 5% → 일반적으로 안전<br>' +
         '• Pf ≤ 10% → 주의 필요, 설계 보강 검토<br>' +
         '• Pf > 10% → <strong>설계 변경 필요</strong> (직경↑ 또는 근입↑)</div>' +
-        '<div class="help-tip-box" style="margin-top:6px"><strong>💡 분포 형태 해석:</strong><br>' +
+        '<div class="help-tip-box" style="margin-top:6px"><strong>분포 형태 해석:</strong><br>' +
         '• 좁은 분포(뾰족) = 결과가 안정적, 불확실성 낮음<br>' +
         '• 넓은 분포(평평) = 결과 변동 크음, 보수적 설계 필요<br>' +
         '• 비대칭 분포 = 특정 방향으로 위험 편향 존재</div>'
@@ -1491,26 +1502,26 @@ const FEATURE_HELP = {
   inverse: {
     title: '역설계 최적화란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p>일반 설계는 "이 사양이면 지지력이 얼마인가?"를 계산하지만, <strong>역설계는 반대로</strong> "이 지지력을 확보하려면 최소 어떤 사양이 필요한가?"를 찾습니다.</p>' +
         '<p>목표 성능(Qa, Ha, St)을 입력하면, <strong>모든 시추공에서 동시에</strong> 해당 목표를 만족하는 최소 직경과 근입 깊이를 자동 탐색합니다.</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>결과 표 읽는 법:</strong><br>' +
-        '• 🟢 <strong>충족</strong> = 현재 사양으로 목표 달성 → 변경 불필요<br>' +
-        '• 🟠 <strong>변경</strong> = 현재 사양 부족 → 추천 직경/근입깊이로 변경 필요<br>' +
-        '• 🔴 <strong>달성 불가</strong> = 탐색 범위 내 해결 불가 → 공법 변경 검토</div>' +
+        '• <span class="status-dot green"></span><strong>충족</strong> = 현재 사양으로 목표 달성 — 변경 불필요<br>' +
+        '• <span class="status-dot yellow"></span><strong>변경</strong> = 현재 사양 부족 — 추천 직경/근입깊이로 변경 필요<br>' +
+        '• <span class="status-dot red"></span><strong>달성 불가</strong> = 탐색 범위 내 해결 불가 — 공법 변경 검토</div>' +
         '<div class="help-example-box" style="margin-top:6px"><strong>예시:</strong> NBH-13에서 Qa 목표 800kN인데 현재 192kN?<br>' +
-        '→ 직경 800mm, 근입 5m으로 상향해도 부족하면 🔴 표시<br>' +
+        '→ 직경 800mm, 근입 5m으로 상향해도 부족하면 "달성 불가" 표시<br>' +
         '→ 암반 지지 공법 또는 추가 보강 검토 필요</div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 목표값 설정 가이드:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>목표값 설정 가이드:</strong><br>' +
         '• Qa (수직지지력): 구조 하중의 1.0~1.5배 이상<br>' +
         '• Ha (수평지지력): 풍하중/지진하중 기준<br>' +
         '• St (침하량): 일반 건축 25mm, 교량 기초 10~15mm</div>' +
-        '<div class="help-tip-box" style="margin-top:6px"><strong>💡 경제적 설계:</strong><br>' +
-        '모든 시추공이 🟢이면 현재 사양이 충분합니다. 🟠이 많다면 가장 경제적인 사양(추천 직경 최솟값)을 선택하세요.</div>'
+        '<div class="help-tip-box" style="margin-top:6px"><strong>경제적 설계:</strong><br>' +
+        '모든 시추공이 "충족"이면 현재 사양이 충분합니다. "변경"이 많다면 가장 경제적인 사양(추천 직경 최솟값)을 선택하세요.</div>'
       }
     ],
     refs: 'KDS 11 50 40 | 구조물기초설계기준해설'
@@ -1518,25 +1529,25 @@ const FEATURE_HELP = {
   spatial: {
     title: '시추공 공간분석이란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p>개별 시추공의 결과를 <strong>지도 위에 펼쳐서</strong> 사이트 전체의 지반 특성을 시각화합니다.</p>' +
         '<p><strong>IDW(역거리 가중) 보간법</strong>으로 시추공 사이의 값을 추정하여 연속적인 히트맵을 생성합니다. 가까운 시추공의 데이터에 더 큰 가중치를 부여합니다.</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>히트맵 색상:</strong><br>' +
-        '• <span style="color:#22c55e">🟢 초록</span> = 높은 값 (지지력이면 양호, 침하량이면 주의)<br>' +
-        '• <span style="color:#eab308">🟡 노랑</span> = 중간 값<br>' +
-        '• <span style="color:#ef4444">🔴 빨강</span> = 낮은 값 (지지력이면 취약)</div>' +
+        '• <span class="status-dot green"></span><span style="color:#22c55e">초록</span> = 높은 값 (지지력이면 양호, 침하량이면 주의)<br>' +
+        '• <span class="status-dot yellow"></span><span style="color:#eab308">노랑</span> = 중간 값<br>' +
+        '• <span class="status-dot red"></span><span style="color:#ef4444">빨강</span> = 낮은 값 (지지력이면 취약)</div>' +
         '<div class="help-example-box" style="margin-top:6px"><strong>점선 원(⭕) = 이상치:</strong><br>' +
         '주변 시추공과 <strong>크게 다른 값</strong>(평균 ± 2σ 밖)을 가진 시추공입니다.<br>' +
         '→ 추가 시추조사 또는 설계 보강 검토 대상입니다.</div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 활용법:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>활용법:</strong><br>' +
         '• 빨간 영역 위에 구조물 기초 배치 피하기<br>' +
         '• 이상치 시추공 주변 추가 조사 계획<br>' +
         '• 메트릭 전환(Qa/Ha/St/지표고)으로 다각적 분석</div>' +
-        '<div class="help-tip-box" style="margin-top:6px"><strong>⚠️ 한계:</strong><br>' +
+        '<div class="help-tip-box" style="margin-top:6px"><strong>한계:</strong><br>' +
         'IDW 보간은 시추공 간 지반이 연속적이라고 가정합니다. 단층, 하천 등 불연속 지반에서는 결과 해석에 주의하세요.</div>'
       }
     ],
@@ -1545,13 +1556,13 @@ const FEATURE_HELP = {
   risk: {
     title: '위험도 평가란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p>각 시추공별 <strong>수직지지력·수평지지력·침하량의 안전율을 종합</strong>하여 A~E 등급으로 평가합니다.</p>' +
         '<p>복합 안전율 = (Qa안전율 × Ha안전율 × St안전율)^(1/3)</p>' +
         '<p style="margin-top:6px"><strong>등급 기준:</strong> A(≥2.0 매우안전) → B(≥1.5 안전) → C(≥1.0 보통) → D(≥0.7 주의) → E(&lt;0.7 위험)</p>' +
         '<p><strong>사이트 등급</strong>은 가장 약한 시추공 기준으로 결정됩니다 (보수적 접근).</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>안전율 바 차트 읽는 법:</strong><br>' +
         '• 각 시추공별 Qa/Ha/St 안전율을 막대로 표시<br>' +
         '• <span style="color:#dc2626">점선(1.0)</span> = 기준선. 이 아래면 목표 미달<br>' +
@@ -1560,8 +1571,8 @@ const FEATURE_HELP = {
         '→ 최약 시추공(예: NBH-13)의 복합 안전율이 0.7~1.0 사이<br>' +
         '→ 해당 시추공 위치에서 설계 보강 필요</div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 목표 등급:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>목표 등급:</strong><br>' +
         '• 일반 건축: <strong>C등급 이상</strong> 권장<br>' +
         '• 중요 구조물 (교량, 터널): <strong>B등급 이상</strong> 권장<br>' +
         '• 원자력/특수 시설: <strong>A등급</strong> 필수</div>'
@@ -1572,21 +1583,21 @@ const FEATURE_HELP = {
   whatif: {
     title: 'What-If 시나리오란?',
     tabs: [
-      { label: '📖 이것은?', content:
+      { label: '개요', content:
         '<p>"만약 지하수위가 1m 올라가면?", "N값이 20% 줄어들면?" 같은 <strong>가상 시나리오</strong>를 적용하여 설계 결과가 어떻게 변하는지 비교합니다.</p>' +
         '<p>시공 중 예상치 못한 조건 변화에 대한 <strong>사전 위험 평가</strong>에 활용합니다.</p>'
       },
-      { label: '💡 예시로 이해하기', content:
+      { label: '예시', content:
         '<div class="help-example-box"><strong>델타(Δ) 읽는 법:</strong><br>' +
         '• <span style="color:#16a34a">+35.4%</span> = 개선 (지지력 증가 또는 침하 감소)<br>' +
         '• <span style="color:#dc2626">-17.3%</span> = 악화 (지지력 감소 또는 침하 증가)</div>' +
         '<div class="help-example-box" style="margin-top:6px"><strong>3가지 시나리오:</strong><br>' +
-        '• 💧 지하수위 +1m = 우기/홍수 시나리오<br>' +
-        '• 📈 N값 20% 감소 = 지반 조건 불리 시나리오<br>' +
-        '• 🔼 직경 상향 = 설계 보강 시나리오</div>'
+        '• 지하수위 +1m = 우기/홍수 시나리오<br>' +
+        '• N값 20% 감소 = 지반 조건 불리 시나리오<br>' +
+        '• 직경 상향 = 설계 보강 시나리오</div>'
       },
-      { label: '🔧 엔지니어 팁', content:
-        '<div class="help-tip-box"><strong>💡 활용법:</strong><br>' +
+      { label: '실무 팁', content:
+        '<div class="help-tip-box"><strong>활용법:</strong><br>' +
         '• 시공 전 위험 시나리오별 영향 사전 파악<br>' +
         '• 설계 보고서에 시나리오 분석 결과 포함 → 설계 신뢰성 입증<br>' +
         '• 직경 상향 시나리오로 경제적 보강안 비교</div>'
@@ -1607,7 +1618,7 @@ function buildFeatureHelpHTML(key) {
   h.tabs.forEach((t, i) => {
     html += '<div class="help-tab-content" id="helpContent-' + key + '-' + i + '"' + (i>0?' hidden':'') + '>' + t.content + '</div>';
   });
-  if (h.refs) html += '<div class="help-refs">📚 ' + h.refs + '</div>';
+  if (h.refs) html += '<div class="help-refs"><strong>참고:</strong> ' + h.refs + '</div>';
   html += '</div></div>';
   return html;
 }
@@ -1618,7 +1629,7 @@ function toggleFeatureHelp(key) {
   if (!el) return;
   const isOpen = el.classList.toggle('open');
   btn.classList.toggle('open', isOpen);
-  btn.textContent = isOpen ? '✕ 닫기' : '📘 이 분석은?';
+  btn.textContent = isOpen ? '닫기' : '도움말';
 }
 
 function switchHelpTab(key, idx) {
@@ -1636,63 +1647,63 @@ function generateTornadoInterpretation(results) {
   const topPct = Math.abs(top.impact).toFixed(1);
   const targetLabels = {Qa_applied:'수직지지력(Qa)',Ha_applied:'수평지지력(Ha)',St:'침하량(St)'};
   const tgtLabel = targetLabels[results.target] || results.target;
-  let html = '<div class="result-interp">📊 <strong>해석:</strong> ';
+  let html = '<div class="result-interp"><strong>해석:</strong> ';
   html += '<strong>' + top.label + '</strong>(±' + topPct + '%)이 ' + tgtLabel + '에 가장 큰 영향을 미칩니다. ';
   if (sorted.length >= 2) {
     html += '다음으로 <strong>' + sorted[1].label + '</strong>(±' + Math.abs(sorted[1].impact).toFixed(1) + '%)이 중요합니다. ';
   }
   const negligible = results.results.filter(r => Math.abs(r.impact) < 1.0);
   if (negligible.length > 0) {
-    html += '<br><span style="font-size:10px;color:#6b7280">ℹ️ ' + negligible.map(n=>n.label).join(', ') + '은(는) 영향이 미미합니다.</span>';
+    html += '<br><span style="font-size:10px;color:#6b7280">' + negligible.map(n=>n.label).join(', ') + '은(는) 영향이 미미합니다.</span>';
   }
-  html += '<div class="ri-action">👉 <strong>' + top.label + '</strong>의 정밀한 관리가 설계 신뢰성에 가장 중요합니다.</div>';
+  html += '<div class="ri-action"><strong>' + top.label + '</strong>의 정밀한 관리가 설계 신뢰성에 가장 중요합니다.</div>';
   html += '</div>';
   return html;
 }
 
 function generateMCInterpretation(stats) {
   if (!stats) return '';
-  let html = '<div class="result-interp">📊 <strong>확률 분석 결과 해석:</strong><br>';
+  let html = '<div class="result-interp"><strong>확률 분석 결과 해석:</strong><br>';
   const items = [];
   if (stats.Qa) {
-    const qStatus = stats.Qa.pf <= 0.05 ? '✅ 안전' : stats.Qa.pf <= 0.10 ? '⚠️ 주의' : '❌ 위험';
+    const qStatus = stats.Qa.pf <= 0.05 ? '<span class="status-tag safe">안전</span>' : stats.Qa.pf <= 0.10 ? '<span class="status-tag caution">주의</span>' : '<span class="status-tag danger">위험</span>';
     items.push('• Qa 평균 <strong>' + stats.Qa.mean.toFixed(0) + 'kN</strong>, 파괴확률 <strong>' + (stats.Qa.pf*100).toFixed(1) + '%</strong> ' + qStatus);
     items.push('  (P5=' + stats.Qa.p5.toFixed(0) + 'kN — 95% 확률로 이 값 이상 확보)');
   }
   if (stats.Ha) {
-    const hStatus = stats.Ha.pf <= 0.05 ? '✅ 안전' : stats.Ha.pf <= 0.10 ? '⚠️ 주의' : '❌ 위험';
+    const hStatus = stats.Ha.pf <= 0.05 ? '<span class="status-tag safe">안전</span>' : stats.Ha.pf <= 0.10 ? '<span class="status-tag caution">주의</span>' : '<span class="status-tag danger">위험</span>';
     items.push('• Ha 평균 <strong>' + stats.Ha.mean.toFixed(0) + 'kN</strong>, 파괴확률 <strong>' + (stats.Ha.pf*100).toFixed(1) + '%</strong> ' + hStatus);
   }
   if (stats.St) {
-    const sStatus = stats.St.pf <= 0.05 ? '✅ 안전' : stats.St.pf <= 0.10 ? '⚠️ 주의' : '❌ 위험';
+    const sStatus = stats.St.pf <= 0.05 ? '<span class="status-tag safe">안전</span>' : stats.St.pf <= 0.10 ? '<span class="status-tag caution">주의</span>' : '<span class="status-tag danger">위험</span>';
     items.push('• St 평균 <strong>' + stats.St.mean.toFixed(1) + 'mm</strong>, 초과확률 <strong>' + (stats.St.pf*100).toFixed(1) + '%</strong> ' + sStatus);
   }
   html += items.join('<br>');
   // Action recommendation
   const anyDanger = (stats.Qa && stats.Qa.pf > 0.10) || (stats.Ha && stats.Ha.pf > 0.10) || (stats.St && stats.St.pf > 0.10);
   if (anyDanger) {
-    html += '<div class="ri-action">⚠️ 파괴확률이 10%를 초과하는 항목이 있습니다. 직경 상향 또는 근입 깊이 증가를 검토하세요.</div>';
+    html += '<div class="ri-action">파괴확률이 10%를 초과하는 항목이 있습니다. 직경 상향 또는 근입 깊이 증가를 검토하세요.</div>';
   } else {
-    html += '<div class="ri-action" style="background:rgba(34,197,94,0.1);color:#15803d">✅ 모든 항목의 파괴확률이 허용 범위 내입니다.</div>';
+    html += '<div class="ri-action" style="background:rgba(34,197,94,0.1);color:#15803d">모든 항목의 파괴확률이 허용 범위 내입니다.</div>';
   }
   html += '</div>';
   return html;
 }
 
 function generateInverseInterpretation(nSatisfied, nChange, nFail, total) {
-  let html = '<div class="result-interp">📊 <strong>역설계 결과 요약:</strong> ';
+  let html = '<div class="result-interp"><strong>역설계 결과 요약:</strong> ';
   html += total + '개 시추공 중 ';
   if (nSatisfied === total) {
     html += '<strong>전체 충족</strong> — 현재 사양으로 모든 시추공에서 목표 달성 가능합니다.';
-    html += '<div class="ri-action" style="background:rgba(34,197,94,0.1);color:#15803d">✅ 사양 변경 불필요. 현재 설계가 적합합니다.</div>';
+    html += '<div class="ri-action" style="background:rgba(34,197,94,0.1);color:#15803d">사양 변경 불필요. 현재 설계가 적합합니다.</div>';
   } else {
-    html += '🟢 ' + nSatisfied + '개 충족, ';
-    if (nChange > 0) html += '🟠 ' + nChange + '개 사양 변경 필요, ';
-    if (nFail > 0) html += '🔴 ' + nFail + '개 달성 불가';
+    html += '<span class="status-dot green"></span>' + nSatisfied + '개 충족, ';
+    if (nChange > 0) html += '<span class="status-dot yellow"></span>' + nChange + '개 사양 변경 필요, ';
+    if (nFail > 0) html += '<span class="status-dot red"></span>' + nFail + '개 달성 불가';
     if (nFail > 0) {
-      html += '<div class="ri-action">🔴 달성 불가 시추공은 현재 탐색 범위(직경 400~1000mm, 근입 1~5m) 내에서 목표를 만족하지 못합니다. 공법 변경(예: 암반 지지)을 검토하세요.</div>';
+      html += '<div class="ri-action">달성 불가 시추공은 현재 탐색 범위(직경 400~1000mm, 근입 1~5m) 내에서 목표를 만족하지 못합니다. 공법 변경(예: 암반 지지)을 검토하세요.</div>';
     } else {
-      html += '<div class="ri-action">🟠 추천 직경/근입깊이로 변경하면 모든 시추공에서 목표를 달성할 수 있습니다.</div>';
+      html += '<div class="ri-action">추천 직경/근입깊이로 변경하면 모든 시추공에서 목표를 달성할 수 있습니다.</div>';
     }
   }
   html += '</div>';
@@ -1880,8 +1891,8 @@ async function runAIReview(forceRefresh) {
     openAIPanel('AI 설계 검토', meta);
     document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.review.text) +
       `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
-        <button class="btn btn-sm" onclick="runAIReview(true)" style="font-size:10px;padding:2px 8px">&#128260; 재분석</button>
+        <span style="font-size:10px;color:#6b7280">캐시된 결과</span>
+        <button class="btn btn-sm" onclick="runAIReview(true)" style="font-size:10px;padding:2px 8px">재분석</button>
       </div>`;
     showAITokenInfo(AI_CACHE.review.usage);
     return;
@@ -1930,7 +1941,7 @@ ${JSON.stringify(data, null, 2)}
     },
     onError: (err) => {
       document.getElementById('aiContent').innerHTML =
-        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">[오류] ${err.message}</div>
          <div style="font-size:11px;color:var(--text-muted);padding:0 20px">${err.details || ''}</div>`;
     }
   });
@@ -2032,7 +2043,7 @@ function showNLPreview(parsed, container) {
   // 설계 파라미터 표시
   const paramEntries = Object.entries(parsed).filter(([k]) => k !== 'actions');
   if (paramEntries.length > 0) {
-    html += '<div style="font-size:11px;font-weight:600;color:#15803d;margin-bottom:6px">&#10003; 인식된 설계 조건:</div>';
+    html += '<div style="font-size:11px;font-weight:600;color:#15803d;margin-bottom:6px">인식된 설계 조건:</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px">';
     for (const [key, val] of paramEntries) {
       const label = names[key] || key;
@@ -2044,7 +2055,7 @@ function showNLPreview(parsed, container) {
   }
   // 액션 표시
   if (parsed.actions && parsed.actions.length > 0) {
-    html += '<div style="font-size:11px;font-weight:600;color:#7c3aed;margin:6px 0 4px">&#9889; 실행할 명령:</div>';
+    html += '<div style="font-size:11px;font-weight:600;color:#7c3aed;margin:6px 0 4px">실행할 명령:</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;font-size:11px">';
     parsed.actions.forEach(a => {
       html += `<span style="background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:10px;font-weight:600">${actionNames[a] || a}</span>`;
@@ -2234,8 +2245,8 @@ async function runBoreholeAnalysis(forceRefresh) {
     openAIPanel('AI 시추공 분석', `<span class="pm-label">시추공 수: </span><span class="pm-value">${n}개</span>`);
     document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.borehole.text) +
       `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
-        <button class="btn btn-sm" onclick="runBoreholeAnalysis(true)" style="font-size:10px;padding:2px 8px">&#128260; 재분석</button>
+        <span style="font-size:10px;color:#6b7280">캐시된 결과</span>
+        <button class="btn btn-sm" onclick="runBoreholeAnalysis(true)" style="font-size:10px;padding:2px 8px">재분석</button>
       </div>`;
     showAITokenInfo(AI_CACHE.borehole.usage);
     return;
@@ -2289,7 +2300,7 @@ N값이 낮은 연약 지반 구간 (N<10), 급격한 N값 변화 구간
     },
     onError: (err) => {
       document.getElementById('aiContent').innerHTML =
-        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>`;
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">[오류] ${err.message}</div>`;
     }
   });
 }
@@ -2336,9 +2347,9 @@ async function generateAIReport(forceRefresh) {
     _lastAIReport = AI_CACHE.report.text;
     document.getElementById('aiContent').innerHTML = renderAIMarkdown(AI_CACHE.report.text) +
       `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
-        <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">&#128203; 클립보드 복사</button>
-        <span style="font-size:10px;color:#6b7280">&#128193; 캐시된 결과</span>
-        <button class="btn btn-sm" onclick="generateAIReport(true)" style="font-size:10px;padding:2px 8px">&#128260; 재생성</button>
+        <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">클립보드 복사</button>
+        <span style="font-size:10px;color:#6b7280">캐시된 결과</span>
+        <button class="btn btn-sm" onclick="generateAIReport(true)" style="font-size:10px;padding:2px 8px">재생성</button>
       </div>`;
     showAITokenInfo(AI_CACHE.report.usage);
     return;
@@ -2391,13 +2402,13 @@ ${JSON.stringify(data, null, 2)}
       _lastAIReport = finalText;
       document.getElementById('aiContent').innerHTML = renderAIMarkdown(finalText) +
         `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
-          <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">&#128203; 클립보드 복사</button>
+          <button class="btn btn-sm" onclick="copyAIReport()" style="background:#4338ca;color:#fff">클립보드 복사</button>
         </div>`;
       showAITokenInfo(usage);
     },
     onError: (err) => {
       document.getElementById('aiContent').innerHTML =
-        `<div style="color:var(--status-fail);font-weight:600;padding:20px">&#10060; ${err.message}</div>`;
+        `<div style="color:var(--status-fail);font-weight:600;padding:20px">[오류] ${err.message}</div>`;
     }
   });
 }
@@ -2702,7 +2713,7 @@ async function sendChatMessage() {
     }
     // max_tokens로 잘린 경우 경고 추가
     if (stopReason === 'max_tokens') {
-      fullText += '\n\n⚠️ 응답이 길어 중단되었습니다. 더 구체적으로 질문해주세요.';
+      fullText += '\n\n[주의] 응답이 길어 중단되었습니다. 더 구체적으로 질문해주세요.';
       assistantDiv.innerHTML = renderAIMarkdown(fullText);
     }
     // 히스토리에 추가
@@ -2843,13 +2854,13 @@ function getThkOptions() {
 function renderNLInputSection() {
   let html = `<div class="ai-nl-box">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:14px">&#9889;</span>
+      
       <span style="font-size:11px;font-weight:700;color:#4338ca">AI 자연어 입력</span>
       <span style="font-size:10px;color:var(--text-muted)">— 설계 조건을 자연어로 입력하면 자동 적용됩니다</span>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileUpload(event)">
-      <button onclick="document.getElementById('fileInput').click()" title="JSON 시추공 데이터 업로드" style="flex-shrink:0;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;background:${STATE.uploadedData ? '#dcfce7' : '#f8fafc'};cursor:pointer;font-size:11px;color:${STATE.uploadedData ? '#16a34a' : '#64748b'};white-space:nowrap">${STATE.uploadedData ? '&#10003; ' + STATE.uploadedData.length + '공' : '&#128194; JSON'}</button>
+      <button onclick="document.getElementById('fileInput').click()" title="JSON 시추공 데이터 업로드" style="flex-shrink:0;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;background:${STATE.uploadedData ? '#dcfce7' : '#f8fafc'};cursor:pointer;font-size:11px;color:${STATE.uploadedData ? '#16a34a' : '#64748b'};white-space:nowrap">${STATE.uploadedData ? '&#10003; ' + STATE.uploadedData.length + '공' : 'JSON'}</button>
       <input type="text" id="nlInput" placeholder="예: PHC 500mm B종, 토사 지지, 계획고 135m, 근입깊이 2m"
         onkeydown="if(event.key==='Enter')parseNLInput()">
       <button class="ai-btn" onclick="parseNLInput()">AI 적용</button>
@@ -2862,7 +2873,7 @@ function renderNLInputSection() {
       <select onchange="selectBorehole(this.value)">
         ${STATE.uploadedData.map((bh, i) => `<option value="${i}" ${bh.holeNo === STATE.boreholeNo ? 'selected' : ''}>${bh.holeNo}</option>`).join('')}
       </select>
-      <button class="btn btn-sm" onclick="openLogPanel(); renderLogPanel()">&#128200; 로그 보기</button>
+      <button class="btn btn-sm" onclick="openLogPanel(); renderLogPanel()">로그 보기</button>
     </div>`;
   }
   return html;
@@ -2902,7 +2913,7 @@ function renderBoreholeContextCard() {
         <span style="font-size:10px;color:var(--text-muted)">(${idx+1}/${total})</span>
         <button class="btn btn-sm" ${hasNext?`onclick="contextCardNav(${idx+1})"`:' disabled'} style="padding:3px 10px;font-size:11px">다음 &rarr;</button>
       </div>
-      <button class="btn btn-sm btn-outline" onclick="openLogPanel();renderLogPanel()" style="font-size:10px;padding:4px 8px">&#128200; 로그</button>
+      <button class="btn btn-sm btn-outline" onclick="openLogPanel();renderLogPanel()" style="font-size:10px;padding:4px 8px">로그</button>
     </div>
     <div class="bcc-body">
       <div class="bcc-metrics">
@@ -3000,7 +3011,7 @@ function renderInputTab() {
   }
   html += `</div>
   <details style="margin-top:8px">
-    <summary style="cursor:pointer;font-size:11px;font-weight:600;color:var(--primary-slate);padding:6px 0">&#9881; 고급 설정 (수평지지력 계수)</summary>
+    <summary style="cursor:pointer;font-size:11px;font-weight:600;color:var(--primary-slate);padding:6px 0">고급 설정 (수평지지력 계수)</summary>
     <div class="form-grid cols-3" style="margin-top:6px">
       <div class="field"><label>alpha (Kh) <button class="info-btn" onclick="event.stopPropagation();showGuide('alpha_kh')">?</button></label><input type="number" value="${STATE.alpha_kh}" step="0.1" min="0.1" max="5" onchange="STATE.alpha_kh=parseFloat(this.value)||1; recalculate()"></div>
       <div class="field"><label>허용변위 (cm) <button class="info-btn" onclick="event.stopPropagation();showGuide('delta_cm')">?</button></label><input type="number" value="${STATE.delta_cm}" step="0.1" min="0.1" max="10" onchange="STATE.delta_cm=parseFloat(this.value)||1.5; recalculate()"></div>
@@ -3083,7 +3094,7 @@ function renderSPTSection() {
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
     <span style="font-size:11px; font-weight:600; color:var(--text-secondary)">SPT 데이터</span>
     <div style="display:flex;gap:4px">
-      ${STATE.sptData.length > 0 ? '<button class="btn btn-sm btn-outline" onclick="openLogPanel(); renderLogPanel()">&#128200; 로그 보기</button>' : ''}
+      ${STATE.sptData.length > 0 ? '<button class="btn btn-sm btn-outline" onclick="openLogPanel(); renderLogPanel()">로그 보기</button>' : ''}
       <button class="btn btn-sm btn-outline" onclick="openPasteModal()">붙여넣기</button>
       <button class="btn btn-sm" onclick="addSPT()">+ 추가</button>
     </div>
@@ -3903,10 +3914,10 @@ function renderSummaryTab() {
     <strong>Ref:</strong> KDS 11 50 40 (2018) | Road Bridge (2008) | Geotechnical Society (1996)${!isPHC?' | Goodman (1980) | Canadian FEM':''}
   </div>
   <div style="margin-top:14px;display:flex;gap:8px">
-    <button class="ai-btn" onclick="runAIReview()" style="padding:8px 18px;font-size:11px">&#9889; AI 설계 검토</button>
-    <button class="ai-btn" onclick="generateAIReport()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#059669,#10b981)">&#128203; AI 보고서 생성</button>
-    <button class="ai-btn" onclick="openChatPanel()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
-    <button class="ai-btn" onclick="showCumulativeChartPopup()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#1e40af,#3b82f6)">&#128200; 누적 지지력 그래프</button>
+    <button class="ai-btn" onclick="runAIReview()" style="padding:8px 18px;font-size:11px">AI 설계 검토</button>
+    <button class="ai-btn" onclick="generateAIReport()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#059669,#10b981)">AI 보고서 생성</button>
+    <button class="ai-btn" onclick="openChatPanel()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">AI 채팅</button>
+    <button class="ai-btn" onclick="showCumulativeChartPopup()" style="padding:8px 18px;font-size:11px;background:linear-gradient(135deg,#1e40af,#3b82f6)">누적 지지력 그래프</button>
   </div>`;
   document.getElementById('tab-summary').innerHTML = html;
   drawSVGDesign();
@@ -4106,7 +4117,7 @@ function renderVerifyModal(type) {
 
   html += `<div class="verify-compare">
     <div class="verify-col">
-      <h3>&#128203; 검증 데이터: ${vd.label}</h3>
+      <h3>검증 데이터: ${vd.label}</h3>
       <table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody>
         <tr><td class="left">Pile</td><td>${vd.pileType} D${vd.diameter_mm}x${vd.thickness_mm}t</td></tr>
         <tr><td class="left">Length</td><td>${fmt(vResult.pileLength)} m</td></tr>
@@ -4123,7 +4134,7 @@ function renderVerifyModal(type) {
       <button class="btn" style="margin-top:10px;width:100%" onclick="applyVerifyData('${type}')">&#8594; 이 데이터를 메인에 적용</button>
     </div>
     <div class="verify-col">
-      <h3>&#128200; 현재 계산 결과${cur ? ` (${STATE.boreholeNo})` : ''}</h3>
+      <h3>현재 계산 결과${cur ? ` (${STATE.boreholeNo})` : ''}</h3>
       ${cur ? `<table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody>
         <tr><td class="left">Pile</td><td>${STATE.pileType} D${STATE.diameter_mm}x${STATE.thickness_mm}t</td></tr>
         <tr><td class="left">Length</td><td>${fmt(cur.pileLength)} m</td></tr>
@@ -4969,7 +4980,7 @@ function renderQuantitySection(q, isMulti) {
     border:1px solid #c7d2fe;border-radius:8px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-size:13px;font-weight:700;color:#4338ca;display:flex;align-items:center;gap:6px">
-        &#128230; \uBB3C\uB7C9 \uC0B0\uC815</div>
+        \uBB3C\uB7C9 \uC0B0\uC815</div>
       <div style="display:flex;align-items:center;gap:8px">
         <label style="font-size:10px;color:var(--text-muted)">개소당 본수:
           <input type="number" min="1" max="100" value="${q.nPilesPerBH}" style="width:50px;padding:2px 4px;font-size:11px;border:1px solid #c7d2fe;border-radius:4px;text-align:center"
@@ -5235,14 +5246,14 @@ function renderDashboardTab() {
   if (!el) return;
   if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
     el.innerHTML = `<div style="text-align:center;padding:60px 20px">
-      <div style="font-size:48px;margin-bottom:16px">&#128204;</div>
+      <div style="font-size:48px;margin-bottom:16px">—</div>
       <h3 style="font-size:18px;font-weight:700;color:var(--primary-navy);margin-bottom:8px">시추공 대시보드</h3>
       <p style="color:var(--text-muted);margin-bottom:24px">JSON 시추 데이터를 업로드하면 전체 시추공 현황을 한눈에 확인할 수 있습니다.</p>
       <div class="upload-zone" onclick="document.getElementById('fileInput').click()"
         ondragover="event.preventDefault();this.classList.add('dragover')"
         ondragleave="this.classList.remove('dragover')"
         ondrop="event.preventDefault();this.classList.remove('dragover');if(event.dataTransfer.files[0])handleFileUpload({target:{files:event.dataTransfer.files}})">
-        <div class="uz-icon">&#128194;</div>
+        <div class="uz-icon">—</div>
         <div class="uz-text">JSON 파일을 드래그하거나 클릭하여 업로드</div>
         <div class="uz-sub">GeoAI Platform 시추 데이터 형식 지원</div>
       </div>
@@ -5265,7 +5276,7 @@ function renderDashboardTab() {
 
   let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <h3 class="sec-title" style="margin:0">전체 시추공 한눈에 보기</h3>
-    <button class="btn btn-sm" onclick="exportExcel()" style="padding:7px 14px;font-size:11px">&#128196; EXCEL 내보내기</button>
+    <button class="btn btn-sm" onclick="exportExcel()" style="padding:7px 14px;font-size:11px">EXCEL 내보내기</button>
   </div>`;
   html += `<div class="dash-stats">
     <div class="dash-stat"><div class="ds-val">${count}</div><div class="ds-label">총 시추공</div></div>
@@ -5494,13 +5505,13 @@ function renderSensitivityTab() {
   // Welcome banner (first visit only)
   if (!localStorage.getItem('sens_welcome_dismissed')) {
     html += `<div class="sens-welcome" id="sensWelcome">
-      👋 <strong>민감도 분석 탭에 오신 것을 환영합니다!</strong> 각 섹션의 <span style="color:#6366f1;font-weight:700">📘 이 분석은?</span> 버튼을 클릭하면 상세한 설명을 볼 수 있습니다.
+      <strong>민감도 분석 탭에 오신 것을 환영합니다.</strong> 각 섹션의 <span style="color:#6366f1;font-weight:700">"도움말"</span> 버튼을 클릭하면 상세한 설명을 볼 수 있습니다.
       <button onclick="this.parentElement.remove();localStorage.setItem('sens_welcome_dismissed','1')">&times;</button>
     </div>`;
   }
   // Section 1: Tornado
   html += `<div class="sens-section">
-    <div class="sens-section-title">&#127768; 토네이도 다이어그램 — 결정론적 민감도 분석 <button class="help-toggle-btn" onclick="toggleFeatureHelp('tornado')">📘 이 분석은?</button></div>
+    <div class="sens-section-title">토네이도 다이어그램 — 결정론적 민감도 분석 <button class="help-toggle-btn" onclick="toggleFeatureHelp('tornado')">도움말</button></div>
     ${buildFeatureHelpHTML('tornado')}
     <div class="sens-controls">
       <div><label>분석 대상</label>
@@ -5519,7 +5530,7 @@ function renderSensitivityTab() {
   </div>`;
   // Section 2: Monte Carlo
   html += `<div class="sens-section">
-    <div class="sens-section-title">&#127922; 몬테카를로 시뮬레이션 — 확률론적 분석 <button class="help-toggle-btn" onclick="toggleFeatureHelp('montecarlo')">📘 이 분석은?</button></div>
+    <div class="sens-section-title">몬테카를로 시뮬레이션 — 확률론적 분석 <button class="help-toggle-btn" onclick="toggleFeatureHelp('montecarlo')">도움말</button></div>
     ${buildFeatureHelpHTML('montecarlo')}
     <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">N값(CV=0.3), 지표고(&sigma;=0.5m), 지하수위(&sigma;=1.0m), 설계계수(균등분포) 등을 확률 변동하여 1,000회 시뮬레이션합니다.</p>
     <button class="btn" onclick="runMonteCarloSimulation()" id="mcRunBtn" style="margin-bottom:8px">&#9654; 시뮬레이션 실행 (1,000회)</button>
@@ -5528,8 +5539,8 @@ function renderSensitivityTab() {
   </div>`;
   // Section 3: AI Interpretation
   html += `<div class="sens-section">
-    <div class="sens-section-title">&#129302; AI 민감도 해석</div>
-    <button class="btn ai-btn" onclick="runSensitivityAI()" style="margin-bottom:8px">&#9889; AI 분석 실행</button>
+    <div class="sens-section-title">AI 민감도 해석</div>
+    <button class="btn ai-btn" onclick="runSensitivityAI()" style="margin-bottom:8px">AI 분석 실행</button>
     <div id="sensAIResult"></div>
   </div>`;
   // Section 4: Inverse Design
@@ -5738,7 +5749,7 @@ async function runSensitivityAI() {
   if (typeof ensureApiKey === 'function' && !ensureApiKey()) return;
   if (!AI_API_KEY) { showToast('API Key를 설정하세요','error'); return; }
   const container = document.getElementById('sensAIResult');
-  container.innerHTML = '<div class="ai-interp-card"><div class="aic-title">&#9889; AI 분석 중...</div><div class="ai-interp-content" id="sensAIContent"><span class="chat-typing"><span></span><span></span><span></span></span></div></div>';
+  container.innerHTML = '<div class="ai-interp-card"><div class="aic-title">AI 분석 중...</div><div class="ai-interp-content" id="sensAIContent"><span class="chat-typing"><span></span><span></span><span></span></span></div></div>';
   const tornadoInfo = SENS_STATE.tornadoResults ? JSON.stringify(SENS_STATE.tornadoResults.results.map(r=>({param:r.label,impact:r.impact.toFixed(1),dHigh:r.dHigh.toFixed(1),dLow:r.dLow.toFixed(1)}))) : '미실행';
   const mcInfo = SENS_STATE.mcStatistics ? JSON.stringify(Object.fromEntries(Object.entries(SENS_STATE.mcStatistics).map(([k,v])=>v?[k,{mean:v.mean.toFixed(2),std:v.std.toFixed(2),p5:v.p5.toFixed(2),p95:v.p95.toFixed(2),pf:(v.pf*100).toFixed(1)+'%'}]:[k,null]))) : '미실행';
   let fullText = '';
@@ -5755,14 +5766,14 @@ async function runSensitivityAI() {
 // ===== INVERSE DESIGN (Feature 2) =====
 function buildInverseDesignSection() {
   return `<div class="sens-section">
-    <div class="sens-section-title">&#127919; 역설계 최적화 — 목표 기반 사양 탐색 <button class="help-toggle-btn" onclick="toggleFeatureHelp('inverse')">📘 이 분석은?</button></div>
+    <div class="sens-section-title">역설계 최적화 — 목표 기반 사양 탐색 <button class="help-toggle-btn" onclick="toggleFeatureHelp('inverse')">도움말</button></div>
     ${buildFeatureHelpHTML('inverse')}
     <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">목표 성능을 입력하면, 각 시추공에서 이를 만족하는 최소 사양을 자동 탐색합니다.</p>
     <div class="inv-target-row">
       <div class="inv-field"><label>최소 Qa (kN)</label><input type="number" id="invTargetQa" value="800"></div>
       <div class="inv-field"><label>최소 Ha (kN)</label><input type="number" id="invTargetHa" value="50"></div>
       <div class="inv-field"><label>최대 St (mm)</label><input type="number" id="invTargetSt" value="25"></div>
-      <button class="btn" onclick="runInverseDesign()" style="white-space:nowrap;align-self:flex-end">&#128269; 전체 시추공 최적화 분석</button>
+      <button class="btn" onclick="runInverseDesign()" style="white-space:nowrap;align-self:flex-end">전체 시추공 최적화 분석</button>
     </div>
     <div id="invResults"></div>
   </div>`;
@@ -5884,7 +5895,7 @@ function detectSpatialAnomalies(values) {
 function buildSpatialSection() {
   if (!STATE.uploadedData || STATE.uploadedData.length < 3) return '';
   return `<div class="sens-section" style="margin-top:24px">
-    <div class="sens-section-title">&#127758; 시추공 공간분포 — 사이트 히트맵 <button class="help-toggle-btn" onclick="toggleFeatureHelp('spatial')">📘 이 분석은?</button></div>
+    <div class="sens-section-title">시추공 공간분포 — 사이트 히트맵 <button class="help-toggle-btn" onclick="toggleFeatureHelp('spatial')">도움말</button></div>
     ${buildFeatureHelpHTML('spatial')}
     <div class="sens-controls">
       <div><label>표시 지표</label>
@@ -6010,7 +6021,7 @@ function buildRiskDashboardSection() {
   const site = calcSiteRiskGrade(scores);
   const gradeColors = {A:'#16a34a',B:'#65a30d',C:'#ca8a04',D:'#ea580c',E:'#dc2626'};
   let html = `<div class="sens-section" style="margin-top:24px">
-    <div class="sens-section-title">&#9888;&#65039; 위험도 평가 — 사이트 안전성 종합 <button class="help-toggle-btn" onclick="toggleFeatureHelp('risk')">📘 이 분석은?</button></div>
+    <div class="sens-section-title">위험도 평가 — 사이트 안전성 종합 <button class="help-toggle-btn" onclick="toggleFeatureHelp('risk')">도움말</button></div>
     ${buildFeatureHelpHTML('risk')}
     <div class="risk-cards">
       <div class="risk-card grade-${site.grade.toLowerCase()}">
@@ -6032,10 +6043,10 @@ function buildRiskDashboardSection() {
   // What-If panel
   html += `<div class="whatif-panel">
     <span style="font-size:10px;font-weight:700;color:var(--primary-navy);align-self:center">What-If 시나리오:</span>
-    <button class="help-toggle-btn" onclick="toggleFeatureHelp('whatif')" style="padding:2px 8px;font-size:9px">📘 ?</button>
-    <button class="whatif-btn" onclick="runWhatIfScenario('gwl')">&#128167; 지하수위 +1m 상승</button>
-    <button class="whatif-btn" onclick="runWhatIfScenario('nval')">&#128200; N값 20% 감소</button>
-    <button class="whatif-btn" onclick="runWhatIfScenario('diam')">&#128316; 직경 한 단계 상향</button>
+    <button class="help-toggle-btn" onclick="toggleFeatureHelp('whatif')" style="padding:2px 8px;font-size:9px">?</button>
+    <button class="whatif-btn" onclick="runWhatIfScenario('gwl')">지하수위 +1m 상승</button>
+    <button class="whatif-btn" onclick="runWhatIfScenario('nval')">N값 20% 감소</button>
+    <button class="whatif-btn" onclick="runWhatIfScenario('diam')">직경 한 단계 상향</button>
   </div>
   ${buildFeatureHelpHTML('whatif')}
   <div id="whatifResults"></div>`;
@@ -6101,7 +6112,7 @@ function runWhatIfScenario(scenario) {
     try { newResults[bh.holeNo] = calcPile(buildCalcPileParamsForBh(bh, overrides)); } catch(e) { newResults[bh.holeNo] = null; }
   });
   // Render delta table
-  let html = `<div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:8px">&#128270; 시나리오: ${label}</div>`;
+  let html = `<div style="font-size:11px;font-weight:700;color:var(--primary-navy);margin-bottom:8px">시나리오: ${label}</div>`;
   html += `<div class="dash-table-wrap"><table class="dash-table" style="font-size:10px"><thead><tr>
     <th>시추공</th><th>현재 Qa</th><th>변경 Qa</th><th>&Delta;</th><th>현재 Ha</th><th>변경 Ha</th><th>&Delta;</th><th>현재 St</th><th>변경 St</th><th>&Delta;</th>
   </tr></thead><tbody>`;
@@ -6156,8 +6167,8 @@ function renderOverallTab() {
     <h3 class="sec-title" style="margin:0">종합 계산 결과 (전체 시추공)</h3>
     <div style="display:flex;gap:6px">
       <button class="btn btn-sm" onclick="toggleBatchEditor()" style="padding:7px 12px;font-size:11px">&#9998; 일괄 편집</button>
-      <button class="ai-btn" onclick="runBoreholeAnalysis()" style="padding:7px 16px;font-size:11px">&#9889; AI 시추공 분석</button>
-      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+      <button class="ai-btn" onclick="runBoreholeAnalysis()" style="padding:7px 16px;font-size:11px">AI 시추공 분석</button>
+      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">AI 채팅</button>
     </div>
   </div>`;
   html += `<div id="batchEditorWrap" style="display:none"></div>`;
@@ -6273,8 +6284,8 @@ function renderReportTab() {
   let html = `<div style="display:flex;justify-content:space-between;align-items:center">
     <h3 class="sec-title" style="margin:0">상세 계산서 — ${STATE.boreholeNo}</h3>
     <div style="display:flex;gap:6px">
-      <button class="ai-btn" onclick="generateAIReport()" style="padding:7px 16px;font-size:11px">&#9889; AI 보고서 생성</button>
-      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">&#128172; AI 채팅</button>
+      <button class="ai-btn" onclick="generateAIReport()" style="padding:7px 16px;font-size:11px">AI 보고서 생성</button>
+      <button class="ai-btn" onclick="openChatPanel()" style="padding:7px 16px;font-size:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed)">AI 채팅</button>
     </div>
   </div>`;
 
@@ -6724,7 +6735,7 @@ function showShortcutHelp() {
   ov.onclick = function(e) { if (e.target === ov) ov.remove(); };
   ov.innerHTML = `<div class="shortcut-modal">
     <button class="close-btn" onclick="this.closest('.shortcut-overlay').remove()">&times;</button>
-    <h3>&#9000; 키보드 단축키</h3>
+    <h3>키보드 단축키</h3>
     <table>
       <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>~<kbd>0</kbd></td><td>탭 전환 (대시보드~민감도)</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>엑셀 내보내기</td></tr>
