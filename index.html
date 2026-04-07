@@ -15,7 +15,7 @@
   --primary-steel: #2c4e7e;
   --primary-slate: #3d5a80;
   --status-pass: #2e7d32;
-  --status-fail: #c62828;
+  --status-fail: #b45309;
   --status-warning: #f57c00;
   --status-info: #0277bd;
   --bg-primary: #ffffff;
@@ -115,8 +115,8 @@ table tr.from-json td:first-child { border-left: 3px solid #93c5fd; }
 .btn { padding: 6px 13px; background: var(--primary-navy); color: #fff; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .2s; }
 .btn:hover { background: var(--primary-steel); }
 .btn-sm { padding: 4px 8px; font-size: 10px; }
-.btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-.btn-danger:hover { background: #fecaca; }
+.btn-danger { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+.btn-danger:hover { background: #e5e7eb; }
 .btn-success { background: var(--status-pass); }
 .btn-warning { background: var(--status-warning); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
@@ -286,12 +286,13 @@ table select { padding: 3px 5px; border: 1px solid var(--border-color); border-r
 /* Dashboard */
 .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
 .dash-stat { padding: 12px; background: #fff; border-radius: 6px; text-align: center; border: 1px solid var(--border-color); }
-.dash-stat .ds-val { font-size: 22px; font-weight: 800; font-family: var(--font-mono); color: var(--primary-navy); }
-.dash-stat .ds-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.dash-stat .ds-val { font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: var(--primary-navy); }
+.dash-stat .ds-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .dash-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .dash-toolbar input { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; min-width: 200px; }
 .dash-table th { cursor: pointer; user-select: none; }
 .dash-table th:hover { background: #37474f; }
+.dash-table td { font-size: 13px; padding: 8px 10px; white-space: nowrap; }
 
 /* Report */
 .report-section { margin-bottom: 24px; padding: 16px; background: #fff; border-radius: 8px; border: 1px solid var(--border-color); }
@@ -536,7 +537,7 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 .risk-card.grade-b { border-color:#65a30d; background:#f7fee7; }
 .risk-card.grade-c { border-color:#ca8a04; background:#fefce8; }
 .risk-card.grade-d { border-color:#ea580c; background:#fff7ed; }
-.risk-card.grade-e { border-color:#dc2626; background:#fef2f2; }
+.risk-card.grade-e { border-color:#9ca3af; background:#f9fafb; }
 .risk-grade { font-size:28px; font-weight:800; font-family:var(--font-mono); }
 .risk-grade-label { font-size:9px; color:var(--text-muted); }
 .whatif-panel { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; padding:12px; background:#f8f9ff; border:1px solid #c7d2fe; border-radius:8px; }
@@ -578,11 +579,24 @@ table thead th { position: sticky; top: 0; z-index: 5; }
 .status-tag { display:inline-block; padding:1px 6px; border-radius:3px; font-size:10px; font-weight:700; vertical-align:middle; }
 .status-tag.safe { background:#dcfce7; color:#15803d; }
 .status-tag.caution { background:#fef3c7; color:#92400e; }
-.status-tag.danger { background:#fee2e2; color:#dc2626; }
+.status-tag.danger { background:#fef3c7; color:#92400e; }
 .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; vertical-align:middle; margin-right:3px; }
 .status-dot.green { background:#16a34a; }
 .status-dot.yellow { background:#ca8a04; }
-.status-dot.red { background:#dc2626; }
+.status-dot.red { background:#b45309; }
+
+/* Advanced Tornado Settings */
+.adv-param-table { width:100%; font-size:12px; border-collapse:collapse; margin-top:8px; }
+.adv-param-table th { text-align:left; padding:6px 8px; background:var(--bg-secondary); font-weight:600; font-size:11px; color:var(--text-secondary); }
+.adv-param-table td { padding:5px 8px; border-bottom:1px solid var(--border-color); }
+.adv-param-table input[type="number"] { width:60px; padding:3px 6px; border:1px solid var(--border-color); border-radius:4px; font-size:12px; text-align:center; }
+.adv-param-table input[type="checkbox"] { accent-color:var(--primary-navy); }
+
+/* MC Config Panel */
+.mc-config { display:grid; grid-template-columns:repeat(2,1fr); gap:6px 20px; padding:12px 14px; background:var(--bg-secondary); border-radius:6px; margin-bottom:12px; border:1px solid var(--border-color); }
+.mc-config-row { display:flex; align-items:center; justify-content:space-between; font-size:12px; gap:8px; }
+.mc-config-row label { color:var(--text-secondary); font-weight:500; white-space:nowrap; }
+.mc-config-row input, .mc-config-row select { padding:4px 8px; border:1px solid var(--border-color); border-radius:4px; font-size:12px; background:#fff; }
 
 @media(max-width:1200px) { .mc-stats-grid{grid-template-columns:repeat(2,1fr)} .risk-cards{grid-template-columns:repeat(3,1fr)} .mc-histograms{grid-template-columns:1fr} }
 @media(max-width:768px) { .mc-stats-grid{grid-template-columns:1fr} .risk-cards{grid-template-columns:repeat(2,1fr)} .inv-target-row{flex-direction:column} .sens-controls{flex-direction:column} }
@@ -5303,16 +5317,16 @@ function renderDashboardTab() {
 
 function buildDashboardTable(bhs) {
   let html = `<table class="dash-table"><thead><tr>
-    <th onclick="sortDashboard('holeNo')">시추공 <span class="dash-sort-icon">&#8597;</span></th>
-    <th onclick="sortDashboard('groundEL')">지표고<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
-    <th onclick="sortDashboard('gwlEL')">지하수위<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
-    <th onclick="sortDashboard('wrEL')">풍화암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
-    <th onclick="sortDashboard('srEL')">연암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
-    <th onclick="sortDashboard('endEL')">시추종료<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
-    <th>N값 추이</th>
-    <th>토질 구성</th>
+    <th style="min-width:80px" onclick="sortDashboard('holeNo')">시추공 <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:70px" onclick="sortDashboard('groundEL')">지표고<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:70px" onclick="sortDashboard('gwlEL')">지하수위<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:70px" onclick="sortDashboard('wrEL')">풍화암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:70px" onclick="sortDashboard('srEL')">연암<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:70px" onclick="sortDashboard('endEL')">시추종료<br>(EL.m) <span class="dash-sort-icon">&#8597;</span></th>
+    <th style="min-width:100px">N값 추이</th>
+    <th style="min-width:160px">토질 구성</th>
     <th>상세</th>
-    <th>삭제</th>
+    <th></th>
   </tr></thead><tbody>`;
   bhs.forEach(bh => {
     const realIdx = STATE.uploadedData.indexOf(bh);
@@ -5325,7 +5339,7 @@ function buildDashboardTable(bhs) {
     const maxD = (bh.layers||[]).reduce((mx,l) => Math.max(mx, l.depthTo||0), 0);
     const endEL = gEL != null && maxD > 0 ? '+' + (gEL - maxD).toFixed(2) : '-';
     // Sparkline
-    const sparkW = 80;
+    const sparkW = 100;
     let spark = `<svg width="${sparkW}" height="16" style="vertical-align:middle">`;
     if (bh.sptData && bh.sptData.length > 0) {
       const step = sparkW / Math.max(bh.sptData.length, 1);
@@ -5351,7 +5365,7 @@ function buildDashboardTable(bhs) {
       <td>${spark}</td>
       <td class="soil-col">${soilBadges}</td>
       <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();dashboardOpenLog(${realIdx})" style="font-size:10px">로그 보기</button></td>
-      <td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();dashboardDeleteBorehole(${realIdx})" style="font-size:13px;padding:2px 8px">&#10005;</button></td>
+      <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();dashboardDeleteBorehole(${realIdx})" style="font-size:10px;padding:2px 8px;color:#9ca3af">&#10005;</button></td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -5522,6 +5536,18 @@ function renderSensitivityTab() {
       <div><label>변동 범위</label>
         <select id="tornadoRange" onchange="runTornadoAnalysis()"><option value="0.1">&plusmn;10%</option><option value="0.2" selected>&plusmn;20%</option><option value="0.3">&plusmn;30%</option></select>
       </div>
+      <div><button class="help-toggle-btn" onclick="toggleAdvancedTornado()" id="tornadoAdvBtn">고급 설정</button></div>
+    </div>
+    <div id="tornadoAdvanced" style="display:none;margin-bottom:10px">
+      <table class="adv-param-table">
+        <thead><tr><th style="width:40px">포함</th><th>변수</th><th>현재값</th><th style="width:90px">변동(%)</th></tr></thead>
+        <tbody>${TORNADO_PARAMS.map((p,i) => {
+          const val = STATE[p.key] != null ? STATE[p.key] : '-';
+          return '<tr><td style="text-align:center"><input type="checkbox" checked id="tAdv_chk_'+i+'"></td><td>'+p.label+'</td><td style="font-family:var(--font-mono);font-size:11px">'+val+(p.unit?' '+p.unit:'')+'</td><td><input type="number" value="20" min="1" max="100" id="tAdv_pct_'+i+'"> %</td></tr>';
+        }).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:6px;text-align:right"><button class="btn btn-sm" onclick="runTornadoAnalysis()">적용 및 재분석</button></div>
     </div>
     <div id="tornadoInterp"></div>
     <div id="tornadoChart" class="tornado-container"></div>
@@ -5530,8 +5556,16 @@ function renderSensitivityTab() {
   html += `<div class="sens-section">
     <div class="sens-section-title">몬테카를로 시뮬레이션 — 확률론적 분석 <button class="help-toggle-btn" onclick="toggleFeatureHelp('montecarlo')">도움말</button></div>
     ${buildFeatureHelpHTML('montecarlo')}
-    <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">N값(CV=0.3), 지표고(&sigma;=0.5m), 지하수위(&sigma;=1.0m), 설계계수(균등분포) 등을 확률 변동하여 1,000회 시뮬레이션합니다.</p>
-    <button class="btn" onclick="runMonteCarloSimulation()" id="mcRunBtn" style="margin-bottom:8px">&#9654; 시뮬레이션 실행 (1,000회)</button>
+    <div class="mc-config">
+      <div class="mc-config-row"><label>시뮬레이션 횟수</label><select id="mcIterations"><option value="500">500회</option><option value="1000" selected>1,000회</option><option value="3000">3,000회</option><option value="5000">5,000회</option></select></div>
+      <div class="mc-config-row"><label>N값 변동계수 (CV)</label><input type="number" id="mcNcv" value="0.3" step="0.05" min="0.05" max="1.0" style="width:70px"></div>
+      <div class="mc-config-row"><label>지표고 &sigma; (m)</label><input type="number" id="mcGelSigma" value="0.5" step="0.1" min="0.1" max="3.0" style="width:70px"></div>
+      <div class="mc-config-row"><label>지하수위 &sigma; (m)</label><input type="number" id="mcGwlSigma" value="1.0" step="0.1" min="0.1" max="5.0" style="width:70px"></div>
+      <div class="mc-config-row"><label>목표 Qa (kN)</label><input type="number" id="mcTargetQa" value="800" style="width:70px"></div>
+      <div class="mc-config-row"><label>목표 Ha (kN)</label><input type="number" id="mcTargetHa" value="50" style="width:70px"></div>
+      <div class="mc-config-row"><label>허용 St (mm)</label><input type="number" id="mcTargetSt" value="25" style="width:70px"></div>
+    </div>
+    <button class="btn" onclick="runMonteCarloSimulation()" id="mcRunBtn" style="margin-bottom:8px">&#9654; 시뮬레이션 실행</button>
     <div class="mc-progress" id="mcProgressWrap" style="display:none"><div class="mc-progress-bar" id="mcProgressBar" style="width:0%"></div></div>
     <div id="mcResults"></div>
   </div>`;
@@ -5549,17 +5583,32 @@ function renderSensitivityTab() {
 }
 
 // ===== TORNADO ANALYSIS =====
+function toggleAdvancedTornado() {
+  const panel = document.getElementById('tornadoAdvanced');
+  const btn = document.getElementById('tornadoAdvBtn');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : '';
+  if (btn) { btn.classList.toggle('open', !isOpen); btn.textContent = isOpen ? '고급 설정' : '고급 설정 닫기'; }
+}
 function runTornadoAnalysis() {
   const targetEl = document.querySelector('input[name="tornadoTarget"]:checked');
   const target = targetEl ? targetEl.value : 'Qa_applied';
-  const range = parseFloat(document.getElementById('tornadoRange')?.value || 0.2);
+  const globalRange = parseFloat(document.getElementById('tornadoRange')?.value || 0.2);
+  const advPanel = document.getElementById('tornadoAdvanced');
+  const useAdvanced = advPanel && advPanel.style.display !== 'none';
   const baseParams = buildCalcPileParams();
   let baseResult;
   try { baseResult = calcPile(baseParams); } catch(e) { return; }
   const baseline = baseResult[target];
   if (baseline == null || baseline === 0) return;
   const results = [];
-  TORNADO_PARAMS.forEach(tp => {
+  TORNADO_PARAMS.forEach((tp, idx) => {
+    if (useAdvanced) {
+      const chk = document.getElementById('tAdv_chk_'+idx);
+      if (chk && !chk.checked) return;
+    }
+    const range = useAdvanced ? (parseFloat(document.getElementById('tAdv_pct_'+idx)?.value || 20) / 100) : globalRange;
     const baseVal = baseParams[tp.key];
     if (baseVal == null || baseVal === 0) return;
     let rHigh, rLow;
@@ -5628,16 +5677,20 @@ async function runMonteCarloSimulation() {
   if (!STATE.result) return;
   btn.disabled = true; btn.textContent = '시뮬레이션 실행 중...';
   wrap.style.display = ''; bar.style.width = '0%';
-  const N=1000, BATCH=100;
+  const N = parseInt(document.getElementById('mcIterations')?.value || 1000);
+  const ncv = parseFloat(document.getElementById('mcNcv')?.value || 0.3);
+  const gelSigma = parseFloat(document.getElementById('mcGelSigma')?.value || 0.5);
+  const gwlSigma = parseFloat(document.getElementById('mcGwlSigma')?.value || 1.0);
+  const BATCH=100;
   const results = {Qa:[],Ha:[],St:[]};
   for (let batch=0; batch<N; batch+=BATCH) {
     await new Promise(resolve => setTimeout(() => {
       for (let i=batch; i<Math.min(batch+BATCH,N); i++) {
-        const sptP = STATE.sptData.map(s => ({...s, N:Math.max(1,Math.round(normalRandom(s.N,s.N*0.3)))}));
-        const layersP = STATE.layers.map(l => ({...l, avgN:Math.max(1,normalRandom(l.avgN||5,Math.max(l.avgN||5,1)*0.3))}));
+        const sptP = STATE.sptData.map(s => ({...s, N:Math.max(1,Math.round(normalRandom(s.N,s.N*ncv)))}));
+        const layersP = STATE.layers.map(l => ({...l, avgN:Math.max(1,normalRandom(l.avgN||5,Math.max(l.avgN||5,1)*ncv))}));
         const p = buildCalcPileParams({
-          groundEL: normalRandom(STATE.groundEL,0.5),
-          gwlDepth: Math.max(0,normalRandom(STATE.gwlDepth,1.0)),
+          groundEL: normalRandom(STATE.groundEL,gelSigma),
+          gwlDepth: Math.max(0,normalRandom(STATE.gwlDepth,gwlSigma)),
           coeff_tip: uniformRandom(200,300),
           coeff_sand: uniformRandom(1.5,2.5),
           coeff_clay: uniformRandom(5.0,7.5),
@@ -5650,7 +5703,7 @@ async function runMonteCarloSimulation() {
     }, 0));
   }
   wrap.style.display = 'none';
-  btn.disabled = false; btn.textContent = '\u25B6 시뮬레이션 실행 (1,000회)';
+  btn.disabled = false; btn.textContent = '\u25B6 시뮬레이션 실행';
   renderMCResults(results);
 }
 
@@ -5667,18 +5720,24 @@ function renderMCResults(results) {
       p5: calcMCPercentile(arr,0.05), p50: calcMCPercentile(arr,0.5), p95: calcMCPercentile(arr,0.95),
       min: arr[0], max: arr[arr.length-1], n: arr.length
     };
-    // Failure probability
-    if (k==='St') stats[k].pf = arr.filter(v=>v>25).length/arr.length;
-    else { const tgt = k==='Qa'?800:50; stats[k].pf = arr.filter(v=>v<tgt).length/arr.length; }
+    // Failure probability (use UI targets if available)
+    const tgtQa = parseFloat(document.getElementById('mcTargetQa')?.value || 800);
+    const tgtHa = parseFloat(document.getElementById('mcTargetHa')?.value || 50);
+    const tgtSt = parseFloat(document.getElementById('mcTargetSt')?.value || 25);
+    if (k==='St') stats[k].pf = arr.filter(v=>v>tgtSt).length/arr.length;
+    else { const tgt = k==='Qa'?tgtQa:tgtHa; stats[k].pf = arr.filter(v=>v<tgt).length/arr.length; }
   });
   SENS_STATE.mcStatistics = stats;
   SENS_STATE.mcRawResults = results;
   let html = generateMCInterpretation(stats);
   html += '<div class="mc-histograms">';
+  const mcTgtQa = parseFloat(document.getElementById('mcTargetQa')?.value || 800);
+  const mcTgtHa = parseFloat(document.getElementById('mcTargetHa')?.value || 50);
+  const mcTgtSt = parseFloat(document.getElementById('mcTargetSt')?.value || 25);
   const cfgs = [
-    {k:'Qa',label:'수직지지력 Qa',unit:'kN',color:'#3b82f6',tgt:800,tgtLabel:'목표 800kN',inv:false},
-    {k:'Ha',label:'수평지지력 Ha',unit:'kN',color:'#8b5cf6',tgt:50,tgtLabel:'목표 50kN',inv:false},
-    {k:'St',label:'침하량 St',unit:'mm',color:'#f59e0b',tgt:25,tgtLabel:'한계 25mm',inv:true}
+    {k:'Qa',label:'수직지지력 Qa',unit:'kN',color:'#3b82f6',tgt:mcTgtQa,tgtLabel:'목표 '+mcTgtQa+'kN',inv:false},
+    {k:'Ha',label:'수평지지력 Ha',unit:'kN',color:'#8b5cf6',tgt:mcTgtHa,tgtLabel:'목표 '+mcTgtHa+'kN',inv:false},
+    {k:'St',label:'침하량 St',unit:'mm',color:'#f59e0b',tgt:mcTgtSt,tgtLabel:'한계 '+mcTgtSt+'mm',inv:true}
   ];
   cfgs.forEach(c => {
     if (!stats[c.k]) return;
@@ -6017,7 +6076,7 @@ function buildRiskDashboardSection() {
     return { holeNo:bh.holeNo, ...calcRiskScore(r) };
   });
   const site = calcSiteRiskGrade(scores);
-  const gradeColors = {A:'#16a34a',B:'#65a30d',C:'#ca8a04',D:'#ea580c',E:'#dc2626'};
+  const gradeColors = {A:'#16a34a',B:'#65a30d',C:'#ca8a04',D:'#d97706',E:'#6b7280'};
   let html = `<div class="sens-section" style="margin-top:24px">
     <div class="sens-section-title">위험도 평가 — 사이트 안전성 종합 <button class="help-toggle-btn" onclick="toggleFeatureHelp('risk')">도움말</button></div>
     ${buildFeatureHelpHTML('risk')}
