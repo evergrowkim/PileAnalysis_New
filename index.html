@@ -1727,7 +1727,7 @@ function generateInverseInterpretation(nSatisfied, nChange, nFail, total) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); const so = document.querySelector('.shortcut-overlay'); if (so) so.remove(); }});
 
 // ===== AI INTEGRATION =====
-let AI_API_KEY = localStorage.getItem('claude_api_key') || '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';
+let AI_API_KEY = localStorage.getItem('claude_api_key') || '';
 
 // AI 결과 캐싱 시스템
 const AI_CACHE = { review: null, borehole: null, report: null };
