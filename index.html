@@ -5616,10 +5616,11 @@ function runTornadoAnalysis() {
     try { rLow = calcPile(buildCalcPileParams({[tp.key]: baseVal*(1-range)})); } catch(e) { rLow = null; }
     const dHigh = rHigh ? ((rHigh[target]-baseline)/baseline)*100 : 0;
     const dLow = rLow ? ((rLow[target]-baseline)/baseline)*100 : 0;
-    results.push({ label:tp.label, baseVal, unit:tp.unit, dHigh, dLow, impact:Math.abs(dHigh)+Math.abs(dLow) });
+    results.push({ label:tp.label, baseVal, unit:tp.unit, range, dHigh, dLow, impact:Math.abs(dHigh)+Math.abs(dLow) });
   });
   results.sort((a,b) => b.impact - a.impact);
-  SENS_STATE.tornadoResults = { target, range, baseline, results };
+  // 변동 범위는 항목마다 다를 수 있다(고급 설정) — 항목별 값은 results[].range, 여기는 기본 범위
+  SENS_STATE.tornadoResults = { target, range: globalRange, baseline, results };
   const labels = {Qa_applied:'수직지지력 Qa (kN)',Ha_applied:'수평지지력 Ha (kN)',St:'침하량 St (mm)'};
   const interpEl = document.getElementById('tornadoInterp');
   if (interpEl) interpEl.innerHTML = generateTornadoInterpretation(SENS_STATE.tornadoResults);
@@ -5652,11 +5653,11 @@ function renderTornadoSVG(data, label, baseline) {
     // Low bar (left of center if negative)
     const xLow = cx + (Math.min(d.dLow,0)/maxAbs)*halfW;
     const wLow = Math.abs(d.dLow/maxAbs)*halfW;
-    if (wLow > 0.5) svg += `<rect x="${d.dLow<0?xLow:cx}" y="${yMid-10}" width="${wLow}" height="20" rx="3" fill="${d.dLow<0?'#ef4444':'#3b82f6'}" opacity="0.8"><title>-${(d.baseVal*(1-SENS_STATE.tornadoResults?.range||0.2)).toFixed(2)} → ${d.dLow>0?'+':''}${d.dLow.toFixed(1)}%</title></rect>`;
+    if (wLow > 0.5) svg += `<rect x="${d.dLow<0?xLow:cx}" y="${yMid-10}" width="${wLow}" height="20" rx="3" fill="${d.dLow<0?'#ef4444':'#3b82f6'}" opacity="0.8"><title>-${(d.baseVal*(1-(d.range ?? SENS_STATE.tornadoResults?.range ?? 0.2))).toFixed(2)} → ${d.dLow>0?'+':''}${d.dLow.toFixed(1)}%</title></rect>`;
     // High bar
     const xHigh = cx;
     const wHigh = Math.abs(d.dHigh/maxAbs)*halfW;
-    if (wHigh > 0.5) svg += `<rect x="${d.dHigh>0?cx:cx-(wHigh)}" y="${yMid-10}" width="${wHigh}" height="20" rx="3" fill="${d.dHigh>0?'#3b82f6':'#ef4444'}" opacity="0.8"><title>+${(d.baseVal*(1+(SENS_STATE.tornadoResults?.range||0.2))).toFixed(2)} → ${d.dHigh>0?'+':''}${d.dHigh.toFixed(1)}%</title></rect>`;
+    if (wHigh > 0.5) svg += `<rect x="${d.dHigh>0?cx:cx-(wHigh)}" y="${yMid-10}" width="${wHigh}" height="20" rx="3" fill="${d.dHigh>0?'#3b82f6':'#ef4444'}" opacity="0.8"><title>+${(d.baseVal*(1+(d.range ?? SENS_STATE.tornadoResults?.range ?? 0.2))).toFixed(2)} → ${d.dHigh>0?'+':''}${d.dHigh.toFixed(1)}%</title></rect>`;
     // Value labels
     if (Math.abs(d.dLow) > 0.5) svg += `<text x="${cx + (d.dLow/maxAbs)*halfW + (d.dLow<0?-4:4)}" y="${yMid+3}" text-anchor="${d.dLow<0?'end':'start'}" font-size="8" fill="var(--text-secondary)" font-family="var(--font-mono)">${d.dLow>0?'+':''}${d.dLow.toFixed(1)}%</text>`;
     if (Math.abs(d.dHigh) > 0.5) svg += `<text x="${cx + (d.dHigh/maxAbs)*halfW + (d.dHigh>0?4:-4)}" y="${yMid+3}" text-anchor="${d.dHigh>0?'start':'end'}" font-size="8" fill="var(--text-secondary)" font-family="var(--font-mono)">${d.dHigh>0?'+':''}${d.dHigh.toFixed(1)}%</text>`;
