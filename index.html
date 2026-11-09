@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.anthropic.com; img-src 'self' data:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'none'; img-src 'self' data:;">
 <title>말뚝 기초 설계 계산기 v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js" integrity="sha384-P7KKlGD3Ng66Ds7oTliLzTnol6DbK+k7PafNYXIBDQ4b5eFWtmqctplDVOxslglR" crossorigin="anonymous"></script>
@@ -1727,7 +1727,14 @@ function generateInverseInterpretation(nSatisfied, nChange, nFail, total) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAIPanel(); closeChatPanel(); closeLogPanel(); closeVerifyModal(); closePasteModal(); closeGuide(); const so = document.querySelector('.shortcut-overlay'); if (so) so.remove(); }});
 
 // ===== AI INTEGRATION =====
-let AI_API_KEY = localStorage.getItem('claude_api_key') || '';
+// 사용자 AI 키를 브라우저에 두거나 외부 AI 를 직접 부르는 기능은 껐다.
+// AI 도움은 계산 작업대의 말뚝 결과판에서 쓴다(서버 경유 · 사용량 계량).
+// 예전 판이 저장해 둔 키는 읽지 않고 지운다.
+const AI_OFF_MESSAGE = 'AI 도움은 계산 작업대의 말뚝 결과판에서 씁니다';
+function purgeLegacyAIKey() {
+  try { localStorage.removeItem('claude_api_key'); } catch (e) { /* 저장소 접근 불가 */ }
+}
+purgeLegacyAIKey();
 
 // AI 결과 캐싱 시스템
 const AI_CACHE = { review: null, borehole: null, report: null };
@@ -1740,72 +1747,16 @@ function invalidateAICache() {
   AI_CACHE.report = null;
 }
 
-function setAIApiKey(key) { AI_API_KEY = key; localStorage.setItem('claude_api_key', key); }
-function ensureApiKey() {
-  if (AI_API_KEY) return true;
-  const key = prompt('Claude API Key를 입력하세요 (sk-ant-...):');
-  if (key && key.startsWith('sk-ant-')) { setAIApiKey(key); return true; }
-  showToast('유효한 API Key가 필요합니다', 'error'); return false;
+// AI 단추가 눌리면 저장된 옛 키를 지우고 안내만 띄운다. 항상 true(막힘).
+function aiBlocked() {
+  purgeLegacyAIKey();
+  showToast(AI_OFF_MESSAGE, 'info');
+  return true;
 }
 
-async function callClaudeAPI({ systemPrompt, userMessage, onChunk, onComplete, onError, maxTokens=2048, temperature=0.3, model=null }) {
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': AI_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: model || 'claude-haiku-4-5-20251001',
-        max_tokens: maxTokens,
-        temperature: temperature,
-        stream: true,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMessage }]
-      })
-    });
-    if (!resp.ok) {
-      const errBody = await resp.text();
-      const code = resp.status;
-      if (code === 401) { onError({ message: 'API Key가 유효하지 않습니다', details: '설정에서 키를 확인하세요' }); return; }
-      if (code === 429) { onError({ message: '요청 한도 초과 (Rate Limit)', details: '잠시 후 다시 시도하세요' }); return; }
-      onError({ message: `API 오류 (${code})`, details: errBody.substring(0, 200) }); return;
-    }
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '', inputTokens = 0, outputTokens = 0, buffer = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-        try {
-          const evt = JSON.parse(data);
-          if (evt.type === 'message_start' && evt.message && evt.message.usage) {
-            inputTokens = evt.message.usage.input_tokens || 0;
-          }
-          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
-            fullText += evt.delta.text;
-            if (onChunk) onChunk(evt.delta.text);
-          }
-          if (evt.type === 'message_delta' && evt.usage) {
-            outputTokens = evt.usage.output_tokens || 0;
-          }
-        } catch (pe) { /* skip parse error */ }
-      }
-    }
-    if (onComplete) onComplete(fullText, { input_tokens: inputTokens, output_tokens: outputTokens });
-  } catch (err) {
-    if (onError) onError({ message: '네트워크 연결 실패', details: err.message });
-  }
+// 외부 호출은 없다. 혹시 불리면 안내만 돌려준다.
+async function callClaudeAPI({ onError }) {
+  if (onError) onError({ message: AI_OFF_MESSAGE, details: '' });
 }
 
 // AI Panel Management
@@ -1893,7 +1844,7 @@ function prepareReviewData() {
 }
 
 async function runAIReview(forceRefresh) {
-  if (!ensureApiKey()) return;
+  if (aiBlocked()) return;
   if (!STATE.result) { showToast('계산 결과가 없습니다. 먼저 설계를 완료하세요.', 'warning'); return; }
   const data = prepareReviewData();
   const cacheKey = aiCacheKey(data);
@@ -1964,7 +1915,7 @@ ${JSON.stringify(data, null, 2)}
 let _lastNLParsed = null;
 
 async function parseNLInput() {
-  if (!ensureApiKey()) return;
+  if (aiBlocked()) return;
   const inputEl = document.getElementById('nlInput');
   if (!inputEl) return;
   const input = inputEl.value.trim();
@@ -2246,7 +2197,7 @@ function prepareBoreholeData() {
 }
 
 async function runBoreholeAnalysis(forceRefresh) {
-  if (!ensureApiKey()) return;
+  if (aiBlocked()) return;
   if (!STATE.uploadedData || STATE.uploadedData.length === 0) {
     showToast('시추공 데이터를 먼저 업로드하세요 (JSON)', 'warning'); return;
   }
@@ -2350,7 +2301,7 @@ function prepareReportData() {
 }
 
 async function generateAIReport(forceRefresh) {
-  if (!ensureApiKey()) return;
+  if (aiBlocked()) return;
   if (!STATE.result) { showToast('계산 결과가 없습니다', 'warning'); return; }
   const data = prepareReportData();
   const cacheKey = aiCacheKey(data);
@@ -2552,6 +2503,7 @@ function prepareChatContext() {
 }
 
 function openChatPanel() {
+  if (aiBlocked()) return;
   const overlay = document.getElementById('chatOverlay');
   const panel = document.getElementById('chatPanel');
   overlay.classList.add('open');
@@ -2633,121 +2585,8 @@ function autoResizeChatInput(el) {
 async function sendChatMessage() {
   if (CHAT_STREAMING) return;
   const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  if (!ensureApiKey()) return;
-
-  // 사용자 메시지 추가
-  CHAT_HISTORY.push({ role: 'user', content: text });
-  input.value = '';
-  input.style.height = 'auto';
-  renderChatMessages();
-
-  // 타이핑 인디케이터
-  const container = document.getElementById('chatMessages');
-  const typing = document.createElement('div');
-  typing.className = 'chat-typing';
-  typing.id = 'chatTyping';
-  typing.innerHTML = '<span></span><span></span><span></span>';
-  container.appendChild(typing);
-  container.scrollTop = container.scrollHeight;
-
-  // 전송 버튼 비활성화
-  CHAT_STREAMING = true;
-  document.getElementById('chatSendBtn').disabled = true;
-
-  // 컨텍스트 포함 시스템 프롬프트 구성
-  const context = prepareChatContext();
-  const fullSystem = CHAT_SYSTEM_PROMPT + (context ? '\\n\\n---\\n# 현재 프로젝트 데이터\\n' + context : '');
-
-  // API 메시지 배열 구성 (전체 대화 히스토리)
-  const apiMessages = CHAT_HISTORY.map(m => ({ role: m.role, content: m.content }));
-
-  let fullText = '';
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': AI_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
-        temperature: 0.4,
-        stream: true,
-        system: fullSystem,
-        messages: apiMessages
-      })
-    });
-    if (!resp.ok) {
-      const code = resp.status;
-      const errBody = await resp.text();
-      let errMsg = 'API 오류 (' + code + ')';
-      if (code === 401) errMsg = 'API Key가 유효하지 않습니다';
-      if (code === 429) errMsg = '요청 한도 초과. 잠시 후 다시 시도하세요';
-      throw new Error(errMsg);
-    }
-    // 타이핑 제거, 어시스턴트 메시지 박스 추가
-    const typingEl = document.getElementById('chatTyping');
-    if (typingEl) typingEl.remove();
-    const assistantDiv = document.createElement('div');
-    assistantDiv.className = 'chat-msg assistant';
-    container.appendChild(assistantDiv);
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let stopReason = null;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-        try {
-          const evt = JSON.parse(data);
-          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
-            fullText += evt.delta.text;
-            assistantDiv.innerHTML = renderAIMarkdown(fullText);
-            container.scrollTop = container.scrollHeight;
-          }
-          if (evt.type === 'message_delta' && evt.delta && evt.delta.stop_reason) {
-            stopReason = evt.delta.stop_reason;
-          }
-        } catch (pe) {}
-      }
-    }
-    // max_tokens로 잘린 경우 경고 추가
-    if (stopReason === 'max_tokens') {
-      fullText += '\n\n[주의] 응답이 길어 중단되었습니다. 더 구체적으로 질문해주세요.';
-      assistantDiv.innerHTML = renderAIMarkdown(fullText);
-    }
-    // 히스토리에 추가
-    CHAT_HISTORY.push({ role: 'assistant', content: fullText });
-  } catch (err) {
-    const typingEl = document.getElementById('chatTyping');
-    if (typingEl) typingEl.remove();
-    // 에러 메시지 표시
-    const errDiv = document.createElement('div');
-    errDiv.className = 'chat-msg system';
-    errDiv.style.background = '#fef2f2';
-    errDiv.style.color = '#dc2626';
-    errDiv.textContent = err.message;
-    container.appendChild(errDiv);
-    // 실패한 사용자 메시지 제거
-    CHAT_HISTORY.pop();
-  } finally {
-    CHAT_STREAMING = false;
-    document.getElementById('chatSendBtn').disabled = false;
-    container.scrollTop = container.scrollHeight;
-  }
+  if (!input || !input.value.trim()) return;
+  aiBlocked();
 }
 
 // ===== SIDEBAR =====
@@ -5804,8 +5643,7 @@ function renderMCHistogramSVG(values, label, unit, color, tgt, tgtLabel) {
 
 // ===== AI SENSITIVITY INTERPRETATION =====
 async function runSensitivityAI() {
-  if (typeof ensureApiKey === 'function' && !ensureApiKey()) return;
-  if (!AI_API_KEY) { showToast('API Key를 설정하세요','error'); return; }
+  if (aiBlocked()) return;
   const container = document.getElementById('sensAIResult');
   container.innerHTML = '<div class="ai-interp-card"><div class="aic-title">AI 분석 중...</div><div class="ai-interp-content" id="sensAIContent"><span class="chat-typing"><span></span><span></span><span></span></span></div></div>';
   const tornadoInfo = SENS_STATE.tornadoResults ? JSON.stringify(SENS_STATE.tornadoResults.results.map(r=>({param:r.label,impact:r.impact.toFixed(1),dHigh:r.dHigh.toFixed(1),dLow:r.dLow.toFixed(1)}))) : '미실행';
@@ -6890,12 +6728,8 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('message', function(event) {
     if (!event.data || typeof event.data !== 'object') return;
 
-    // 플랫폼 설정 수신 (API 키 등)
+    // 플랫폼 설정 수신 — AI 키는 받아 두지 않는다(AI 도움은 플랫폼에서)
     if (event.data.type === 'SET_PLATFORM_CONFIG') {
-        var config = event.data.config;
-        if (config && config.anthropic_api_key) {
-            setAIApiKey(config.anthropic_api_key);
-        }
         return;
     }
 
